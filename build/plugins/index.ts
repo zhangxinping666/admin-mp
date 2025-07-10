@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react-swc';
 import legacy from '@vitejs/plugin-legacy';
 import unocss from 'unocss/vite';
 import viteCompression from 'vite-plugin-compression';
+import { createMockPlugin } from './mock';
 
 /**
  * 创建 Vite 插件列表
@@ -21,6 +22,7 @@ export function createVitePlugins(mode: string): PluginOption[] {
     unocss(), // UnoCSS 原子化 CSS
     versionUpdatePlugin(), // 打包后生成 version.json
     autoImportPlugin(), // 自动导入 hooks / stores / utils 等
+    createMockPlugin(mode),
   ];
 
   // 根据环境动态添加插件

@@ -147,15 +147,12 @@ function Login() {
       const { code, data } = await login(values);
       if (Number(code) !== 200) return;
       const { token, user, permissions } = data;
-
       // 处理记住我逻辑
       const passwordObj = { value: values.password, expire: 0 };
       handleRemember(values.username, encryption(passwordObj));
-
       if (!permissions?.length || !token) {
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
       }
-
       setToken(token);
       setUserInfo(user);
       setPermissions(permissions);
