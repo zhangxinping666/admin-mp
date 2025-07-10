@@ -43,23 +43,59 @@ export default [
       return resultSuccess(data, '获取用户信息成功');
     },
   },
+  // 登录接口
   {
     url: '/api/user/login',
     method: 'post',
     response: ({ body }) => {
       const { username, password } = body;
-      if (!username || !password) return { code: 400, message: '用户名或密码不能为空' };
-
+      if (!username || !password) {
+        return { code: 400, message: '用户名或密码不能为空' };
+      }
       if (username === 'admin' && password === 'admin123456') {
-        const token = Mock.Random.guid();
         return resultSuccess(
           {
-            token,
-            userInfo: {
-              id: '@id',
+            token: Mock.Random.string('lower', 32),
+            user: {
+              id: 1,
               username: 'admin',
-              role: 'admin',
+              email: '1275093225@qq.com',
+              phone: '123456789',
             },
+            permissions: [
+              '/dashboard',
+              '/demo',
+              '/demo/copy',
+              '/demo/editor',
+              '/demo/wangEditor',
+              '/demo/virtualScroll',
+              '/demo/watermark',
+              '/authority/user',
+              '/authority/user/index',
+              '/authority/user/create',
+              '/authority/user/update',
+              '/authority/user/view',
+              '/authority/user/delete',
+              '/authority/user/authority',
+              '/authority/role',
+              '/authority/role/index',
+              '/authority/role/create',
+              '/authority/role/update',
+              '/authority/role/view',
+              '/authority/role/delete',
+              '/authority/menu',
+              '/authority/menu/index',
+              '/authority/menu/create',
+              '/authority/menu/update',
+              '/authority/menu/view',
+              '/authority/menu/delete',
+              '/content/article',
+              '/content/article/index',
+              '/content/article/create',
+              '/content/article/update',
+              '/content/article/view',
+              '/content/article/delete',
+            ],
           },
           '登录成功',
         );
