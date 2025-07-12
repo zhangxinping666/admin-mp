@@ -1,5 +1,6 @@
 import type { SideMenu } from '#/public';
 import { demo } from './demo';
+import { merchantMenu } from './merchantManage';
 
 /**
  * 弃用，改为动态菜单获取，如果需要静态菜单将/src/hooks/useCommonStore.ts中的useCommonStore中的menuList改为defaultMenus
@@ -15,5 +16,6 @@ export const defaultMenus: SideMenu[] = [
     key: '/dashboard',
     rule: '/dashboard',
   },
+  ...(merchantMenu as SideMenu[]),
   ...(demo as SideMenu[]),
 ];

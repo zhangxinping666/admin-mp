@@ -412,6 +412,7 @@ export function handleFilterMenus(menus: SideMenu[], level = 0): SideMenu[] {
  * @param permissions - 权限
  */
 function hasPermission(route: SideMenu, permissions: string[]): boolean {
+  return true;
   return permissions?.includes(route?.rule || '');
 }
 

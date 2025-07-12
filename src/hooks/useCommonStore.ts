@@ -1,4 +1,5 @@
 import { useMenuStore, usePublicStore, useTabsStore, useUserStore } from '@/stores';
+import { defaultMenus } from '@/menus';
 
 /**
  * 获取常用的状态数据
@@ -31,7 +32,7 @@ export const useCommonStore = () => {
   // 主题
   const theme = usePublicStore((state) => state.theme);
   // 菜单数据
-  const menuList = useMenuStore((state) => state.menuList);
+  const menuList = defaultMenus;
 
   return {
     isMaximize,

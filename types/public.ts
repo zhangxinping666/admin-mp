@@ -57,9 +57,9 @@ export interface TableColumn<T = object> extends ColumnType<T> {
 }
 
 // 表格参数
-export interface BaseTableProps extends Omit<TableProps, 'columns' | 'rowKey'> {
+export interface BaseTableProps<T = object> extends Omit<TableProps<T>, 'columns' | 'rowKey'> {
   rowKey?: string;
-  columns: TableColumn[];
+  columns: TableColumn<T>[];
 }
 
 // 表格操作
