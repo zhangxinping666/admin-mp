@@ -3,13 +3,11 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
   AxiosRequestConfig,
-  CreateAxiosDefaults,
 } from 'axios';
 import type {
   RequestInterceptors,
   CreateRequestConfig,
   ServerResult,
-  RequestCancel,
 } from './types';
 
 /**
