@@ -1,10 +1,9 @@
 import type { LoginData } from './model';
 import type { FormProps } from 'antd';
 import { Checkbox, message, Form, Button, Input } from 'antd';
-import { login } from '@/servers/login';
+import { getUserInfoServe, login } from '@/servers/login';
 import { setTitle } from '@/utils/helper';
 import { getMenuList } from '@/servers/system/menu';
-import { getPermissions } from '@/servers/permissions';
 import { encryption, decryption } from '@manpao/utils';
 import { getFirstMenu } from '@/menus/utils/helper';
 import Logo from '@/assets/images/logo.png';
@@ -75,8 +74,7 @@ function Login() {
   const getUserPermissions = async () => {
     try {
       setLoading(true);
-      const { code, data } = await getPermissions({ refresh_cache: false });
-      if (Number(code) !== 200) return;
+      const { data } = await getUserInfoServe();
       const { user, permissions } = data;
       setUserInfo(user);
       setPermissions(permissions);
@@ -93,10 +91,9 @@ function Login() {
 
     try {
       setLoading(true);
-      const { code, data } = await getMenuList();
-      if (Number(code) !== 200) return;
-      setMenuList(data || []);
-      result = data;
+      const { data } = await getMenuList();
+      setMenuList(data.menu || []);
+      result = data.menu;
     } finally {
       setLoading(false);
     }
@@ -144,9 +141,10 @@ function Login() {
   const handleFinish: FormProps['onFinish'] = async (values: LoginData) => {
     try {
       setLoading(true);
-      const { code, data } = await login(values);
-      if (Number(code) !== 200) return;
-      const { token, user, permissions } = data;
+      const { data } = await login(values);
+      const { token } = data;
+      const { data: userInfo } = await getUserInfoServe();
+      const { user, permissions } = userInfo;
       // 处理记住我逻辑
       const passwordObj = { value: values.password, expire: 0 };
       handleRemember(values.username, encryption(passwordObj));
@@ -156,7 +154,7 @@ function Login() {
       setToken(token);
       setUserInfo(user);
       setPermissions(permissions);
-      handleGoMenu(permissions);
+      await handleGoMenu(permissions);
     } finally {
       setLoading(false);
     }

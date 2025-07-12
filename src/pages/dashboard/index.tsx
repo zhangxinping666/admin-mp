@@ -27,7 +27,7 @@ function Dashboard() {
     const query = { ...values };
     try {
       setLoading(true);
-      await getDataTrends(query);
+      // await getDataTrends(query);
     } finally {
       setLoading(false);
     }
