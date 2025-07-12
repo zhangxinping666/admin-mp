@@ -1,133 +1,170 @@
-import axios from 'axios';
-import type {
-  AxiosResponse,
+import axios, {
   AxiosInstance,
+  AxiosResponse,
   InternalAxiosRequestConfig,
   AxiosRequestConfig,
+  CreateAxiosDefaults,
 } from 'axios';
-import type { RequestInterceptors, CreateRequestConfig, ServerResult } from './types';
+import type {
+  RequestInterceptors,
+  CreateRequestConfig,
+  ServerResult,
+  RequestCancel,
+} from './types';
 
+/**
+ * AxiosRequest 封装类
+ * 用于创建带有自定义拦截器、重复请求控制的 axios 实例
+ */
 class AxiosRequest {
   // axios 实例
   instance: AxiosInstance;
-  // 拦截器对象
+  // 用户自定义的拦截器对象
   interceptorsObj?: RequestInterceptors<AxiosResponse>;
-  // 存放取消请求控制器Map
+  // 用于管理取消重复请求的 Map
   abortControllerMap: Map<string, AbortController>;
 
   constructor(config: CreateRequestConfig) {
     this.instance = axios.create(config);
-    // 初始化存放取消请求控制器Map
     this.abortControllerMap = new Map();
     this.interceptorsObj = config.interceptors;
-    // 拦截器执行顺序 接口请求 -> 实例请求 -> 全局请求 -> 实例响应 -> 全局响应 -> 接口响应
+
+    // ========= 全局请求拦截器（优先执行）=========
     this.instance.interceptors.request.use(
-      (res: InternalAxiosRequestConfig) => {
+      (reqConfig: InternalAxiosRequestConfig) => {
         const controller = new AbortController();
-        let url = res.method || '';
-        res.signal = controller.signal;
+        let urlKey = reqConfig.method || '';
+        if (reqConfig.url) urlKey += `^${reqConfig.url}`;
 
-        if (res.url) url += `^${res.url}`;
-
-        // 如果存在参数
-        if (res.params) {
-          for (const key in res.params) {
-            url += `&${key}=${res.params[key]}`;
+        // 拼接 params
+        if (reqConfig.params) {
+          for (const key in reqConfig.params) {
+            urlKey += `&${key}=${reqConfig.params[key]}`;
+          }
+        }
+        // 拼接 body（仅简单处理 json 字符串）
+        if (
+          typeof reqConfig.data === 'string' &&
+          reqConfig.data.startsWith('{') &&
+          reqConfig.data.endsWith('}')
+        ) {
+          try {
+            const dataObj = JSON.parse(reqConfig.data);
+            for (const key in dataObj) {
+              urlKey += `#${key}=${dataObj[key]}`;
+            }
+          } catch (e) {
+            console.warn('请求体解析失败', e);
           }
         }
 
-        // 如果存在post数据
-        if (res.data && res.data?.[0] === '{' && res.data?.[res.data?.length - 1] === '}') {
-          const obj = JSON.parse(res.data);
-          for (const key in obj) {
-            url += `#${key}=${obj[key]}`;
-          }
-        }
-
-        // 如果存在则删除该请求
-        if (this.abortControllerMap.get(url)) {
-          console.warn('取消重复请求：', url);
-          this.cancelRequest(url);
+        // 如果已存在相同请求，则取消之前的
+        if (this.abortControllerMap.has(urlKey)) {
+          console.warn('取消重复请求:', urlKey);
+          this.cancelRequest(urlKey);
         } else {
-          this.abortControllerMap.set(url, controller);
+          this.abortControllerMap.set(urlKey, controller);
         }
 
-        return res;
+        reqConfig.signal = controller.signal;
+        return reqConfig;
       },
-      (err: object) => err,
+      (error) => Promise.reject(error),
     );
 
-    // 使用实例拦截器
-    this.instance.interceptors.request.use(
-      this.interceptorsObj?.requestInterceptors,
-      this.interceptorsObj?.requestInterceptorsCatch,
-    );
+    // ========= 实例级请求拦截器（可选，由外部传入）=========
+    if (this.interceptorsObj?.requestInterceptors) {
+      this.instance.interceptors.request.use(
+        this.interceptorsObj.requestInterceptors,
+        this.interceptorsObj.requestInterceptorsCatch,
+      );
+    }
+
+    // ========= 实例级响应拦截器（可选，由外部传入）=========
+    if (this.interceptorsObj?.responseInterceptors) {
+      this.instance.interceptors.response.use(
+        this.interceptorsObj.responseInterceptors,
+        this.interceptorsObj.responseInterceptorsCatch,
+      );
+    }
+
+    // ========= 全局响应拦截器（最后执行，保证删除去重 key，并返回数据部分）=========
     this.instance.interceptors.response.use(
-      this.interceptorsObj?.responseInterceptors,
-      this.interceptorsObj?.responseInterceptorsCatch,
-    );
-    // 全局响应拦截器保证最后执行
-    this.instance.interceptors.response.use(
-      // 因为我们接口的数据都在res.data下，所以我们直接返回res.data
-      (res: AxiosResponse) => {
-        const url = res.config.url || '';
+      (response: AxiosResponse) => {
+        // 删除该请求的 controller
+        const url = response.config.url || '';
         this.abortControllerMap.delete(url);
-        return res.data;
+        // 返回真正需要的数据部分
+        return response;
       },
-      (err: object) => err,
+      (error) => Promise.reject(error),
     );
   }
+
   /**
-   * 取消全部请求
+   * 取消所有请求
    */
   cancelAllRequest() {
-    for (const [, controller] of this.abortControllerMap) {
-      controller.abort();
-    }
+    this.abortControllerMap.forEach((controller) => controller.abort());
     this.abortControllerMap.clear();
   }
+
   /**
-   * 取消指定的请求
-   * @param url - 待取消的请求URL
+   * 取消指定请求
+   * @param url - 单个 urlKey 或 urlKey 数组
    */
   cancelRequest(url: string | string[]) {
     const urlList = Array.isArray(url) ? url : [url];
-    for (const _url of urlList) {
+    urlList.forEach((_url) => {
       this.abortControllerMap.get(_url)?.abort();
       this.abortControllerMap.delete(_url);
-    }
+    });
   }
+
   /**
-   * get请求
-   * @param url - 链接
-   * @param options - 参数
+   * GET 请求
+   * @param url - 请求地址
+   * @param config - axios 配置
    */
-  get<T = object>(url: string, options = {}) {
-    return this.instance.get(url, options) as Promise<ServerResult<T>>;
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<ServerResult<T>> {
+    return this.instance.get(url, config).then((res) => res.data as ServerResult<T>);
   }
+
   /**
-   * post请求
-   * @param url - 链接
-   * @param options - 参数
+   * POST 请求
+   * @param url - 请求地址
+   * @param data - 请求体
+   * @param config - axios 配置
    */
-  post<T = object>(url: string, options = {}, config?: AxiosRequestConfig<object>) {
-    return this.instance.post(url, options, config) as Promise<ServerResult<T>>;
+  post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<ServerResult<T>> {
+    return this.instance.post(url, data, config).then((res) => res.data as ServerResult<T>);
   }
+
   /**
-   * put请求
-   * @param url - 链接
-   * @param options - 参数
+   * PUT 请求
+   * @param url - 请求地址
+   * @param data - 请求体
+   * @param config - axios 配置
    */
-  put<T = object>(url: string, options = {}, config?: AxiosRequestConfig<object>) {
-    return this.instance.put(url, options, config) as Promise<ServerResult<T>>;
+  put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<ServerResult<T>> {
+    return this.instance.put(url, data, config).then((res) => res.data as ServerResult<T>);
   }
+
   /**
-   * delete请求
-   * @param url - 链接
-   * @param options - 参数
+   * DELETE 请求
+   * @param url - 请求地址
+   * @param config - axios 配置
    */
-  delete<T = object>(url: string, options = {}) {
-    return this.instance.delete(url, options) as Promise<ServerResult<T>>;
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<ServerResult<T>> {
+    return this.instance.delete(url, config).then((res) => res.data as ServerResult<T>);
   }
 }
 

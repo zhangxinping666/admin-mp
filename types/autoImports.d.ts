@@ -141,12 +141,12 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { ApiPageSelectProps, ThemeType, TabsData, FC, BusinessComponents, RangeValue, SearchModalProps, Langs, InitTableState, TableAction, EditorProps, FormData, FormList, SearchList } from './autoImports.d'
+  export type { ApiPageSelectProps, ThemeType, TabsData, FC, BusinessComponents, RangeValue, SearchModalProps, Langs, InitTableState, TableAction, EditorProps, FormData, FormList, SearchList, Men } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'
   import('./form')
   // @ts-ignore
-  export type { ArrayData, EmptyData, PageServerResult, PaginationData, SideMenu, PagePermission, ColumnsEnum, TableColumn, BaseTableProps, TableOptions } from './public'
+  export type { ArrayData, EmptyData, PageServerResult, PaginationData, SideMenu, MenuResult, PagePermission, ColumnsEnum, TableColumn, BaseTableProps, TableOptions } from './public'
   import('./public')
 }

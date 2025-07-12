@@ -17,7 +17,7 @@ git clone http://192.168.10.6:9980/manpao/qianduan/manpao-admin.git
 - 选择目录
 
 ```bash
-cd react-admin
+cd manpao-admin
 ```
 
 - 安装pnpm
@@ -53,8 +53,9 @@ react-admin
 ├── packages                  # monorepo子包
 │   ├── message               # 消息模块
 │   ├── request               # 请求模块
-│   ├── stylelintConfig      # stylelint配置
-│   └── utils                 # 工具函数
+│   ├── stylelintConfig       # stylelint配置
+│   ├── utils                 # 工具函数
+|   └── status-codes          # 逻辑状态码管理
 ├── public                    # 静态资源
 ├── src                       # 源代码
 │   ├── assets                # 静态资源

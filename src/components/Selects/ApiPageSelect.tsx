@@ -61,10 +61,10 @@ function ApiPageSelect(props: ApiPageSelectProps) {
    * 展开下拉回调
    * @param open - 是否展开
    */
-  const onDropdownVisibleChange = (open: boolean) => {
+  const onOpenChange = (open: boolean) => {
     if (open) getApiData();
 
-    props.onDropdownVisibleChange?.(open);
+    props.onOpenChange?.(open);
   };
 
   return (
@@ -78,7 +78,7 @@ function ApiPageSelect(props: ApiPageSelectProps) {
       loading={isLoading}
       options={options}
       notFoundContent={isLoading && <Loading />}
-      onDropdownVisibleChange={onDropdownVisibleChange}
+      onOpenChange={onOpenChange}
     />
   );
 }
