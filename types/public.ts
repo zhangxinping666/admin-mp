@@ -33,6 +33,10 @@ export interface SideMenu extends Omit<ItemType, 'children' | 'label' | 'icon'> 
   children?: SideMenu[];
 }
 
+export interface MenuResult {
+  menu: SideMenu[];
+}
+
 // 页面权限
 export interface PagePermission {
   page?: boolean;

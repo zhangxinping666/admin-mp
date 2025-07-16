@@ -120,6 +120,7 @@ function BaseModal(props: Props) {
 
   return (
     <Modal
+      destroyOnHidden
       closable={false}
       maskClosable={false}
       modalRender={!isPhone ? modalRender : undefined}

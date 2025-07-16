@@ -13,14 +13,16 @@ interface User {
 }
 
 // 用户权限数据
-interface Roles {
-  id: string;
-}
+// interface Roles {
+//   id: string;
+// }
 
 // 接口返回数据
 export interface LoginResult {
   token: string;
+}
+
+export interface UserInfoResult {
   user: User;
   permissions: string[];
-  roles: Roles[];
 }

@@ -1,14 +1,12 @@
 import { useToken } from '@/hooks/useToken';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { useOutlet } from 'react-router-dom';
+import { useOutlet, useLocation } from 'react-router-dom';
 import { Skeleton, message } from 'antd';
 import { Icon } from '@iconify/react';
 import { debounce } from 'lodash';
-import { useLocation } from 'react-router-dom';
 import { versionCheck } from './utils/helper';
 import { getMenuList } from '@/servers/system/menu';
 import { useMenuStore, useUserStore } from '@/stores';
-import { getPermissions } from '@/servers/permissions';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import KeepAlive from 'react-activation';
 import Menu from './components/Menu';
@@ -16,6 +14,7 @@ import Header from './components/Header';
 import Tabs from './components/Tabs';
 import Forbidden from '@/pages/403';
 import styles from './index.module.less';
+import { getUserInfoServe } from '@/servers/login';
 
 function Layout() {
   const [getToken] = useToken();
@@ -34,8 +33,7 @@ function Layout() {
   const getUserInfo = useCallback(async () => {
     try {
       setLoading(true);
-      const { code, data } = await getPermissions({ refresh_cache: false });
-      if (Number(code) !== 200) return;
+      const { data } = await getUserInfoServe();
       const { user, permissions } = data;
       setUserInfo(user);
       setPermissions(permissions);
@@ -52,9 +50,8 @@ function Layout() {
   const getMenuData = useCallback(async () => {
     try {
       setLoading(true);
-      const { code, data } = await getMenuList();
-      if (Number(code) !== 200) return;
-      setMenuList(data || []);
+      const { data } = await getMenuList();
+      setMenuList(data.menu || []);
     } finally {
       setLoading(false);
     }

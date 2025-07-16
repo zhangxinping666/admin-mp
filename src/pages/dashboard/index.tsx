@@ -1,6 +1,6 @@
 import { searchList } from './model';
 import { useActivate } from 'react-activation';
-import { getDataTrends } from '@/servers/dashboard';
+// import { getDataTrends } from '@/servers/dashboard';
 import Bar from './components/Bar';
 import Line from './components/Line';
 import Block from './components/Block';
@@ -24,10 +24,10 @@ function Dashboard() {
     // 数据转换
     values.all_pay = values.all_pay ? 1 : undefined;
 
-    const query = { ...values };
+    // const query = { ...values };
     try {
       setLoading(true);
-      await getDataTrends(query);
+      // await getDataTrends(query);
     } finally {
       setLoading(false);
     }
