@@ -1,4 +1,4 @@
-import { CRUDPageTemplate, TableActions } from '../shared';
+import { CRUDPageTemplate, TableActions } from '@/shared';
 import { searchList, tableColumns, formList, type Merchant } from './model';
 
 // 初始化新增数据

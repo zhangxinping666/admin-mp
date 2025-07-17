@@ -2,7 +2,6 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import type { ColumnsType } from 'antd/es/table';
 
 // 商家分类数据接口
 export interface Merchant {
