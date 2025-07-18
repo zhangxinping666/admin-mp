@@ -7,6 +7,7 @@
 export {}
 declare global {
   const ADD_TITLE: typeof import('../src/utils/config')['ADD_TITLE']
+  const AmountRange: typeof import('../src/components/AmountRange/index')['default']
   const ApiPageSelect: typeof import('../src/components/Selects/ApiPageSelect')['default']
   const ApiSelect: typeof import('../src/components/Selects/index')['ApiSelect']
   const ApiTreeSelect: typeof import('../src/components/Selects/index')['ApiTreeSelect']
@@ -141,7 +142,7 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { ApiPageSelectProps, ThemeType, TabsData, FC, BusinessComponents, RangeValue, SearchModalProps, Langs, InitTableState, TableAction, EditorProps, FormData, FormList, SearchList, Men } from './autoImports.d'
+  export type { ApiPageSelectProps, ThemeType, TabsData, FC, BusinessComponents, RangeValue, SearchModalProps, Langs, InitTableState, TableAction, EditorProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'
@@ -149,4 +150,7 @@ declare global {
   // @ts-ignore
   export type { ArrayData, EmptyData, PageServerResult, PaginationData, SideMenu, MenuResult, PagePermission, ColumnsEnum, TableColumn, BaseTableProps, TableOptions } from './public'
   import('./public')
+  // @ts-ignore
+  export type { FlowQueryParams, FlowListParams, FlowRecord, FlowListResponse } from './trade-blotter'
+  import('./trade-blotter')
 }

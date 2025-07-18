@@ -23,6 +23,7 @@ import {
 import { BaseSelect, BaseTreeSelect, ApiSelect, ApiTreeSelect } from '@/components/Selects';
 import BaseTransfer from '@/components/Transfer/BaseTransfer';
 import PasswordStrength from '@/components/PasswordStrength';
+import AmountRangeInput from '@/components/AmountRange';
 
 const componentMap = new Map();
 
@@ -48,6 +49,7 @@ componentMap.set('TimePicker', BaseTimePicker);
 componentMap.set('TimeRangePicker', BaseTimeRangePicker);
 componentMap.set('ApiSelect', ApiSelect);
 componentMap.set('ApiTreeSelect', ApiTreeSelect);
+componentMap.set('AmountRangeInput', AmountRangeInput);
 componentMap.set('PasswordStrength', PasswordStrength);
 
 // 业务组件注入
@@ -55,9 +57,12 @@ CreateBusiness();
 
 /**
  * 获取组件
+ * @param t - 国际化函数
  * @param item - 表单项
+ * @param onPressEnter - 回车事件
+ * @param form - 表单实例
  */
-export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () => void) {
+export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () => void, form?: any) {
   const { component, componentProps } = item;
 
   // 输入框渲染
@@ -80,9 +85,14 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
   // 获取组件失败直接返回空标签
   if (!Comp) return renderInput;
 
+  // 处理componentProps为函数的情况
+  const props = typeof componentProps === 'function' 
+    ? componentProps(form) 
+    : componentProps;
+
   return (
     <>
-      <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      <Comp {...initCompProps(t, component, onPressEnter)} {...props} />
     </>
   );
 }

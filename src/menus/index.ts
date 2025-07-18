@@ -15,5 +15,12 @@ export const defaultMenus: SideMenu[] = [
     key: '/dashboard',
     rule: '/dashboard',
   },
+  {
+    label: '交易流水管理',
+    labelEn: 'Trade Blotter',
+    icon: 'mdi:chart-line',
+    key: '/trade-blotter',
+    rule: '/trade-blotter',
+  },
   ...(demo as SideMenu[]),
 ];
