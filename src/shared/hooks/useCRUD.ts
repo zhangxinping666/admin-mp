@@ -127,6 +127,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           // 本地新增
           const newId = getNextId();
           const newItem = { ...values, id: newId } as T;
+          console.log(newItem);
           if (optionRender) {
             (newItem as any).action = optionRender(newItem, {
               handleEdit: (record) => handleEdit('编辑', record),

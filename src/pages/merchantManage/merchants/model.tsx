@@ -2,12 +2,56 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { message, Modal} from 'antd';
+import {  useState } from 'react';
 
+// 添加图片预览组件
+
+const ImagePreview = ({ imgUrl }: { imgUrl: string | string[] }) => {
+  const [visible, setVisible] = useState(false);
+
+  // 处理数组格式的图片地址或 base64 数据
+  const displayUrl = Array.isArray(imgUrl) ? imgUrl[0] : imgUrl;
+
+
+  // 处理可能的 base64 数据
+  const processedUrl = displayUrl  ? displayUrl : displayUrl;
+
+  return (
+    <>
+      {processedUrl ? (
+        <>
+          <img
+            src={processedUrl}
+            alt="商家图片"
+            style={{
+              width: '60px',
+              height: '60px',
+              objectFit: 'cover',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            onClick={() => setVisible(true)}
+          />
+          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
+            <img
+              src={processedUrl}
+              alt="商家图片预览"
+              style={{ width: '100%', height: 'auto' }}
+            />
+          </Modal>
+        </>
+      ) : (
+        '无图片'
+      )}
+    </>
+  );
+};
 // 商家分类数据接口
 export interface Merchant {
   id: number;
   merchantName: string;
-  merchantImg: File | string;
+  merchantImg: string[];
   schoolId: number;
   city: string;
   status: number;
@@ -101,6 +145,9 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'merchantImg',
     key: 'merchantImg',
     width: 100,
+    render: (imgUrl: string) => {
+      return <ImagePreview imgUrl={imgUrl} />;
+    },
   },
   {
     title: '学校ID',
@@ -179,13 +226,35 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '商家图片',
-    name: 'merchantImg',
-    rules: FORM_REQUIRED,
+    name: 'merchantImg', // 修改为与接口匹配的名称
+
     component: 'Upload',
     componentProps: {
-      listType: 'picture-card',
+      accept: 'image/png, image/jpeg, image/jpg',
+      listType: 'picture-card', // 添加图片卡片样式
+      beforeUpload: (file: File) => {
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+          message.error('图片大小不能超过2MB!');
+          return false;
+        }
+        return true;
+      },
+      customRequest: (options: any) => {
+        const { file, onSuccess, onError } = options;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          setTimeout(() => {
+            onSuccess({ url: reader.result });
+          }, 500);
+        };
+        reader.onerror = () => {
+          onError(new Error('读取文件失败'));
+        };
+      },
       maxCount: 1,
-      accept: 'image/*',
     },
   },
   {

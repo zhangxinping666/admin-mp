@@ -4,7 +4,7 @@ import { searchList, tableColumns, formList, type Merchant } from './model';
 // 初始化新增数据
 const initCreate: Partial<Merchant> = {
   merchantName: '',
-  merchantImg: undefined,
+  merchantImg: [], // 初始化为空数组
   schoolId: 0,
   city: '',
   status: 1,
@@ -12,7 +12,7 @@ const initCreate: Partial<Merchant> = {
   address: '',
   longitude: 0,
   latitude: 0,
-  isDormStore: false,
+  isDormStore: false, // 保持布尔类型
   categoryId: 0,
   storeRecommend: 0,
 };
@@ -22,7 +22,9 @@ const mockData: Merchant[] = [
   {
     id: 1,
     merchantName: '麦当劳(清华店)',
-    merchantImg: new File([], 'mcdonalds.jpg', { type: 'image/jpeg' }),
+    merchantImg: [
+      'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
+    ],
     schoolId: 1001,
     city: '北京',
     status: 1,
@@ -39,7 +41,9 @@ const mockData: Merchant[] = [
   {
     id: 2,
     merchantName: '星巴克(北大店)',
-    merchantImg: new File([], 'starbucks.jpg', { type: 'image/jpeg' }),
+    merchantImg: [
+      'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
+    ],
     schoolId: 1002,
     city: '北京',
     status: 1,
@@ -56,7 +60,9 @@ const mockData: Merchant[] = [
   {
     id: 3,
     merchantName: '便民超市',
-    merchantImg: new File([], 'supermarket.jpg', { type: 'image/jpeg' }),
+    merchantImg: [
+      'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
+    ],
     schoolId: 1001,
     city: '北京',
     status: 0,
@@ -72,7 +78,8 @@ const mockData: Merchant[] = [
   },
 ];
 
-const MerchantSortPage = () => {
+const MerchantsPage = () => {
+
   const optionRender = (
     record: Merchant,
     actions: {
@@ -83,7 +90,7 @@ const MerchantSortPage = () => {
 
   return (
     <CRUDPageTemplate
-      title="商家分类"
+      title="商家管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
@@ -94,4 +101,4 @@ const MerchantSortPage = () => {
   );
 };
 
-export default MerchantSortPage;
+export default MerchantsPage;

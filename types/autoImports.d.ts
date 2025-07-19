@@ -148,6 +148,7 @@ declare global {
   const useUserStore: typeof import('../src/stores/user')['useUserStore']
   const useVirtual: typeof import('../src/components/Table/hooks/useVirtual')['default']
   const useWatermark: typeof import('../src/hooks/useWatermark')['useWatermark']
+  const validateUploadFile: typeof import('../src/components/Form/utils/helper')['validateUploadFile']
 }
 // for type re-export
 declare global {

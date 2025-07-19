@@ -37,7 +37,7 @@ function PasswordStrength(props: InputProps) {
     <>
       <Input.Password
         value={value}
-        allowClear={true}
+        visibilityToggle={true}
         placeholder={t('public.inputPleaseEnter')}
         autoComplete="password"
         {...props}
