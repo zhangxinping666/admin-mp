@@ -5,7 +5,6 @@ import type { TFunction } from 'i18next';
  */
 export const TITLE_SUFFIX = (t: TFunction) => t('public.currentName'); // 标题后缀
 export const WATERMARK_PREFIX = 'admin'; // 水印前缀
-export const TOKEN = 'admin_token'; // token名称
 export const LANG = 'lang'; // 语言
 export const VERSION = 'admin_version'; // 版本
 export const EMPTY_VALUE = '-'; // 空值显示

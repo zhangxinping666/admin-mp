@@ -3,7 +3,7 @@ import type { MenuProps } from 'antd';
 import { useMemo, useRef } from 'react';
 import { useAliveController } from 'react-activation';
 import { useNavigate } from 'react-router-dom';
-import { useToken } from '@/hooks/useToken';
+import { clearTokens } from '@/stores/token';
 import { App, Dropdown } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/hooks/useCommonStore';
@@ -18,7 +18,6 @@ import {
 import Avatar from '@/assets/images/avatar.png';
 import styles from '../index.module.less';
 import Fullscreen from '@/components/Fullscreen';
-import GlobalSearch from '@/components/GlobalSearch';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
 import UpdatePassword from './UpdatePassword';
@@ -27,7 +26,6 @@ import Nav from './Nav';
 type MenuKey = 'password' | 'logout';
 
 function Header() {
-  const [, , removeToken] = useToken();
   const { t } = useTranslation();
   const { clear } = useAliveController();
   const { modal } = App.useApp();
@@ -79,7 +77,7 @@ function Header() {
         clearInfo();
         closeAllTab();
         setActiveKey('');
-        removeToken();
+        clearTokens();
         clear(); // 清除keepalive缓存
         navigate('/login');
       },
@@ -91,7 +89,6 @@ function Header() {
     return useMemo(
       () => (
         <div className="flex items-center">
-          <GlobalSearch />
           <Fullscreen />
           <I18n />
           <Theme />
@@ -107,9 +104,7 @@ function Header() {
                 alt="Avatar"
                 className="rounded-1/2 overflow-hidden object-cover bg-light-500"
               />
-              <span className="ml-2 text-15px min-w-50px truncate">
-                {username || 'admin'}
-              </span>
+              <span className="ml-2 text-15px min-w-50px truncate">{username || 'admin'}</span>
             </div>
           </Dropdown>
         </div>
