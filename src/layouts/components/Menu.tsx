@@ -111,6 +111,7 @@ function LayoutMenu() {
 
   const onClickMenu: MenuProps['onClick'] = (e) => {
     const menuItem = getMenuByKey(menuList, e.key);
+    console.log('点击的菜单路径:', menuItem?.route_path); // 添加这行
 
     if (!menuItem || !menuItem.route_path) {
       console.warn('未找到匹配的菜单项或该项无 route_path:', e.key);

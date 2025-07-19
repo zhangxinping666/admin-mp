@@ -1,5 +1,4 @@
-import { Button } from 'antd';
-import { DeleteBtn } from '@/components/Buttons';
+import { DeleteBtn, BaseBtn } from '@/components/Buttons';
 import type { BaseEntity } from '../types/common';
 
 interface TableActionsProps<T extends BaseEntity> {
@@ -18,9 +17,7 @@ export const TableActions = <T extends BaseEntity>({
   deleteText,
 }: TableActionsProps<T>) => (
   <>
-    <Button type="link" onClick={() => onEdit(record)}>
-      {editText}
-    </Button>
+    <BaseBtn onClick={() => onEdit(record)}>{editText}</BaseBtn>
     <DeleteBtn handleDelete={() => onDelete(record.id)} name={deleteText} />
   </>
 );

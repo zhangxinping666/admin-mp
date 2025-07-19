@@ -28,6 +28,10 @@ export function handleRoutes(
   const layouts: RouteObject[] = []; // layout内部组件
 
   for (const key in routes) {
+    // 添加日志检查商户管理相关路由
+    if (key.includes('merchantManage')) {
+      console.log('发现商户管理路由:', key);
+    }
     // 是否在排除名单中
     const isExclude = handleRouterExclude(key);
     if (isExclude) continue;
@@ -38,6 +42,9 @@ export function handleRoutes(
     const ComponentNode = loadable(routes[key], {
       fallback: <Skeleton active className="p-30px" paragraph={{ rows: 10 }} />,
     });
+
+    // 添加日志检查组件是否成功加载
+    console.log('加载的组件:', key, ComponentNode);
 
     layouts.push({
       path,

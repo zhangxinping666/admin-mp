@@ -101,7 +101,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   return (
     <>
       {contextHolder}
-      <BaseContent>
+      <BaseContent isPermission={true}>
         {/* 搜索区域 */}
         <BaseCard>
           <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
@@ -112,6 +112,9 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           <BaseTable
             isLoading={isLoading}
             columns={finalColumns as TableColumnsType}
+            getPage={() => {
+              console.log('getPage called');
+            }}
             dataSource={tableData}
             rowKey="id"
             pagination={false}
