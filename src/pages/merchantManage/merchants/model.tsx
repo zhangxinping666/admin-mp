@@ -7,7 +7,17 @@ import {  useState } from 'react';
 
 // 添加图片预览组件
 
-const ImagePreview = ({ imgUrl }: { imgUrl: string | string[] }) => {
+type uploadImg={
+  uid:string,
+  name:string,
+  status:string,
+  url:string,
+  response?:{
+    url:string
+  }
+}
+
+const ImagePreview = ({ imgUrl }: { imgUrl: uploadImg[] }) => {
   const [visible, setVisible] = useState(false);
 
   // 处理数组格式的图片地址或 base64 数据
@@ -15,7 +25,9 @@ const ImagePreview = ({ imgUrl }: { imgUrl: string | string[] }) => {
 
 
   // 处理可能的 base64 数据
-  const processedUrl = displayUrl  ? displayUrl : displayUrl;
+  const processedUrl = displayUrl.url || displayUrl.response?.url;
+  console.log('processedUrl',processedUrl);
+  console.log('displayUrl',displayUrl);
 
   return (
     <>
@@ -51,7 +63,7 @@ const ImagePreview = ({ imgUrl }: { imgUrl: string | string[] }) => {
 export interface Merchant {
   id: number;
   merchantName: string;
-  merchantImg: string[];
+  merchantImg: object[];
   schoolId: number;
   city: string;
   status: number;
@@ -145,7 +157,7 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'merchantImg',
     key: 'merchantImg',
     width: 100,
-    render: (imgUrl: string) => {
+    render: (imgUrl: uploadImg[]) => {
       return <ImagePreview imgUrl={imgUrl} />;
     },
   },

@@ -22,9 +22,12 @@ const mockData: Merchant[] = [
   {
     id: 1,
     merchantName: '麦当劳(清华店)',
-    merchantImg: [
-      'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-    ],
+    merchantImg: [{
+      uid:'1',
+      name:'麦当劳(清华店)',
+      status:'done',
+      url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3'
+    }],
     schoolId: 1001,
     city: '北京',
     status: 1,
@@ -41,9 +44,12 @@ const mockData: Merchant[] = [
   {
     id: 2,
     merchantName: '星巴克(北大店)',
-    merchantImg: [
-      'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-    ],
+    merchantImg: [{
+      uid:'2',
+      name:'星巴克(北大店)',
+      status:'done',
+      url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3'
+    }],
     schoolId: 1002,
     city: '北京',
     status: 1,
@@ -60,8 +66,13 @@ const mockData: Merchant[] = [
   {
     id: 3,
     merchantName: '便民超市',
-    merchantImg: [
-      'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
+    merchantImg: [{
+      uid:'3',
+      name:'便民超市',
+      status:'done',
+      url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3'
+    }
+     
     ],
     schoolId: 1001,
     city: '北京',
