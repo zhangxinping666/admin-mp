@@ -1,11 +1,10 @@
-import { useToken } from '@/hooks/useToken';
+import { getAccessToken } from '@/stores/token';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useOutlet, useLocation } from 'react-router-dom';
 import { Skeleton, message } from 'antd';
 import { Icon } from '@iconify/react';
 import { debounce } from 'lodash';
 import { versionCheck } from './utils/helper';
-import { getMenuList } from '@/servers/system/menu';
 import { useMenuStore, useUserStore } from '@/stores';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import KeepAlive from 'react-activation';
@@ -15,12 +14,12 @@ import Tabs from './components/Tabs';
 import Forbidden from '@/pages/403';
 import styles from './index.module.less';
 import { getUserInfoServe } from '@/servers/login';
+import { getPermissions } from '@/servers/login';
 
 function Layout() {
-  const [getToken] = useToken();
   const { pathname, search } = useLocation();
   const uri = pathname + search;
-  const token = getToken();
+  const token = getAccessToken();
   const outlet = useOutlet();
   const [isLoading, setLoading] = useState(true);
   const [messageApi, contextHolder] = message.useMessage();
@@ -29,48 +28,44 @@ function Layout() {
 
   const { permissions, userId, isMaximize, isCollapsed, isPhone, isRefresh } = useCommonStore();
 
-  /** 获取用户信息和权限 */
-  const getUserInfo = useCallback(async () => {
+  /** 获取用户信息（仅在必要时获取权限和菜单数据） */
+  const initializeUserData = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await getUserInfoServe();
-      const { user, permissions } = data;
-      setUserInfo(user);
-      setPermissions(permissions);
+
+      // 获取用户信息
+      const { data: userInfo } = await getUserInfoServe();
+      setUserInfo(userInfo.data);
+
+      // 只有在权限为空时才获取权限和菜单信息，避免与Guards.tsx冲突
+      if (permissions.length === 0) {
+        console.log('Layout检测到权限为空，获取权限和菜单信息');
+        const permissionsResponse = await getPermissions({ role: 'admin' });
+        console.log('Layout中获取权限和菜单信息:', permissionsResponse);
+        const { perms, menus } = permissionsResponse.data;
+
+        // 设置权限和菜单
+        setPermissions(perms || []);
+        setMenuList(menus || []);
+      } else {
+        console.log('Layout检测到权限已存在，跳过权限获取，避免与Guards.tsx冲突');
+      }
     } catch (err) {
       console.error('获取用户数据失败:', err);
-      setPermissions([]);
+      // 发生错误时不清空权限，避免影响已登录用户
+      console.warn('保持现有权限状态，避免清空已有权限');
     } finally {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /** 获取菜单数据 */
-  const getMenuData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const { data } = await getMenuList();
-      setMenuList(data.menu || []);
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [permissions.length]);
 
   useEffect(() => {
     // 当用户信息缓存不存在时则重新获取
     if (token && !userId) {
-      getUserInfo();
-      getMenuData();
+      initializeUserData();
     }
-  }, [getUserInfo, getMenuData, token, userId]);
-
-  // 监测是否需要刷新
-  useEffect(() => {
-    versionCheck(messageApi);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [initializeUserData, token, userId]);
 
   /** 判断是否是手机端 */
   const handleIsPhone = debounce(() => {

@@ -1,32 +1,31 @@
 import type { LoginData } from './model';
 import type { FormProps } from 'antd';
 import { Checkbox, message, Form, Button, Input } from 'antd';
-import { getUserInfoServe, login } from '@/servers/login';
 import { setTitle } from '@/utils/helper';
-import { getMenuList } from '@/servers/system/menu';
-import { encryption, decryption } from '@manpao/utils';
-import { getFirstMenu } from '@/menus/utils/helper';
 import Logo from '@/assets/images/logo.png';
-
+import { useCommonStore } from '@/hooks/useCommonStore';
+import { useMenuStore } from '@/stores/menu';
 const CHECK_REMEMBER = 'remember-me';
-const USER_USERNAME = 'login-username';
-const USER_PASSWORD = 'login-password';
+import { encryption } from '@manpao/utils';
+import { getUserInfoServe, login, getPermissions } from '@/servers/login';
 
+import { getFirstMenu } from '@/menus/utils/helper';
+import { setAccessToken, setRefreshToken } from '@/stores/token';
 function Login() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [getToken, setToken] = useToken();
   const [isLoading, setLoading] = useState(false);
-  const [isRemember, setRemember] = useState(true);
+  const [isRemember, setRemember] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const { search } = useLocation();
-  const { permissions, menuList } = useCommonStore();
+  const { clearLoginInfo, saveLoginInfo } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
   const setThemeValue = usePublicStore((state) => state.setThemeValue);
   const { setPermissions, setUserInfo } = useUserStore((state) => state);
   const themeCache = (localStorage.getItem(THEME_KEY) ?? 'light') as ThemeType;
 
+  //主题色挂载
   useEffect(() => {
     if (!themeCache) {
       localStorage.setItem(THEME_KEY, 'light');
@@ -35,103 +34,85 @@ function Login() {
       document.body.className = 'theme-dark';
     }
     setThemeValue(themeCache === 'dark' ? 'dark' : 'light');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [themeCache]);
 
+  // 初始化记住我状态
   useEffect(() => {
-    // 如果存在token，则直接进入页面
-    if (getToken()) {
-      // 如果不存在缓存则获取权限
-      if (!permissions.length) {
-        getUserPermissions();
-      } else {
-        // 有权限则直接跳转
-        handleGoMenu(permissions);
-      }
+    const rememberStatus = localStorage.getItem(CHECK_REMEMBER);
+    if (rememberStatus !== null) {
+      setRemember(rememberStatus === 'true');
     }
-
-    // 如果存在记住我缓存
-    const remember = localStorage.getItem(CHECK_REMEMBER);
-    setRemember(remember !== 'false');
-
-    // 如果存在账号密码缓存，则自动填充
-    const username = localStorage.getItem(USER_USERNAME);
-    const password = localStorage.getItem(USER_PASSWORD);
-    if (username && password) {
-      const newPassword = decryption(password);
-      form.setFieldsValue({ username, password: newPassword.value });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 语言切换修改title
   useEffect(() => {
     setTitle(t, t('login.login'));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i18n.language]);
-
-  /** 获取用户权限 */
-  const getUserPermissions = async () => {
-    try {
-      setLoading(true);
-      const { data } = await getUserInfoServe();
-      const { user, permissions } = data;
-      setUserInfo(user);
-      setPermissions(permissions);
-      handleGoMenu(permissions);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /** 获取菜单数据 */
-  const getMenuData = async () => {
-    if (menuList?.length) return menuList;
-    let result: SideMenu[] = [];
-
-    try {
-      setLoading(true);
-      const { data } = await getMenuList();
-      setMenuList(data.menu || []);
-      result = data.menu;
-    } finally {
-      setLoading(false);
-    }
-
-    return result;
-  };
 
   /** 获取重定向路由 */
   const getRedirectUrl = () => {
-    const key = '?redirect=';
-    const start = search.includes(key) ? search.indexOf(key) + 10 : 0;
-    const end = search.includes('&') ? search.indexOf('&') : search.length;
+    if (!search || !search.includes('?redirect=')) {
+      return '';
+    }
 
-    return search.substring(start, end);
+    const urlParams = new URLSearchParams(search);
+    return urlParams.get('redirect') || '';
   };
 
   /** 菜单跳转 */
-  const handleGoMenu = async (permissions: string[]) => {
-    let menuData: SideMenu[] = menuList;
-    if (!menuData?.length) {
-      menuData = (await getMenuData()) as SideMenu[];
-    }
-
-    // 如果存在重定向
+  const handleGoMenu = async (menus: SideMenu[], userPermissions: string[]) => {
+    // 检查是否有重定向URL
     if (search?.includes('?redirect=')) {
-      const url = getRedirectUrl();
-      if (url) {
-        navigate(url);
-        return;
+      const redirectUrl = getRedirectUrl();
+      if (redirectUrl) {
+        // 验证重定向URL是否有权限访问
+        const hasRedirectPermission = userPermissions.includes(redirectUrl);
+        if (hasRedirectPermission) {
+          navigate(redirectUrl, { replace: true });
+          return;
+        }
       }
     }
 
-    // 有权限则直接跳转
-    const firstMenu = getFirstMenu(menuData, permissions);
+    // 获取第一个有权限的菜单
+    const firstMenu = getFirstMenu(menus, userPermissions);
     if (!firstMenu) {
       return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
     }
-    navigate(firstMenu);
+    navigate(firstMenu, { replace: true });
+  };
+
+  //获取用户信息
+  const getUserInfo = async () => {
+    try {
+      setLoading(true);
+      // 获取用户信息 - data 字段直接是 UserInfo 对象
+      const { data: user } = await getUserInfoServe();
+      // 获取权限信息 - data 字段直接是 PermissionsData 对象
+      setUserInfo(user);
+      return { user };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //获取用户权限
+  const getUserPermissions = async () => {
+    try {
+      setLoading(true);
+      // 获取权限信息 - data 字段直接是 PermissionsData 对象
+      const permissionsResponse = await getPermissions({ role: 'admin' });
+      const { menus, perms } = permissionsResponse.data;
+      setMenuList(menus);
+      // 转换后端菜单数据格式
+
+      // 如果后端没有返回perms或perms为空，从菜单中提取权限
+      let finalPermissions = perms;
+      setPermissions(finalPermissions);
+      return { menus: menus, perms: finalPermissions };
+    } finally {
+      setLoading(false);
+    }
   };
 
   /**
@@ -141,20 +122,29 @@ function Login() {
   const handleFinish: FormProps['onFinish'] = async (values: LoginData) => {
     try {
       setLoading(true);
-      const { data } = await login(values);
-      const { token } = data;
-      const { data: userInfo } = await getUserInfoServe();
-      const { user, permissions } = userInfo;
-      // 处理记住我逻辑
+      const loginResponse = await login(values);
+      saveLoginInfo(values.account, values.password);
+      const loginResult = loginResponse.data;
+      // 从 LoginResult 对象中，访问其内部的 data 属性，再获取 token
+      const refresh_token = loginResult.refresh_token;
+      const access_token = loginResult.access_token;
+      setAccessToken(access_token);
+      setRefreshToken(refresh_token);
+
+      // 获取用户信息 - data 字段直接是 UserInfo 对象
+      const user = await getUserInfo();
+      console.log('用户信息数据:', user);
+      // 获取权限信息 - data 字段直接是 PermissionsData 对象
+      const { menus, perms } = await getUserPermissions();
+
+      // 处理记住我逻辑 - 在登录成功后保存账号密码
       const passwordObj = { value: values.password, expire: 0 };
-      handleRemember(values.username, encryption(passwordObj));
-      if (!permissions?.length || !token) {
+      handleRemember(values.account, encryption(passwordObj));
+
+      if (!perms || !refresh_token) {
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
       }
-      setToken(token);
-      setUserInfo(user);
-      setPermissions(permissions);
-      await handleGoMenu(permissions);
+      await handleGoMenu(menus, perms);
     } finally {
       setLoading(false);
     }
@@ -170,20 +160,19 @@ function Login() {
 
   /** 点击记住我 */
   const onRemember = () => {
-    setRemember(!isRemember);
-    localStorage.setItem(CHECK_REMEMBER, isRemember ? 'false' : 'true');
+    const newRememberState = !isRemember;
+    setRemember(newRememberState);
+    localStorage.setItem(CHECK_REMEMBER, newRememberState ? 'true' : 'false');
   };
 
   /**
    * 记住我逻辑
    */
-  const handleRemember = (username: string, password: string) => {
+  const handleRemember = (account: string, password: string) => {
     if (isRemember) {
-      localStorage.setItem(USER_USERNAME, username);
-      localStorage.setItem(USER_PASSWORD, password);
+      saveLoginInfo(account, password);
     } else {
-      localStorage.removeItem(USER_USERNAME);
-      localStorage.removeItem(USER_PASSWORD);
+      clearLoginInfo();
     }
   };
 
@@ -234,14 +223,14 @@ function Login() {
             onFinish={handleFinish}
             onFinishFailed={handleFinishFailed}
             initialValues={{
-              username: 'admin',
-              password: 'admin123456',
+              account: 'admin',
+              password: 'admin111',
             }}
           >
             <div className="text-#AAA6A6 text-14px mb-8px">{t('login.username')}</div>
 
             <Form.Item
-              name="username"
+              name="account"
               className="!mb-15px"
               rules={[
                 { required: true, message: t('public.pleaseEnter', { name: t('login.username') }) },
@@ -249,7 +238,7 @@ function Login() {
             >
               <Input
                 allow-clear="true"
-                placeholder={t('public.pleaseEnter', { name: t('login.username') })}
+                placeholder={t('public.pleaseEnter', { name: t('login.account') })}
                 autoComplete="username"
               />
             </Form.Item>
@@ -265,6 +254,7 @@ function Login() {
               ]}
             >
               <Input.Password
+                name="password"
                 placeholder={t('public.pleaseEnter', { name: t('login.password') })}
                 autoComplete="current-password"
               />
@@ -281,7 +271,7 @@ function Login() {
           </Form>
 
           <div className="flex justify-between items-center mb-5px px-1px">
-            <Checkbox checked={isRemember} onChange={onRemember}>
+            <Checkbox name="remember" checked={isRemember} onChange={onRemember}>
               {t('login.rememberMe')}
             </Checkbox>
 

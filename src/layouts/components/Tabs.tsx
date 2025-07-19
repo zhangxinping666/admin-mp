@@ -49,28 +49,32 @@ function LayoutTabs() {
    */
   const handleAddTab = useCallback(
     (path = uri) => {
-      // 当值为空时匹配路由
-      if (permissions.length > 0) {
-        if (path === '/') return;
-        const menuByKeyProps = {
-          menus: menuList,
-          permissions,
-          key: path,
-        };
-        const newItems = getMenuByKey(menuByKeyProps);
-        if (newItems?.key) {
-          setActiveKey(newItems.key);
-          setNav(newItems.nav);
-          addTabs(newItems);
-          // 初始化Tabs时，更新文案语言类型
-          setChangeLang(true);
-        } else {
-          setActiveKey(path);
-        }
+      // 1. 前置条件检查：确保有权限和菜单数据，并且路径不是根路径
+      if (permissions.length === 0 || menuList.length === 0 || path === '/') {
+        return;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+
+      // 2. 【核心修改】直接在【原始的、扁平的】menuList 数组上使用 .find() 方法
+      //    根据传入的路径(path)来查找匹配的菜单项
+      const foundMenuItem = menuList.find((menu) => menu.route_path === path);
+
+      // 3. 根据查找结果更新 Tabs 状态
+      if (foundMenuItem) {
+        // 如果找到了匹配的菜单项
+        // antd Tabs 的 activeKey 通常是 string 类型
+        setActiveKey(String(foundMenuItem.key));
+
+        setChangeLang(true);
+      } else {
+        // 如果在菜单列表中找不到匹配项（例如，一个非菜单页面，或者通过url直接访问的详情页）
+        // 我们可以设置一个默认行为，比如仅激活tab的key为当前路径
+        setActiveKey(path);
+        console.warn(`在菜单列表中未找到路径: ${path}，可能是一个非菜单页面。`);
+      }
     },
-    [permissions, menuList],
+    // 4. 【重要修正】将所有外部依赖项添加到 useCallback 的依赖数组中
+    //    这对于避免 React Hook 的 stale closure (闭包陈旧) 问题至关重要
+    [uri, permissions, menuList, setActiveKey, setNav, addTabs, setChangeLang],
   );
 
   useEffect(() => {
@@ -158,11 +162,6 @@ function LayoutTabs() {
         permissions,
         key,
       };
-      const newItems = getMenuByKey(menuByKeyProps);
-      if (newItems?.key) {
-        navigate(key);
-        setNav(newItems.nav);
-      }
     }
   };
 

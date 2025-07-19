@@ -23,14 +23,15 @@ export interface PaginationData {
 
 // 侧边菜单
 export interface SideMenu extends Omit<ItemType, 'children' | 'label' | 'icon'> {
-  label: string;
-  labelZh?: string;
-  labelEn: string;
-  key: string;
-  icon?: React.ReactNode | string;
-  rule?: string; // 路由权限
-  nav?: string[]; // 面包屑路径
+  key: number;
+  pid: number;
   children?: SideMenu[];
+  label: string;
+  icon?: string | React.ReactNode;
+  route_path: string;
+  component_path: string;
+  sort: number;
+  permission?: string;
 }
 
 export interface MenuResult {

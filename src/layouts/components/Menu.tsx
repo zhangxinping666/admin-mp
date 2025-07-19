@@ -1,69 +1,99 @@
 import type { MenuProps } from 'antd';
 import type { SideMenu } from '#/public';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+
+type MenuItem = Required<MenuProps>['items'][number];
+import { useCallback, useEffect, useMemo, useState, startTransition } from 'react';
 import { Menu } from 'antd';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMenuStore } from '@/stores';
-import {
-  filterMenus,
-  getFirstMenu,
-  getOpenMenuByRouter,
-  handleFilterMenus,
-  splitPath,
-} from '@/menus/utils/helper';
+import { getFirstMenu, getOpenMenuByRouter, splitPath, filterMenus } from '@/menus/utils/helper';
+import { buildMenuTree } from '@/menus/utils/menuTree';
 import styles from '../index.module.less';
 import Logo from '@/assets/images/logo.png';
+import { getMenuByKey } from '@/menus/utils/helper';
 
 function LayoutMenu() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { pathname } = useLocation();
-  const [menus, setMenus] = useState<SideMenu[]>([]);
-  // 获取当前语言
-  const currentLanguage = i18n.language;
+  const [antdMenuItems, setAntdMenuItems] = useState<MenuItem[]>([]);
 
   const { isMaximize, isCollapsed, isPhone, openKeys, selectedKeys, permissions, menuList } =
     useCommonStore();
+  const { setOpenKeys } = useMenuStore((state) => state);
+  const { setSelectedKeys } = useMenuStore((state) => state);
   const { toggleCollapsed } = useMenuStore((state) => state);
-  const [currentOpenKeys, setCurrentOpenKeys] = useState(openKeys || []);
-  const [currentSelectedKeys, setCurrentSelectedKeys] = useState(
-    selectedKeys ? [selectedKeys] : [],
-  );
-
-  // 处理默认展开
+  // 处理菜单数据
   useEffect(() => {
-    const newOpenKey = getOpenMenuByRouter(pathname);
-    setCurrentOpenKeys(newOpenKey);
-    setCurrentSelectedKeys([pathname]);
-  }, [pathname]);
+    if (menuList.length > 0 && permissions.length > 0) {
+      // 先根据权限过滤菜单
+      const filteredMenus = filterMenus(menuList, permissions);
+      // 然后处理菜单图标
+      const menuListWithIcons = processMenuIcons(filteredMenus);
+      // 最后转换为antd菜单格式
+      const menuItems = buildMenuTree(menuListWithIcons);
+
+      setAntdMenuItems(menuItems);
+    } else {
+      setAntdMenuItems([]);
+    }
+  }, [menuList, permissions]);
+
+  useEffect(() => {
+    const currentPath = location.pathname;
+    // 递归函数，在menuList中查找与当前路径匹配的菜单项
+    const findMenuByPath = (menus: SideMenu[], targetPath: string): SideMenu | null => {
+      for (const menu of menus) {
+        if (menu.route_path === targetPath) {
+          return menu;
+        }
+        if (menu.children?.length) {
+          const found = findMenuByPath(menu.children, targetPath);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const menuItem = findMenuByPath(menuList, currentPath);
+    if (menuItem) {
+      setSelectedKeys([String(menuItem.key)]);
+    }
+
+    // 智能设置展开的菜单项：只在必要时更新openKeys
+    const newOpenKeys = getOpenMenuByRouter(currentPath);
+
+    // 检查当前路径是否需要展开新的菜单项
+    const needsNewOpenKeys = newOpenKeys.some((key) => !openKeys.includes(key));
+
+    if (needsNewOpenKeys) {
+      // 合并现有的展开状态和新需要展开的菜单项
+      const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
+      setOpenKeys(mergedOpenKeys);
+    }
+  }, [location.pathname, menuList, openKeys]);
 
   /**
-   * 转换菜单icon格式
-   * @param menus - 菜单
+   * 处理菜单图标
+   * @param menus - 菜单数组
    */
-  const filterMenuIcon = useCallback((menus: SideMenu[]) => {
-    for (let i = 0; i < menus.length; i++) {
-      if (menus[i]?.icon) {
-        menus[i].icon = <Icon icon={menus[i].icon as string} />;
+  const processMenuIcons = useCallback((menus: SideMenu[]): SideMenu[] => {
+    return menus.map((menu) => {
+      const processedMenu = { ...menu };
+      // 处理图标
+      if (processedMenu.icon && typeof processedMenu.icon === 'string') {
+        processedMenu.icon = <Icon icon={processedMenu.icon} />;
       }
-
-      if (menus[i]?.children?.length) {
-        filterMenuIcon(menus[i].children as SideMenu[]);
+      // 递归处理子菜单
+      if (processedMenu.children?.length) {
+        processedMenu.children = processMenuIcons(processedMenu.children);
       }
-    }
+      return processedMenu;
+    });
   }, []);
-
-  // 过滤没权限菜单
-  useEffect(() => {
-    if (permissions.length > 0) {
-      const newMenus = filterMenus(menuList, permissions);
-      filterMenuIcon(newMenus);
-      setMenus(newMenus || []);
-    }
-  }, [filterMenuIcon, permissions, currentLanguage, menuList]);
 
   /**
    * 处理跳转
@@ -77,64 +107,47 @@ function LayoutMenu() {
    * 点击菜单
    * @param e - 菜单事件
    */
+  // 假设 finalMenuItems 是您传递给 <Menu> items 属性的那个【树形数组】
+
   const onClickMenu: MenuProps['onClick'] = (e) => {
-    // 如果点击的菜单是当前菜单则退出
-    if (e.key === pathname) return;
+    const menuItem = getMenuByKey(menuList, e.key);
 
-    setCurrentSelectedKeys([e.key]);
-    if (isPhone) hiddenMenu();
-
-    goPath(e.key);
-  };
-
-  /**
-   * 对比当前展开目录是否是同一层级
-   * @param arr - 当前展开目录
-   * @param lastArr - 最后展开的目录
-   */
-  const diffOpenMenu = (arr: string[], lastArr: string[]) => {
-    let result = true;
-
-    for (let j = 0; j < arr.length; j++) {
-      if (arr[j] !== lastArr[j]) {
-        result = false;
-        break;
-      }
+    if (!menuItem || !menuItem.route_path) {
+      console.warn('未找到匹配的菜单项或该项无 route_path:', e.key);
+      return;
     }
 
-    return result;
+    if (menuItem.route_path === pathname) {
+      return;
+    }
+
+    // 在跳转前，保存当前的展开状态并计算新的展开状态
+    const targetPath = menuItem.route_path;
+    const newOpenKeys = getOpenMenuByRouter(targetPath);
+
+    // 合并当前展开的菜单和新路径需要展开的菜单
+    const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
+
+    goPath(targetPath);
+    // 点击菜单时设置选中的key，确保类型一致
+    setSelectedKeys([String(e.key)]);
+    // 保持父级菜单展开状态
+    setOpenKeys(mergedOpenKeys);
+
+    if (isPhone) {
+      hiddenMenu();
+    }
   };
 
-  /**
-   * 展开/关闭回调
-   * @param openKeys - 展开键值
-   */
-  const onOpenChange = (openKeys: string[]) => {
-    startTransition(() => {
-      const newOpenKey: string[] = [];
-      let last = ''; // 最后一个目录结构
-
-      // 当目录有展开值
-      if (openKeys.length > 0) {
-        last = openKeys[openKeys.length - 1];
-        const lastArr: string[] = splitPath(last);
-        newOpenKey.push(last);
-
-        // 对比当前展开目录是否是同一层级
-        for (let i = openKeys.length - 2; i >= 0; i--) {
-          const arr = splitPath(openKeys[i]);
-          const hasOpenKey = diffOpenMenu(arr, lastArr);
-          if (hasOpenKey) newOpenKey.unshift(openKeys[i]);
-        }
-      }
-
-      setCurrentOpenKeys(newOpenKey);
-    });
+  const handleOpenChange: MenuProps['onOpenChange'] = (keys) => {
+    // 用户手动控制菜单展开/收起时，直接更新状态
+    // 这样可以覆盖自动展开逻辑，给用户完全的控制权
+    setOpenKeys(keys);
   };
 
   /** 点击logo */
   const onClickLogo = () => {
-    const firstMenu = getFirstMenu(menus, permissions);
+    const firstMenu = getFirstMenu(menuList, permissions);
     goPath(firstMenu);
     if (isPhone) hiddenMenu();
   };
@@ -149,38 +162,38 @@ function LayoutMenu() {
       <>
         <div
           className={`
-          transition-all
-          overflow-auto
-          z-2
-          ${styles.menu}
-          ${isCollapsed ? styles['menu-close'] : ''}
-          ${isMaximize || (isPhone && isCollapsed) ? styles['menu-none'] : ''}
-          ${isPhone ? '!z-1002' : ''}
-        `}
+            transition-all
+            overflow-auto
+            z-2
+            ${styles.menu}
+            ${isCollapsed ? styles['menu-close'] : ''}
+            ${isMaximize || (isPhone && isCollapsed) ? styles['menu-none'] : ''}
+            ${isPhone ? '!z-1002' : ''}
+          `}
         >
           <div
             className={`
-            text-white
-            flex
-            content-center
-            px-5
-            py-2
-            cursor-pointer
-            ${isCollapsed ? 'justify-center' : ''}
-          `}
+              text-white
+              flex
+              content-center
+              px-5
+              py-2
+              cursor-pointer
+              ${isCollapsed ? 'justify-center' : ''}
+            `}
             onClick={onClickLogo}
           >
             <img src={Logo} width={30} height={30} className="object-contain" alt="logo" />
 
             <span
               className={`
-            text-white
-            ml-3
-            text-xl
-            font-bold
-            truncate
-            ${isCollapsed ? 'hidden' : ''}
-          `}
+              text-white
+              ml-3
+              text-xl
+              font-bold
+              truncate
+              ${isCollapsed ? 'hidden' : ''}
+            `}
             >
               {t('public.currentName')}
             </span>
@@ -189,36 +202,35 @@ function LayoutMenu() {
           <Menu
             id="layout-menu"
             className="z-1000"
-            selectedKeys={currentSelectedKeys}
-            openKeys={currentOpenKeys}
+            selectedKeys={selectedKeys}
+            openKeys={openKeys}
             mode="inline"
             theme="dark"
             forceSubMenuRender
             inlineCollapsed={isPhone ? false : isCollapsed}
-            items={handleFilterMenus(menus)}
+            items={antdMenuItems}
             onClick={onClickMenu}
-            onOpenChange={onOpenChange}
+            onOpenChange={handleOpenChange}
           />
         </div>
 
         {isPhone && !isCollapsed && (
           <div
             className={`
-            ${styles.cover}
-            fixed
-            w-full
-            h-full
-            bg-gray-500
-            bg-opacity-10
-            z-1001
-          `}
+              ${styles.cover}
+              fixed
+              w-full
+              h-full
+              bg-gray-500
+              bg-opacity-10
+              z-1001
+            `}
             onClick={hiddenMenu}
           />
         )}
       </>
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     ),
-    [currentOpenKeys, currentSelectedKeys, isCollapsed, isMaximize, isPhone, menus],
+    [openKeys, selectedKeys, isCollapsed, isMaximize, isPhone, antdMenuItems],
   );
 }
 

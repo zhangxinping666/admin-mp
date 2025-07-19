@@ -22,11 +22,10 @@ function Nav(props: Props) {
       const result: BreadcrumbProps['items'] = [];
       if (!list?.length) return [];
       // 获取当前语言
-      const currentLanguage = i18n.language;
 
       for (let i = 0; i < list?.length; i++) {
         const item = list?.[i];
-        const data = currentLanguage === 'en' ? item.labelEn : item.labelZh;
+        const data = item.name;
         result.push({
           title: data || '',
         });

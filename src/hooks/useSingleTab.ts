@@ -7,7 +7,6 @@ import { useLocation } from 'react-router-dom';
 import { useCallback, useEffect } from 'react';
 import { useActivate } from 'react-activation';
 import { useMenuStore, useTabsStore } from '@/stores';
-
 interface Props {
   fatherPath: string;
   zhTitle: string;
@@ -26,8 +25,7 @@ export function useSingleTab(props: Props) {
   const { t, i18n } = useTranslation();
   const { pathname, search } = useLocation();
   const { setOpenKeys, setSelectedKeys } = useMenuStore((state) => state);
-  const { addTabs, setNav, setActiveKey } = useTabsStore((state) => state);
-  const { isPhone, isCollapsed, menuList, permissions } = useCommonStore();
+  const { isPhone, isCollapsed, menuList } = useCommonStore();
   const uri = pathname + search;
 
   // 处理默认展开
@@ -46,47 +44,6 @@ export function useSingleTab(props: Props) {
    * 添加标签
    * @param path - 路径
    */
-  const handleAddTab = useCallback(
-    (path = pathname) => {
-      // 当值为空时匹配路由
-      if (path === '/') return;
-      const title = i18n.language === 'zh' ? zhTitle : enTitle;
-      const currentTitle = handleGetTitle();
-      const menuByKeyProps = {
-        menus: menuList,
-        permissions,
-        key: fatherPath,
-      };
-      const newNav = getMenuByKey(menuByKeyProps)?.nav || [];
-      newNav.push({
-        label: title,
-        labelZh: zhTitle,
-        labelEn: enTitle,
-      });
-
-      const newTab = {
-        label: currentTitle,
-        labelEn: enTitle,
-        labelZh: zhTitle,
-        key: uri,
-        nav: newNav,
-      };
-      setActiveKey(newTab.key);
-      setNav(newTab.nav);
-      addTabs(newTab);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    },
-    [pathname, search],
-  );
-
-  useEffect(() => {
-    handleAddTab();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useActivate(() => {
-    handleAddTab();
-  });
 
   /** 获取路由对应名称 */
   const getNameByRoute = (): string => {

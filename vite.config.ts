@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 7000, // 开发服务端口
       open: true, // 启动后自动打开浏览器
+      historyApiFallback: true, // 支持 BrowserRouter
       proxy:
         isDev || isMock
           ? createProxy([

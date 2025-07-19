@@ -11,7 +11,7 @@ function BaseContent(props: Props) {
 
   return (
     <>
-      {isPermission !== false && (
+      {isPermission === true && (
         <div id="content" className="p-10px">
           {children}
         </div>
