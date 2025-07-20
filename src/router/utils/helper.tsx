@@ -22,6 +22,7 @@ export function layoutRoutes(routes: RouteObject[]): RouteObject[] {
  * 处理路由
  * @param routes - 路由数据
  */
+
 export function handleRoutes(
   routes: Record<string, () => Promise<DefaultComponent<unknown>>>,
 ): RouteObject[] {
