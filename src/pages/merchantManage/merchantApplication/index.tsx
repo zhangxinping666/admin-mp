@@ -59,7 +59,7 @@ const mockData: MerchantApplication[] = [
   },
 ];
 
-const MerchantSortPage = () => {
+const MerchantApplicationPage = () => {
   const optionRender = (
     record: MerchantApplication,
     actions: {
@@ -70,7 +70,7 @@ const MerchantSortPage = () => {
 
   return (
     <CRUDPageTemplate
-      title="商家分类"
+      title="商家申请"
       searchConfig={searchList()}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
@@ -81,4 +81,4 @@ const MerchantSortPage = () => {
   );
 };
 
-export default MerchantSortPage;
+export default MerchantApplicationPage;
