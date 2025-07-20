@@ -113,7 +113,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             isLoading={isLoading}
             columns={finalColumns as TableColumnsType}
             getPage={() => {
-              console.log('getPage called');
+              console.log('点击了刷新按钮');
             }}
             dataSource={tableData}
             rowKey="id"
