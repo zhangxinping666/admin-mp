@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import type { FormItemProps } from 'antd';
+import { message, Upload, type FormItemProps } from 'antd';
 import type { ComponentProps, ComponentType, BaseFormList } from '#/form';
 import { cloneDeep } from 'lodash';
 import { DATE_FORMAT, TIME_FORMAT } from '@/utils/config';
@@ -20,6 +20,14 @@ export function handleValuePropName(component: ComponentType): string {
       return 'value';
   }
 }
+
+/**
+ * 验证上传文件
+ * @param file - 上传的文件
+ * @param allowedTypes - 允许的文件类型
+ * @param maxSize - 最大文件大小(MB)
+ */
+
 
 /**
  * 初始化组件自定义属性
@@ -90,6 +98,31 @@ export function initCompProps(
         format: [TIME_FORMAT, TIME_FORMAT],
       };
 
+    case 'Upload':
+      return {
+        beforeUpload: (file) => {
+          const isValid = file;
+          return isValid || Upload.LIST_IGNORE;
+        },
+        onChange: (info: any) => {
+          if (info.file.status === 'uploading') {
+            // 可以添加上传中的状态处理
+            console.log('上传中', info.file.percent);
+          } else if (info.file.status === 'done') {
+            message.success(`${info.file.name} 上传成功`);
+            // 处理上传成功后的逻辑，如更新fileList
+          } else if (info.file.status === 'error') {
+            message.error(`${info.file.name} 上传失败`);
+          }
+          console.log(info.fileList);
+        },
+        listType: 'picture',
+        showUploadList: {
+          showRemoveIcon: true,
+          showPreviewIcon: true,
+        },
+      };
+
     default:
       return {
         allowClear: true,
@@ -103,7 +136,12 @@ const handleUploadData: FormItemProps['getValueFromEvent'] = (e) => {
   if (Array.isArray(e)) {
     return e;
   }
-  return e?.fileList;
+  // 确保返回的fileList包含完整的文件信息，特别是url
+  return e?.fileList.map((file:any) => ({
+    ...file,
+    // 如果有response，提取url
+    url: file.response?.data?.url || file.url,
+  }));
 };
 
 /**

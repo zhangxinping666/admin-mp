@@ -10,6 +10,8 @@ import nprogress from 'nprogress';
 import Layout from '@/layouts';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
+import { checkPermission } from '@/utils/permissions';
+import Forbidden from '@/pages/403';
 // 记住我相关常量
 const CHECK_REMEMBER = 'remember-me';
 
@@ -91,6 +93,17 @@ function Guards() {
     }
   };
 
+  // 检查当前路径是否有权限访问
+  const checkRoutePermission = (pathname: string, userPermissions: string[]): boolean => {
+    // 登录页面和首页不需要权限检查
+    if (pathname === '/login' || pathname === '/') {
+      return true;
+    }        
+    
+    // 使用权限检测工具函数检查路径权限
+    return checkPermission(pathname, userPermissions);
+  };
+
   useEffect(() => {
     // 如果已经在登录页面，不需要处理
     if (location.pathname === '/login') {
@@ -102,6 +115,7 @@ function Guards() {
       loadPermissionsData();
       return;
     }
+    
     // 无token且不在自动登录过程中时，尝试自动登录
     if (!token && !isAutoLogging) {
       // 尝试自动登录
@@ -119,6 +133,26 @@ function Guards() {
       });
     }
   }, [permissions.length]);
+
+  // 监听路由变化，检查权限
+  useEffect(() => {
+    // 只有在有token和权限数据时才进行权限检查
+    if (token && permissions.length > 0) {
+      const hasPermission = checkRoutePermission(location.pathname, permissions);
+      
+      if (!hasPermission) {
+        console.warn(`用户没有访问路径 ${location.pathname} 的权限`);
+        // 可以选择跳转到403页面或者跳转到有权限的首页
+        const firstMenu = getFirstMenu(menuList, permissions);
+        if (firstMenu) {
+          navigate(firstMenu, { replace: true });
+        } else {
+          // 如果没有任何有权限的菜单，跳转到403页面
+          navigate('/403', { replace: true });
+        }
+      }
+    }
+  }, [location.pathname, permissions, token, menuList]);
 
   /** 渲染页面 */
   const renderPage = () => {
@@ -151,6 +185,14 @@ function Guards() {
     // 如果在登录页面且没有token，显示登录页面
     if (location.pathname === '/login') {
       return <div>{outlet}</div>;
+    }
+
+    // 检查当前路径权限（仅在有权限数据时检查）
+    if (token && permissions.length > 0) {
+      const hasPermission = checkRoutePermission(location.pathname, permissions);
+      if (!hasPermission) {
+        return <Forbidden />;
+      }
     }
 
     return <Layout />;

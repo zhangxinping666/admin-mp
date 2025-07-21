@@ -12,6 +12,7 @@ import Guards from './Guards';
 type PageFiles = Record<string, () => Promise<DefaultComponent<unknown>>>;
 const pages = import.meta.glob('../../pages/**/*.tsx') as PageFiles;
 const layouts = handleRoutes(pages);
+console.log('生成的路由:', layouts); // 添加这行
 
 const newRoutes: RouteObject[] = [
   {
