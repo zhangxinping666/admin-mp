@@ -16,25 +16,54 @@ const initCreate: Partial<School> = {
 };
 
 const SchoolsPage = () => {
-  const [mockData, setMockData] = useState<School[]>([]);
+  // const [mockData, setMockData] = useState<School[]>([]);
 
-  useEffect(() => {
-    const fetchSchoolList = async () => {
-      try {
-        const params = { page: 1, page_size: 10 };
-        const res = await getSchoolList(params);
-        console.log(res);
-        if (res.data && res.data.list) {
-          setMockData(res.data.list);
-        }
-      } catch (error) {
-        console.error('获取学校列表失败:', error);
-      } finally {
-      }
-    };
-    fetchSchoolList();
-  }, []);
+  // useEffect(() => {
+  //   const fetchSchoolList = async () => {
+  //     try {
+  //       const params = { page: 1, page_size: 10 };
+  //       const res = await getSchoolList(params);
+  //       console.log(res);
+  //       if (res.data && res.data.list) {
+  //         setMockData(res.data.list);
+  //       }
+  //     } catch (error) {
+  //       console.error('获取学校列表失败:', error);
+  //     } finally {
+  //     }
+  //   };
+  //   fetchSchoolList();
+  // }, []);
 
+  const mockData: School[] = [
+    {
+      id: 1,
+      school_id: 1,
+      name: '北京大学',
+      address: '北京市海淀区颐和园路5号',
+      city_id: 101,
+      school_logo: 1,
+      status: 1,
+    },
+    {
+      id: 2,
+      school_id: 2,
+      name: '复旦大学',
+      address: '上海市杨浦区邯郸路220号',
+      city_id: 102,
+      school_logo: 2,
+      status: 1,
+    },
+    {
+      id: 3,
+      school_id: 3,
+      name: '清华大学',
+      address: '上海市浦东新区浦东南路1000号',
+      city_id: 103,
+      school_logo: 3,
+      status: 1,
+    },
+  ];
   // 操作列渲染
   const optionRender = (
     record: School,

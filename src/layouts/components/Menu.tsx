@@ -26,6 +26,27 @@ function LayoutMenu() {
   const { setOpenKeys } = useMenuStore((state) => state);
   const { setSelectedKeys } = useMenuStore((state) => state);
   const { toggleCollapsed } = useMenuStore((state) => state);
+  /**
+   * 将SideMenu转换为antd MenuItem格式
+   * @param menus - SideMenu数组
+   */
+  const convertToAntdMenuItems = useCallback((menus: SideMenu[]): MenuItem[] => {
+    return menus.map((menu) => {
+      const menuItem: MenuItem = {
+        key: String(menu.key), // 确保key是字符串类型
+        label: menu.label,
+        icon: menu.icon,
+      };
+
+      // 如果有子菜单，递归转换
+      if (menu.children && menu.children.length > 0) {
+        (menuItem as any).children = convertToAntdMenuItems(menu.children);
+      }
+
+      return menuItem;
+    });
+  }, []);
+
   // 处理菜单数据
   useEffect(() => {
     if (menuList.length > 0 && permissions.length > 0) {
@@ -34,14 +55,16 @@ function LayoutMenu() {
       console.log(filteredMenus);
       // 然后处理菜单图标
       const menuListWithIcons = processMenuIcons(filteredMenus);
+      // 构建树形结构
+      const menuTree = buildMenuTree(menuListWithIcons);
+      console.log(menuTree);
       // 最后转换为antd菜单格式
-      const menuItems = buildMenuTree(menuListWithIcons);
-      console.log(menuItems);
-      setAntdMenuItems(menuItems);
+      const antdItems = convertToAntdMenuItems(menuTree);
+      setAntdMenuItems(antdItems);
     } else {
       setAntdMenuItems([]);
     }
-  }, [menuList, permissions]);
+  }, [menuList, permissions, convertToAntdMenuItems]);
 
   useEffect(() => {
     const currentPath = location.pathname;

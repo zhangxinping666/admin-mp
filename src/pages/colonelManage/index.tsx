@@ -9,7 +9,7 @@ const initCreate: Partial<Colonel> = {
   id: 0,
   name: '',
   phone: 0,
-  password: 0,
+  password: '',
   city_id: 1, // 默认城市ID
   status: 0, // 默认状态
 };
