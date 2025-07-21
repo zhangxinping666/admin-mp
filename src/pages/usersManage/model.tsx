@@ -1,11 +1,58 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { message, Modal } from 'antd';
 
+const UserPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
+  const [visible, setVisible] = useState(false);
+
+  // 处理数组格式的图片地址或 base64 数据
+  const displayUrl = Array.isArray(voucherUrl) ? voucherUrl[0] : voucherUrl;
+
+  // 处理可能的 base64 数据
+  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
+  console.log('processedUrl', processedUrl);
+  console.log('displayUrl', displayUrl);
+
+  return (
+    <>
+      {processedUrl ? (
+        <>
+          <img
+            src={processedUrl}
+            alt="用户图片"
+            style={{
+              width: '60px',
+              height: '60px',
+              objectFit: 'cover',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            onClick={() => setVisible(true)}
+          />
+          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
+            <img src={processedUrl} alt="用户图片预览" style={{ width: '100%', height: 'auto' }} />
+          </Modal>
+        </>
+      ) : (
+        '无图片'
+      )}
+    </>
+  );
+};
+type uploadImg = {
+  uid: string;
+  name: string;
+  status: string;
+  url: string;
+  response?: {
+    url: string;
+  };
+};
 // 楼栋接口定义
 export interface User {
   id: number;
-  image: string;
+  image: uploadImg[];
   nickname: string;
   phone: string;
   last_time: number;
@@ -14,7 +61,7 @@ export interface User {
 
 export interface UserItem {
   id: number;
-  image: string;
+  image: uploadImg[];
   nickname: string;
   phone: string;
   last_time: number;
@@ -49,6 +96,18 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Input',
     placeholder: '请输入用户昵称',
   },
+  {
+    label: '状态',
+    name: 'status',
+    component: 'Select',
+    placeholder: '请选择状态',
+    componentProps: {
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+  },
 ];
 
 // 表格列配置
@@ -72,12 +131,16 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'image',
     key: 'image',
     width: 100,
+    render: (url: uploadImg[]) => <UserPreview voucherUrl={url} />,
   },
   {
-    title: '用户状态',
+    title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
+    width: 80,
+    render: (value: number) => (
+      <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
+    ),
   },
   {
     title: '操作',
@@ -107,23 +170,45 @@ export const formList = (): BaseFormList[] => [
   {
     label: '用户图片',
     name: 'image',
-    component: 'InputNumber',
-    placeholder: '请输入用户图片',
-    rules: FORM_REQUIRED,
+    component: 'Upload',
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      accept: 'image/png, image/jpeg, image/jpg',
+      listType: 'picture-card',
+      beforeUpload: (file: File) => {
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+          message.error('图片大小不能超过2MB!');
+          return false;
+        }
+        return true;
+      },
+      customRequest: (options: any) => {
+        const { file, onSuccess, onError } = options;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          setTimeout(() => {
+            onSuccess({ url: reader.result });
+          }, 500);
+        };
+        reader.onerror = () => {
+          onError(new Error('读取文件失败'));
+        };
+      },
+      maxCount: 1,
     },
   },
   {
     label: '状态',
     name: 'status',
-    component: 'InputNumber',
-    placeholder: '请输入状态',
-    rules: FORM_REQUIRED,
+    component: 'Select',
+    placeholder: '请选择状态',
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
     },
   },
 ];

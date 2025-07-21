@@ -49,6 +49,18 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Input',
     placeholder: '请输入城市名称',
   },
+  {
+    label: '状态',
+    name: 'status',
+    component: 'Select',
+    placeholder: '请选择状态',
+    componentProps: {
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+  },
 ];
 
 // 表格列配置
@@ -73,10 +85,19 @@ export const tableColumns: TableColumn[] = [
     width: 100,
   },
   {
+    title: '运营商密码',
+    dataIndex: 'password',
+    key: 'password',
+    width: 100,
+  },
+  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
+    width: 80,
+    render: (value: number) => (
+      <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
+    ),
   },
   {
     title: '操作',
@@ -129,11 +150,12 @@ export const formList = (): BaseFormList[] => [
     label: '状态',
     name: 'status',
     component: 'Select',
-    placeholder: '请输入状态',
-    rules: FORM_REQUIRED,
+    placeholder: '请选择状态',
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
     },
   },
 ];
