@@ -80,7 +80,7 @@ export const getMenuName = (list: SideMenu[], path: string) => {
 export function filterMenus(menus: SideMenu[], permissions: string[]): SideMenu[] {
   const result: SideMenu[] = [];
   const newMenus = cloneDeep(menus);
-
+  console.log(menus);
   for (let i = 0; i < newMenus.length; i++) {
     const item = newMenus[i];
 
@@ -104,7 +104,7 @@ export function filterMenus(menus: SideMenu[], permissions: string[]): SideMenu[
       result.push(item);
     }
   }
-
+  console.log(result);
   return result;
 }
 /**

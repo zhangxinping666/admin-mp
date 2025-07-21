@@ -1,0 +1,1 @@
+export { useCRUD } from './useCRUD';

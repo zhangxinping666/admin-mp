@@ -31,11 +31,12 @@ function LayoutMenu() {
     if (menuList.length > 0 && permissions.length > 0) {
       // 先根据权限过滤菜单
       const filteredMenus = filterMenus(menuList, permissions);
+      console.log(filteredMenus);
       // 然后处理菜单图标
       const menuListWithIcons = processMenuIcons(filteredMenus);
       // 最后转换为antd菜单格式
       const menuItems = buildMenuTree(menuListWithIcons);
-
+      console.log(menuItems);
       setAntdMenuItems(menuItems);
     } else {
       setAntdMenuItems([]);
@@ -111,6 +112,7 @@ function LayoutMenu() {
 
   const onClickMenu: MenuProps['onClick'] = (e) => {
     const menuItem = getMenuByKey(menuList, e.key);
+    console.log('点击的菜单路径:', menuItem?.route_path); // 添加这行
 
     if (!menuItem || !menuItem.route_path) {
       console.warn('未找到匹配的菜单项或该项无 route_path:', e.key);
