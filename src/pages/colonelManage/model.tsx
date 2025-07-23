@@ -11,16 +11,6 @@ export interface Colonel {
   city_id: number;
   status: number;
 }
-
-export interface ColonelItem {
-  id: number;
-  name: string;
-  phone: number;
-  password: number;
-  city_id: number;
-  status: number;
-}
-
 export interface Pagination {
   page: number;
   pageSize: number;

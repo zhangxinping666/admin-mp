@@ -102,11 +102,19 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     ) => React.ReactNode | undefined,
   ) => {
     setCreateLoading(true);
+    console.log(' 表单提交开始:', {
+      操作类型: createId && createId > 0 ? '编辑' : '新增',
+      表单数据: values,
+      时间戳: new Date().toLocaleString(),
+    });
+
     try {
       if (createId && createId > 0) {
         // 编辑
+        let updateResult;
         if (updateApi) {
-          await updateApi(createId, values);
+          updateResult = await updateApi(createId, values);
+          console.log('编辑API调用结果:', updateResult);
         }
         setTableData((prev) => {
           prev = prev.map((item) => {
@@ -117,17 +125,24 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           });
           return prev;
         });
+        console.log('编辑操作完成:', {
+          编辑ID: createId,
+          更新数据: values,
+          API结果: updateResult,
+        });
         messageApi.success('编辑成功');
         // setFetch(true);
       } else {
         // 新增
+        let createResult;
         if (createApi) {
-          await createApi(values);
+          createResult = await createApi(values);
+          console.log('新增API调用结果:', createResult);
         } else {
           // 本地新增
           const newId = getNextId();
           const newItem = { ...values, id: newId } as T;
-          console.log(newItem);
+          console.log('本地新增项目:', newItem);
           if (optionRender) {
             (newItem as any).action = optionRender(newItem, {
               handleEdit: (record) => handleEdit('编辑', record),
@@ -136,11 +151,30 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           }
           setTableData((prev) => [...prev, newItem]);
           setTotal((prev) => prev + 1);
+          createResult = { success: true, data: newItem };
         }
+        console.log('新增操作完成:', {
+          新增数据: values,
+          生成ID: createResult?.data?.id || '本地生成',
+          API结果: createResult,
+        });
         messageApi.success('新增成功');
       }
+
+      console.log(' 表单提交成功完成:', {
+        操作类型: createId && createId > 0 ? '编辑' : '新增',
+        最终状态: '成功',
+        完成时间: new Date().toLocaleString(),
+      });
+
       setCreateOpen(false);
     } catch (error) {
+      console.error(' 表单提交失败:', {
+        操作类型: createId && createId > 0 ? '编辑' : '新增',
+        错误信息: error,
+        提交数据: values,
+        失败时间: new Date().toLocaleString(),
+      });
       messageApi.error(createId ? '编辑失败' : '新增失败');
     } finally {
       setCreateLoading(false);

@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 
 //创建一个token的存储
+const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
 //创建一个接口
 interface TokenState {
-  assess_token: string;
+  access_token: string;
   refresh_token: string | null;
   setAccessToken: (token: string) => void;
   setRefreshToken: (token: string) => void;
@@ -15,26 +16,29 @@ interface TokenState {
 }
 
 export const useTokenStore = create<TokenState>((set, get) => ({
-  assess_token: '',
+  access_token: localStorage.getItem(ACCESS_TOKEN_KEY) || '',
   refresh_token: localStorage.getItem(REFRESH_TOKEN_KEY),
-  setAccessToken: (token: string) => set({ assess_token: token }),
+  setAccessToken: (token: string) => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    set({ access_token: token });
+  },
   setRefreshToken: (token: string) => {
     localStorage.setItem(REFRESH_TOKEN_KEY, token);
     set({ refresh_token: token });
   },
-  setTokens: (assess_token: string, refresh_token: string) => {
-    set({ assess_token: assess_token });
+  setTokens: (access_token: string, refresh_token: string) => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
     localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
-    set({ refresh_token: refresh_token });
+    set({ access_token: access_token, refresh_token: refresh_token });
   },
   clearTokens: () => {
-    set({ assess_token: '', refresh_token: '' });
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
-    set({ refresh_token: null });
+    set({ access_token: '', refresh_token: null });
   },
 }));
 
-export const getAccessToken = () => useTokenStore.getState().assess_token;
+export const getAccessToken = () => useTokenStore.getState().access_token;
 export const getRefreshToken = () => useTokenStore.getState().refresh_token;
 export const setAccessToken = (token: string) => useTokenStore.getState().setAccessToken(token);
 export const setRefreshToken = (token: string) => useTokenStore.getState().setRefreshToken(token);

@@ -12,15 +12,6 @@ export interface City {
   status: number;
 }
 
-export interface CityItem {
-  id: number;
-  name: string;
-  phone: number;
-  password: number;
-  city_name: string;
-  status: number;
-}
-
 export interface Pagination {
   page: number;
   pageSize: number;

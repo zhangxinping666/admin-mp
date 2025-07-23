@@ -1,16 +1,18 @@
-import type { LoginData } from './model';
+import type { LoginData, LoginResult, UserInfoResponse, PermissionsResponse } from './model';
+import type { SideMenu } from '#/public';
 import type { FormProps } from 'antd';
 import { Checkbox, message, Form, Button, Input } from 'antd';
+import { getUserInfoServe, login } from '@/servers/login';
 import { setTitle } from '@/utils/helper';
+import { encryption, decryption } from '@manpao/utils';
+import { getFirstMenu } from '@/menus/utils/helper';
 import Logo from '@/assets/images/logo.png';
+import { setAccessToken, setRefreshToken } from '@/stores/token';
+import { getPermissions } from '@/servers/login';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
 const CHECK_REMEMBER = 'remember-me';
-import { encryption } from '@manpao/utils';
-import { getUserInfoServe, login, getPermissions } from '@/servers/login';
 
-import { getFirstMenu } from '@/menus/utils/helper';
-import { setAccessToken, setRefreshToken } from '@/stores/token';
 function Login() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ function Login() {
   const [isRemember, setRemember] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const { search } = useLocation();
-  const { clearLoginInfo, saveLoginInfo } = useCommonStore();
+  const { clearLoginInfo, saveLoginInfo, menuList } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
   const setThemeValue = usePublicStore((state) => state.setThemeValue);
   const { setPermissions, setUserInfo } = useUserStore((state) => state);

@@ -1,73 +1,19 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal } from 'antd';
 
-const UserPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  const [visible, setVisible] = useState(false);
-
-  // 处理数组格式的图片地址或 base64 数据
-  const displayUrl = Array.isArray(voucherUrl) ? voucherUrl[0] : voucherUrl;
-
-  // 处理可能的 base64 数据
-  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
-  console.log('processedUrl', processedUrl);
-  console.log('displayUrl', displayUrl);
-
-  return (
-    <>
-      {processedUrl ? (
-        <>
-          <img
-            src={processedUrl}
-            alt="用户图片"
-            style={{
-              width: '60px',
-              height: '60px',
-              objectFit: 'cover',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-            onClick={() => setVisible(true)}
-          />
-          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
-            <img src={processedUrl} alt="用户图片预览" style={{ width: '100%', height: 'auto' }} />
-          </Modal>
-        </>
-      ) : (
-        '无图片'
-      )}
-    </>
-  );
-};
-type uploadImg = {
-  uid: string;
-  name: string;
-  status: string;
-  url: string;
-  response?: {
-    url: string;
-  };
-};
 // 楼栋接口定义
 export interface User {
   id: number;
-  image: uploadImg[];
+  avatar: string;
   nickname: string;
   phone: string;
-  last_time: number;
+  school: string;
+  wechat: string;
+  alipay: string;
+  last_time: string;
   status: number;
 }
-
-export interface UserItem {
-  id: number;
-  image: uploadImg[];
-  nickname: string;
-  phone: string;
-  last_time: number;
-  status: number;
-}
-
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -83,7 +29,7 @@ export interface UserListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
-    list: UserItem[];
+    list: User[];
     pagination: Pagination;
   };
 }
@@ -94,7 +40,7 @@ export const searchList = (): BaseSearchList[] => [
     label: '用户昵称',
     name: 'nickname',
     component: 'Input',
-    placeholder: '请输入用户昵称',
+    placeholder: '请输入团长昵称',
   },
   {
     label: '状态',
@@ -113,6 +59,13 @@ export const searchList = (): BaseSearchList[] => [
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
+    title: '用户头像',
+    dataIndex: 'avatar',
+    key: 'avatar',
+    width: 100,
+    render: (avatar: string) => <img src={avatar} alt="用户头像" style={{ width: '100%' }} />,
+  },
+  {
     title: '用户昵称',
     dataIndex: 'nickname',
     key: 'nickname',
@@ -120,18 +73,34 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '用户手机号',
+    title: '用户电话',
     dataIndex: 'phone',
     key: 'phone',
-    width: 150,
-    ellipsis: true,
+    width: 100,
   },
   {
-    title: '用户图片',
-    dataIndex: 'image',
-    key: 'image',
+    title: '用户学校',
+    dataIndex: 'school',
+    key: 'school',
     width: 100,
-    render: (url: uploadImg[]) => <UserPreview voucherUrl={url} />,
+  },
+  {
+    title: '用户微信',
+    dataIndex: 'wechat',
+    key: 'wechat',
+    width: 100,
+  },
+  {
+    title: '用户支付宝',
+    dataIndex: 'alipay',
+    key: 'alipay',
+    width: 100,
+  },
+  {
+    title: '用户最后登录时间',
+    dataIndex: 'last_time',
+    key: 'last_time',
+    width: 100,
   },
   {
     title: '状态',
@@ -154,49 +123,39 @@ export const tableColumns: TableColumn[] = [
 // 表单配置
 export const formList = (): BaseFormList[] => [
   {
-    label: '用户昵称',
-    name: 'nickname',
+    label: '团长名称',
+    name: 'name',
     component: 'Input',
-    placeholder: '请输入用户昵称',
+    placeholder: '请输入学校名称',
     rules: FORM_REQUIRED,
   },
   {
-    label: '用户手机号',
+    label: '团长电话',
     name: 'phone',
     component: 'Input',
-    placeholder: '请输入用户手机号',
+    placeholder: '请输入团长电话',
     rules: FORM_REQUIRED,
   },
   {
-    label: '用户图片',
-    name: 'image',
-    component: 'Upload',
+    label: '城市ID',
+    name: 'city_id',
+    component: 'InputNumber',
+    placeholder: '请输入城市ID',
+    rules: FORM_REQUIRED,
     componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
+      min: 1,
+      style: { width: '100%' },
+    },
+  },
+  {
+    label: '团长密码',
+    name: 'password',
+    component: 'InputNumber',
+    placeholder: '请输入团长密码',
+    rules: FORM_REQUIRED,
+    componentProps: {
+      precision: 6,
+      style: { width: '100%' },
     },
   },
   {

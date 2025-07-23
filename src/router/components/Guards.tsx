@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAccessToken, setRefreshToken } from '@/stores/token';
+import { getAccessToken, setAccessToken, setRefreshToken } from '@/stores/token';
 import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { decryption } from '@manpao/utils';
 import { login, getUserInfoServe, getPermissions } from '@/servers/login';
@@ -21,6 +21,8 @@ function Guards() {
   const location = useLocation();
   const token = getAccessToken();
   const [isAutoLogging, setIsAutoLogging] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // 标识数据是否已加载完成
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // 标识是否为初始加载
   const { setUserInfo, setPermissions } = useUserStore((state) => state);
   const { getLoginInfo, clearLoginInfo, permissions, menuList } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
@@ -47,7 +49,8 @@ function Guards() {
         });
         const loginResult = loginResponse.data;
         // 从 LoginResult 对象中，访问其内部的 data 属性，再获取 token
-        const refresh_token = loginResult.refresh_token;
+        const { access_token, refresh_token } = loginResult;
+        setAccessToken(access_token);
         setRefreshToken(refresh_token);
 
         const { data: user } = await getUserInfoServe();
@@ -63,6 +66,7 @@ function Guards() {
         const menuTree = buildMenuTree(menus);
         console.log('Guards中转换后的菜单树:', menuTree);
         setMenuList(menus);
+        setIsDataLoaded(true); // 标记数据加载完成
         return true;
       } catch (error) {
         console.error('自动登录失败:', error);
@@ -88,6 +92,7 @@ function Guards() {
       const menuTree = buildMenuTree(menus);
       console.log('Guards中转换后的菜单树:', menuTree);
       setMenuList(menus);
+      setIsDataLoaded(true); // 标记数据加载完成
     } catch (error) {
       console.error('Guards获取权限数据失败:', error);
     }
@@ -98,8 +103,8 @@ function Guards() {
     // 登录页面和首页不需要权限检查
     if (pathname === '/login' || pathname === '/') {
       return true;
-    }        
-    
+    }
+
     // 使用权限检测工具函数检查路径权限
     return checkPermission(pathname, userPermissions);
   };
@@ -107,52 +112,77 @@ function Guards() {
   useEffect(() => {
     // 如果已经在登录页面，不需要处理
     if (location.pathname === '/login') {
+      setIsInitialLoad(false);
       return;
     }
-
     // 有token但没有权限数据时，获取权限信息
     if (token && permissions.length === 0 && !isAutoLogging) {
-      loadPermissionsData();
+      loadPermissionsData().finally(() => {
+        setIsInitialLoad(false);
+      });
       return;
     }
-    
     // 无token且不在自动登录过程中时，尝试自动登录
     if (!token && !isAutoLogging) {
       // 尝试自动登录
-      tryAutoLogin().then((success) => {
-        if (!success) {
-          // 避免重复跳转到登录页面
-          if (location.pathname !== '/login') {
-            const param =
-              location.pathname?.length > 1
-                ? `?redirect=${encodeURIComponent(location.pathname + location.search)}`
-                : '';
-            navigate(`/login${param}`, { replace: true });
+      tryAutoLogin()
+        .then((success) => {
+          if (!success) {
+            // 避免重复跳转到登录页面
+            if (location.pathname !== '/login') {
+              // const param =
+              //   location.pathname?.length > 1
+              //     ? `?redirect=${encodeURIComponent(location.pathname + location.search)}`
+              //     : '';
+              navigate(`/login`, { replace: true });
+            }
           }
-        }
-      });
+        })
+        .finally(() => {
+          setIsInitialLoad(false);
+        });
+    } else if (token && permissions.length > 0) {
+      // 如果已经有token和权限数据，标记初始加载完成
+      setIsInitialLoad(false);
     }
   }, [permissions.length]);
 
   // 监听路由变化，检查权限
   useEffect(() => {
-    // 只有在有token和权限数据时才进行权限检查
-    if (token && permissions.length > 0) {
+    // 只有在非初始加载、有token、权限数据和菜单数据且数据已完全加载时才进行权限检查
+    if (!isInitialLoad && token && permissions.length > 0 && menuList.length > 0 && isDataLoaded) {
+      // 跳过特殊页面的权限检查
+      if (['/', '/403', '/404', '/login'].includes(location.pathname)) {
+        return;
+      }
+
+      // 检查当前路径是否在菜单列表中
+      const isValidMenuPath = menuList.some((menu) => {
+        // 递归检查菜单及其子菜单
+        const checkMenuPath = (menuItem: any): boolean => {
+          if (menuItem.route_path === location.pathname) {
+            return true;
+          }
+          if (menuItem.children && menuItem.children.length > 0) {
+            return menuItem.children.some(checkMenuPath);
+          }
+          return false;
+        };
+        return checkMenuPath(menu);
+      });
+
+      // 检查用户是否有当前路径的权限
       const hasPermission = checkRoutePermission(location.pathname, permissions);
-      
-      if (!hasPermission) {
-        console.warn(`用户没有访问路径 ${location.pathname} 的权限`);
-        // 可以选择跳转到403页面或者跳转到有权限的首页
+
+      // 如果路径不在菜单中或者用户没有权限，重定向到第一个有权限的菜单
+      if (!isValidMenuPath || !hasPermission) {
         const firstMenu = getFirstMenu(menuList, permissions);
-        if (firstMenu) {
+        if (firstMenu && firstMenu !== location.pathname) {
           navigate(firstMenu, { replace: true });
-        } else {
-          // 如果没有任何有权限的菜单，跳转到403页面
-          navigate('/403', { replace: true });
         }
       }
     }
-  }, [location.pathname, permissions, token, menuList]);
+  }, [location.pathname, permissions, token, menuList, isDataLoaded, isInitialLoad]);
 
   /** 渲染页面 */
   const renderPage = () => {

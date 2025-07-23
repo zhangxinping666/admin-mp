@@ -13,16 +13,6 @@ export interface School {
   status: number;
 }
 
-export interface SchoolItem {
-  id: number;
-  school_id: number;
-  name: string;
-  address: string;
-  city_id: number;
-  school_logo: number;
-  status: number;
-}
-
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -38,7 +28,7 @@ export interface SchoolListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
-    list: SchoolItem[];
+    list: School[];
     pagination: Pagination;
   };
 }

@@ -1,5 +1,6 @@
 import { TreeSelect, type TreeSelectProps } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
 import { MAX_TAG_COUNT } from './index';
 
 function BaseTreeSelect(props: TreeSelectProps) {
@@ -33,7 +34,7 @@ function BaseTreeSelect(props: TreeSelectProps) {
       treeNodeFilterProp={props?.fieldNames?.label || 'label'}
       placeholder={t('public.inputPleaseSelect')}
       {...props}
-      treeData={currentTreeData}
+      treeData={props.treeData || currentTreeData}
     />
   );
 }

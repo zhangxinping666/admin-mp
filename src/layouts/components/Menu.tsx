@@ -61,13 +61,14 @@ function LayoutMenu() {
       // 最后转换为antd菜单格式
       const antdItems = convertToAntdMenuItems(menuTree);
       setAntdMenuItems(antdItems);
+      console.log(111111111111);
     } else {
       setAntdMenuItems([]);
     }
-  }, [menuList, permissions, convertToAntdMenuItems]);
+  }, [menuList, permissions, pathname, convertToAntdMenuItems]);
 
   useEffect(() => {
-    const currentPath = location.pathname;
+    const currentPath = pathname;
     // 递归函数，在menuList中查找与当前路径匹配的菜单项
     const findMenuByPath = (menus: SideMenu[], targetPath: string): SideMenu | null => {
       for (const menu of menus) {
@@ -98,7 +99,8 @@ function LayoutMenu() {
       const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
       setOpenKeys(mergedOpenKeys);
     }
-  }, [location.pathname, menuList, openKeys]);
+    console.log(pathname);
+  }, [pathname, menuList, openKeys]);
 
   /**
    * 处理菜单图标
@@ -154,6 +156,7 @@ function LayoutMenu() {
     const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
 
     goPath(targetPath);
+    console.log('targetPath' + targetPath);
     // 点击菜单时设置选中的key，确保类型一致
     setSelectedKeys([String(e.key)]);
     // 保持父级菜单展开状态

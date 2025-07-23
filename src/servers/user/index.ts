@@ -1,4 +1,4 @@
-import { UserListResult, PaginationParams } from '../../pages/usersManage/model';
+import { UserListResult, PaginationParams } from '../../pages/permissionManage/roleManage/model';
 import request from '@/utils/request';
 // 获取用户详情列表
 export function getUserList(params: PaginationParams) {
