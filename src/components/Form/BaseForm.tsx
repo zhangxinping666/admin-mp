@@ -18,18 +18,33 @@ interface Props extends FormProps {
   labelCol?: Partial<ColProps>;
   wrapperCol?: Partial<ColProps>;
   handleFinish: FormProps['onFinish'];
+  onValuesChange?: FormProps['onValuesChange'];
 }
 
 const BaseForm = forwardRef((props: Props, ref: Ref<FormInstance>) => {
-  const { list, data, style, className, children, labelCol, wrapperCol, handleFinish } = props;
+  const {
+    list,
+    data,
+    style,
+    className,
+    children,
+    labelCol,
+    wrapperCol,
+    handleFinish,
+    onValuesChange,
+  } = props;
   const { t } = useTranslation();
   const [form] = Form.useForm();
+
+  // 监听所有表单值的变化
+  const formValues = Form.useWatch([], form);
 
   // 清除多余参数
   const formProps: Partial<Props> = { ...props };
   delete formProps.list;
   delete formProps.data;
   delete formProps.handleFinish;
+  delete formProps.onValuesChange;
 
   // 监听传入表单数据，如果变化则替换表单
   useEffect(() => {
@@ -76,14 +91,45 @@ const BaseForm = forwardRef((props: Props, ref: Ref<FormInstance>) => {
   };
 
   /**
+   * 检查字段是否应该显示
+   * @param item - 表单项
+   */
+  const shouldShowField = (item: BaseFormList) => {
+    if (!item.showWhen) {
+      return true; // 没有showWhen条件，默认显示
+    }
+
+    const { name, value: conditionValue } = item.showWhen;
+    const actualValue = formValues?.[name];
+
+    // 如果条件值是函数，调用函数进行判断
+    if (typeof conditionValue === 'function') {
+      return conditionValue(actualValue);
+    }
+    // 如果条件值是数组，检查实际值是否在数组内
+    if (Array.isArray(conditionValue)) {
+      return conditionValue.includes(actualValue);
+    }
+    // 否则，直接比较
+    return actualValue === conditionValue;
+  };
+
+  /**
    * 渲染表单项
    * @param item - 表单项
    */
-  const renderFormItem = (item: BaseFormList) => (
-    <Form.Item {...filterFormItem(item)} valuePropName={handleValuePropName(item.component)}>
-      {getComponent(t, item, onPressEnter, form)}
-    </Form.Item>
-  );
+  const renderFormItem = (item: BaseFormList) => {
+    // 检查是否应该显示该字段
+    if (!shouldShowField(item)) {
+      return null;
+    }
+
+    return (
+      <Form.Item {...filterFormItem(item)} valuePropName={handleValuePropName(item.component)}>
+        {getComponent(t, item, onPressEnter)}
+      </Form.Item>
+    );
+  };
 
   return (
     <div className={className} style={style}>
@@ -97,20 +143,28 @@ const BaseForm = forwardRef((props: Props, ref: Ref<FormInstance>) => {
         validateMessages={validateMessages}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
+        onValuesChange={onValuesChange}
         autoComplete="off"
       >
-        {list?.map((item) => (
-          <div key={`${item.name}`}>
-            {!item?.unit && <>{renderFormItem(item)}</>}
+        {list?.map((item) => {
+          // 检查是否应该显示该字段
+          if (!shouldShowField(item)) {
+            return null;
+          }
 
-            {item.unit && (
-              <Form.Item label={item.label}>
-                {renderFormItem({ ...item, noStyle: true })}
-                <span className="ml-5px whitespace-nowrap">{item.unit}</span>
-              </Form.Item>
-            )}
-          </div>
-        ))}
+          return (
+            <div key={`${item.name}`}>
+              {!item?.unit && <>{renderFormItem(item)}</>}
+
+              {item.unit && (
+                <Form.Item label={item.label}>
+                  {renderFormItem({ ...item, noStyle: true })}
+                  <span className="ml-5px whitespace-nowrap">{item.unit}</span>
+                </Form.Item>
+              )}
+            </div>
+          );
+        })}
 
         {children}
       </Form>

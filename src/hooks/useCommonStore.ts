@@ -7,9 +7,9 @@ export const useCommonStore = () => {
   // 权限
   const permissions = useUserStore((state) => state.permissions);
   // 用户ID
-  const userId = useUserStore((state) => state.userInfo.id);
+  const userId = useUserStore((state) => state.userInfo?.account_id || '');
   // 用户名
-  const username = useUserStore((state) => state.userInfo.username);
+  const username = useUserStore((state) => state.userInfo?.name || '');
   // 是否窗口最大化
   const isMaximize = useTabsStore((state) => state.isMaximize);
   // 导航数据
@@ -33,6 +33,9 @@ export const useCommonStore = () => {
   // 菜单数据
   const menuList = useMenuStore((state) => state.menuList);
 
+  const getLoginInfo = useUserStore((state) => state.getLoginInfo);
+  const saveLoginInfo = useUserStore((state) => state.saveLoginInfo);
+  const clearLoginInfo = useUserStore((state) => state.clearLoginInfo);
   return {
     isMaximize,
     isCollapsed,
@@ -48,5 +51,8 @@ export const useCommonStore = () => {
     tabs,
     theme,
     menuList,
+    getLoginInfo,
+    saveLoginInfo,
+    clearLoginInfo,
   } as const;
 };

@@ -1,12 +1,17 @@
-import type { LoginData, LoginResult, UserInfoResult } from '@/pages/login/model';
-import { request } from '@/utils/request';
+import type {
+  LoginData,
+  LoginResult,
+  UserInfoResponse,
+  PermissionsResponse,
+} from '@/pages/login/model';
+import request from '@/utils/request';
 
 /**
  * 登录
  * @param data - 请求数据
  */
 export function login(data: LoginData) {
-  return request.post<LoginResult>('/login', data);
+  return request.post<LoginResult>('/backstage/login', data);
 }
 
 // 模板中的内容 可删
@@ -29,5 +34,10 @@ export function forgetPassword(data: object) {
  * 获取用户基本信息
  */
 export function getUserInfoServe() {
-  return request.get<UserInfoResult>('/userInfo');
+  return request.get<UserInfoResponse>('/backstage/userInfo');
+}
+
+// 获取用户权限
+export function getPermissions(data: object) {
+  return request.get<PermissionsResponse>('/getPermissions', { params: data });
 }

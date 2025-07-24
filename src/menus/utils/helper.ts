@@ -1,7 +1,5 @@
 import type { SideMenu } from '#/public';
-import type { Langs } from '@/components/I18n';
 import { cloneDeep } from 'lodash';
-import { LANG } from '@/utils/config';
 
 /**
  * 根据路由获取展开菜单数组
@@ -22,32 +20,6 @@ export function getOpenMenuByRouter(router: string): string[] {
       result.push(str);
     }
   }
-
-  return result;
-}
-
-/**
- * 匹配路径内的字段
- * @param path - 路径
- * @param arr - 路径经过数组
- */
-function matchPath(lang: Langs, path: string, arr: MenuPath[]): string[] {
-  const result: string[] = [];
-
-  // 分割路径
-  const pathArr = splitPath(path);
-  let left = 0;
-  const right = pathArr.length;
-
-  for (let i = 0; i < arr.length; i++) {
-    const { path } = arr[i];
-    if (path?.[left] === pathArr[left]) {
-      result.push(lang === 'en' ? arr[i].labelEn : arr[i].label);
-      if (left < right - 1) left++;
-    }
-    if (left === right) return result;
-  }
-
   return result;
 }
 
@@ -66,192 +38,11 @@ export function splitPath(path: string): string[] {
 }
 
 /**
- * 搜索相应菜单值
- * @param menus - 菜单
- * @param permissions - 权限列表
- * @param value - 匹配值
- * @param currentPath - 当前路径
- * @param result - 返回值
- */
-
-interface MenuPath {
-  label: string;
-  labelZh: string;
-  labelEn: string;
-  path: string[];
-}
-interface SearchMenuProps {
-  menus: SideMenu[] | undefined;
-  permissions: string[];
-  value: string;
-  currentPath?: MenuPath[];
-  result?: SideMenu[];
-}
-
-/**
- * 搜索菜单数据
- * @param data - 菜单、权限和搜索值等数据
- */
-export function searchMenuValue(data: SearchMenuProps): SideMenu[] {
-  const { menus, permissions, value } = data;
-  let { currentPath, result } = data;
-  if (!menus?.length || !value) return [];
-  if (!currentPath) currentPath = [];
-  if (!result) result = [];
-  const lang = localStorage.getItem(LANG);
-
-  for (let i = 0; i < menus.length; i++) {
-    const { key, label, labelZh, labelEn, children } = menus[i];
-    // 如果存在子数组则递归
-    if (hasChildren(menus[i])) {
-      currentPath.push({
-        label,
-        labelZh: labelZh || label,
-        labelEn,
-        path: splitPath(key),
-      });
-
-      // 递归子数组，返回结果
-      const childrenData = {
-        menus: children,
-        permissions,
-        value,
-        currentPath,
-        result,
-      };
-      const childResult = searchMenuValue(childrenData);
-
-      // 当子数组返回值有值时则合并数组
-      if (childResult.length) {
-        result.concat(childResult);
-      } else {
-        currentPath.pop();
-      }
-    } else if (
-      ((lang === 'en' &&
-        menus[i]?.labelEn?.toLocaleUpperCase()?.includes(value?.toLocaleUpperCase())) ||
-        (lang !== 'en' &&
-          (menus[i]?.labelZh?.includes(value) || menus[i]?.label?.includes(value)))) &&
-      hasPermission(menus[i], permissions)
-    ) {
-      // 匹配到value值时添加到result中
-      const { label, labelZh, labelEn, key } = menus[i];
-      currentPath.push({
-        label: label,
-        labelZh: labelZh || label,
-        labelEn: labelEn,
-        path: splitPath(key),
-      });
-      const nav = matchPath(lang as Langs, key, currentPath);
-      result.push({ label, labelZh, labelEn, key, nav });
-    }
-  }
-
-  return result;
-}
-
-export interface NavData {
-  label: string;
-  labelZh: string;
-  labelEn: string;
-}
-interface GetMenuByKeyResult {
-  label: string;
-  labelZh: string;
-  labelEn: string;
-  key: string;
-  nav: NavData[];
-}
-interface GetMenuByKeyProps {
-  menus: SideMenu[] | undefined;
-  permissions: string[];
-  key: string;
-  fatherNav?: NavData[];
-  result?: GetMenuByKeyResult;
-}
-
-/**
- * 根据key获取菜单当前值
- * @param menus - 菜单
- * @param permissions - 权限列表
- * @param key - 路由值
- * @param fatherNav - 父级面包屑
- * @param result - 返回值
- */
-export function getMenuByKey(data: GetMenuByKeyProps): GetMenuByKeyResult | undefined {
-  const { menus, permissions, key } = data;
-  const lang = localStorage.getItem(LANG);
-  let { fatherNav, result } = data;
-  if (!menus?.length) return result;
-  if (!fatherNav) fatherNav = [];
-  if (!result?.key)
-    result = {
-      key: '',
-      label: '',
-      labelZh: '',
-      labelEn: '',
-      nav: [],
-    };
-
-  for (let i = 0; i < menus.length; i++) {
-    if (!key || (result as GetMenuByKeyResult).key) return result;
-
-    const { label, labelZh, labelEn, children } = menus[i];
-    const currentLabel = lang === 'en' ? labelEn : labelZh || label;
-
-    // 过滤子数据中值
-    if (hasChildren(menus[i])) {
-      fatherNav.push({
-        label: currentLabel,
-        labelZh: labelZh || label,
-        labelEn,
-      });
-
-      // 递归子数组，返回结果
-      const childProps = {
-        menus: children,
-        permissions,
-        key,
-        fatherNav,
-        result,
-      };
-      const childResult = getMenuByKey(childProps);
-
-      // 当子数组返回值
-      if (childResult?.key) {
-        result = childResult;
-      } else {
-        // 下次递归前删除面包屑前一步错误路径
-        fatherNav.pop();
-      }
-    } else if (menus[i]?.key === key && hasPermission(menus[i], permissions)) {
-      const { key } = menus[i];
-      fatherNav.push({
-        label: currentLabel,
-        labelZh: labelZh || label,
-        labelEn,
-      });
-      if (key)
-        result = {
-          label,
-          labelZh: labelZh || label,
-          labelEn,
-          key,
-          nav: fatherNav,
-        };
-    }
-  }
-
-  return result;
-}
-
-/**
  * 获取菜单名
  * @param list - 菜单列表
  * @param path - 路径
- * @param lang - 语言
  */
-export const getMenuName = (list: SideMenu[], path: string, lang: string) => {
+export const getMenuName = (list: SideMenu[], path: string) => {
   let result = '';
 
   const deepData = (list: SideMenu[], path: string) => {
@@ -260,8 +51,8 @@ export const getMenuName = (list: SideMenu[], path: string, lang: string) => {
     for (let i = 0; i < list?.length; i++) {
       const item = list[i];
 
-      if (item.key === path) {
-        result = lang === 'en' ? item.labelEn : item.labelZh || item.label;
+      if (item.route_path === path) {
+        result = item.label;
         return result;
       }
 
@@ -289,31 +80,59 @@ export const getMenuName = (list: SideMenu[], path: string, lang: string) => {
 export function filterMenus(menus: SideMenu[], permissions: string[]): SideMenu[] {
   const result: SideMenu[] = [];
   const newMenus = cloneDeep(menus);
-  const lang = localStorage.getItem(LANG);
-
+  console.log(menus);
   for (let i = 0; i < newMenus.length; i++) {
     const item = newMenus[i];
+
     // 处理子数组
     if (hasChildren(item)) {
-      const result = filterMenus(item.children as SideMenu[], permissions);
+      const filteredChildren = filterMenus(item.children as SideMenu[], permissions);
 
-      // 有子权限数据则保留
-      item.children = result?.length ? result : undefined;
+      // 有子权限数据则保留，否则设置为undefined
+      if (filteredChildren && filteredChildren.length > 0) {
+        item.children = filteredChildren;
+      } else {
+        item.children = undefined;
+      }
     }
 
+    const hasItemPermission = hasPermission(item, permissions);
+    const hasValidChildren = item.children && item.children.length > 0;
+
     // 有权限或有子数据累加
-    if (hasPermission(item, permissions) || hasChildren(item)) {
-      if (lang === 'en') {
-        item.labelZh = item.labelZh || item.label;
-        item.label = item.labelEn;
-      }
+    if (hasItemPermission || hasValidChildren) {
       result.push(item);
     }
   }
-
+  console.log(result);
   return result;
 }
+/**
+ * 在一个【树形结构】的菜单数组中，根据 key 递归查找并返回对应的菜单对象。
+ * @param menuTree - 经过处理后的树形菜单数组。
+ * @param targetKey - 需要查找的菜单项的 key (通常是 antd Menu 返回的字符串 key)。
+ * @returns 找到的菜单对象，如果未找到则返回 undefined。
+ */
+export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu | undefined {
+  for (const menu of menuList) {
+    // antd 的 key 是字符串，我们的数据 key 可能是数字，统一转为字符串比较更安全
+    if (String(menu.key) === targetKey) {
+      return menu;
+    }
 
+    // 如果当前节点没匹配上，就深入其子节点继续查找
+    if (menu.children && menu.children.length > 0) {
+      const found = getMenuByKey(menu.children, targetKey);
+      // 如果在子节点中找到了，就立即将结果向上返回
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  // 遍历完所有节点及其子孙节点后，仍未找到，则返回 undefined
+  return undefined;
+}
 /**
  * 获取第一个有效权限路由
  * @param menus - 菜单
@@ -337,82 +156,30 @@ export function getFirstMenu(menus: SideMenu[], permissions: string[], result = 
 
     // 有权限且没有有子数据
     if (hasPermission(menus[i], permissions) && !hasChildren(menus[i]) && !result)
-      result = menus[i].key;
+      result = menus[i].route_path;
   }
 
   return result;
 }
 
 /**
- * 获取子数据的key
- * @param menus - 菜单数据
- * @param level - 层级
+ * 检查菜单项是否有权限
+ * @param menu - 菜单项
+ * @param permissions - 权限列表
  */
-function getChildrenKey(menus: SideMenu[] | undefined, level: number) {
-  if (!menus?.length) return 'none';
-  let result = '';
-
-  const deep = (menus: SideMenu[], level: number) => {
-    if (result) return result;
-    const newLevel = level + 1;
-
-    for (let i = 0; i < menus?.length; i++) {
-      const item = menus[i];
-      if (item.key) {
-        const arr = item.key.split('/');
-        for (let j = 1; j < arr?.length && j <= newLevel; j++) {
-          const key = arr[j];
-          result += `/${key}`;
-        }
-        return result;
-      }
-
-      if (item.children) {
-        deep(item.children, newLevel);
-      }
-    }
-  };
-  deep(menus, level);
-
-  return result;
-}
-
-/**
- * 菜单数据处理-去除多余字段
- * @param menus - 菜单数据
- * @param level - 层级
- */
-export function handleFilterMenus(menus: SideMenu[], level = 0): SideMenu[] {
-  const currentItem: SideMenu[] = [];
-
-  for (let i = 0; i < menus?.length; i++) {
-    const item = menus[i];
-    let children: SideMenu[] = [];
-
-    if (item.children?.length) {
-      const newLevel = level + 1;
-      children = handleFilterMenus(item.children, newLevel);
-    }
-
-    const data: Partial<SideMenu> = { ...item };
-    if (children?.length) (data as SideMenu).children = children;
-    if (!data.key) data.key = getChildrenKey(data.children, level);
-    delete data.labelZh;
-    delete data.labelEn;
-
-    currentItem.push(data as SideMenu);
+function hasPermission(menu: SideMenu, permissions: string[]): boolean {
+  // 如果菜单项有明确的权限字段，检查该权限
+  if (menu.permission) {
+    return permissions.includes(menu.permission);
   }
 
-  return currentItem;
-}
+  // 如果没有明确的权限字段，但有路由路径，检查路由权限
+  if (menu.route_path) {
+    return permissions.includes(menu.route_path);
+  }
 
-/**
- * 路由是否权限
- * @param route - 路由
- * @param permissions - 权限
- */
-function hasPermission(route: SideMenu, permissions: string[]): boolean {
-  return permissions?.includes(route?.rule || '');
+  // 如果既没有权限字段也没有路由路径，可能是纯容器菜单，允许访问
+  return true;
 }
 
 /**

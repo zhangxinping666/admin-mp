@@ -1,23 +1,15 @@
-import { getFirstMenu, getMenuByKey } from '@/menus/utils/helper';
 import { Button } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './all.module.less';
 
 function Forbidden() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { permissions, menuList } = useCommonStore();
-  const { addTabs, setActiveKey } = useTabsStore();
 
   /** 跳转首页 */
   const goIndex = () => {
-    const firstMenu = getFirstMenu(menuList, permissions);
-    navigate(firstMenu);
-    const menuByKeyProps = { menus: menuList, permissions, key: firstMenu };
-    const newItems = getMenuByKey(menuByKeyProps);
-    if (newItems?.key) {
-      setActiveKey(newItems.key);
-      addTabs(newItems);
-    }
+    navigate('/dashboard');
   };
 
   return (

@@ -23,14 +23,15 @@ export interface PaginationData {
 
 // 侧边菜单
 export interface SideMenu extends Omit<ItemType, 'children' | 'label' | 'icon'> {
-  label: string;
-  labelZh?: string;
-  labelEn: string;
-  key: string;
-  icon?: React.ReactNode | string;
-  rule?: string; // 路由权限
-  nav?: string[]; // 面包屑路径
+  key: number;
+  pid: number;
   children?: SideMenu[];
+  label: string;
+  icon?: string | React.ReactNode;
+  route_path: string;
+  component_path: string;
+  sort: number;
+  permission?: string;
 }
 
 export interface MenuResult {
@@ -61,9 +62,9 @@ export interface TableColumn<T = object> extends ColumnType<T> {
 }
 
 // 表格参数
-export interface BaseTableProps extends Omit<TableProps, 'columns' | 'rowKey'> {
+export interface BaseTableProps<T = object> extends Omit<TableProps<T>, 'columns' | 'rowKey'> {
   rowKey?: string;
-  columns: TableColumn[];
+  columns: TableColumn<T>[];
 }
 
 // 表格操作

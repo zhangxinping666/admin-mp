@@ -1,4 +1,4 @@
-import { request } from '@/utils/request';
+import request from '@/utils/request';
 
 // 获取交易流水列表
 export function getTradeBlotterListServe(params: FlowListParams) {

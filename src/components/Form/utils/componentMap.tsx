@@ -13,6 +13,7 @@ import {
   Slider,
   Upload,
   type InputProps,
+  Button,
 } from 'antd';
 import {
   BaseDatePicker,
@@ -24,6 +25,7 @@ import { BaseSelect, BaseTreeSelect, ApiSelect, ApiTreeSelect } from '@/componen
 import BaseTransfer from '@/components/Transfer/BaseTransfer';
 import PasswordStrength from '@/components/PasswordStrength';
 import AmountRangeInput from '@/components/AmountRange';
+import { UploadOutlined } from '@ant-design/icons';
 
 const componentMap = new Map();
 
@@ -92,7 +94,13 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
 
   return (
     <>
-      <Comp {...initCompProps(t, component, onPressEnter)} {...props} />
+      {component == 'Upload' ? (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} listType="picture">
+          <Button icon={<UploadOutlined />}>Upload png only</Button>
+        </Comp>
+      ) : (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      )}
     </>
   );
 }
