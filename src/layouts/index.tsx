@@ -4,7 +4,6 @@ import { useOutlet, useLocation } from 'react-router-dom';
 import { Skeleton, message } from 'antd';
 import { Icon } from '@iconify/react';
 import { debounce } from 'lodash';
-import { versionCheck } from './utils/helper';
 import { useMenuStore, useUserStore } from '@/stores';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import KeepAlive from 'react-activation';
@@ -15,6 +14,8 @@ import Forbidden from '@/pages/403';
 import styles from './index.module.less';
 import { getUserInfoServe } from '@/servers/login';
 import { getPermissions } from '@/servers/login';
+import type { SideMenu } from '#/public';
+import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
 
 function Layout() {
   const { pathname, search } = useLocation();
@@ -23,10 +24,10 @@ function Layout() {
   const outlet = useOutlet();
   const [isLoading, setLoading] = useState(true);
   const [messageApi, contextHolder] = message.useMessage();
-  const { setPermissions, setUserInfo } = useUserStore((state) => state);
+  const { setPermissions, setUserInfo, setMenuPermissions } = useUserStore((state) => state);
   const { setMenuList, toggleCollapsed, togglePhone } = useMenuStore((state) => state);
 
-  const { permissions, userId, isMaximize, isCollapsed, isPhone, isRefresh } = useCommonStore();
+  const { menuPermissions, userId, isMaximize, isCollapsed, isPhone, isRefresh } = useCommonStore();
 
   /** 获取用户信息（仅在必要时获取权限和菜单数据） */
   const initializeUserData = useCallback(async () => {
@@ -36,17 +37,18 @@ function Layout() {
       // 获取用户信息
       const { data: userInfo } = await getUserInfoServe();
       setUserInfo(userInfo.data);
-
       // 只有在权限为空时才获取权限和菜单信息，避免与Guards.tsx冲突
-      if (permissions.length === 0) {
+      if (menuPermissions.length === 0) {
         console.log('Layout检测到权限为空，获取权限和菜单信息');
         const permissionsResponse = await getPermissions({ role: 'admin' });
         console.log('Layout中获取权限和菜单信息:', permissionsResponse);
         const { perms, menus } = permissionsResponse.data;
-
+        console.log('Layout中获取权限和菜单信息:', menus);
         // 设置权限和菜单
         setPermissions(perms || []);
         setMenuList(menus || []);
+        // 设置菜单权限
+        setMenuPermissions(extractRoutePathsFromMenus(menus || []));
       } else {
         console.log('Layout检测到权限已存在，跳过权限获取，避免与Guards.tsx冲突');
       }
@@ -58,7 +60,7 @@ function Layout() {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [permissions.length]);
+  }, [menuPermissions.length]);
 
   useEffect(() => {
     // 当用户信息缓存不存在时则重新获取
@@ -116,10 +118,10 @@ function Layout() {
             ${isPhone ? `!left-0 !w-full` : ''}
           `}
         >
-          {isLoading && permissions.length === 0 && (
+          {isLoading && menuPermissions.length === 0 && (
             <Skeleton active className="p-30px" paragraph={{ rows: 10 }} />
           )}
-          {!isLoading && permissions.length === 0 && <Forbidden />}
+          {!isLoading && menuPermissions.length === 0 && <Forbidden />}
           {isRefresh && (
             <div
               className={`
@@ -133,7 +135,7 @@ function Layout() {
               <Icon className="text-40px animate-spin" icon="ri:loader-2-fill" />
             </div>
           )}
-          {permissions.length > 0 && (
+          {menuPermissions.length > 0 && (
             <KeepAlive id={uri} name={uri}>
               <div
                 className={`

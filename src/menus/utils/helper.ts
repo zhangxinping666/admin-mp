@@ -52,7 +52,7 @@ export const getMenuName = (list: SideMenu[], path: string) => {
       const item = list[i];
 
       if (item.route_path === path) {
-        result = item.label;
+        result = String(item.id);
         return result;
       }
 
@@ -75,48 +75,39 @@ export const getMenuName = (list: SideMenu[], path: string) => {
 /**
  * 过滤权限菜单
  * @param menus - 菜单
- * @param permissions - 权限列表
+ * @param permissions - 权限列表（现在基于菜单存在性判断，只要有菜单就有权限）
  */
-export function filterMenus(menus: SideMenu[], permissions: string[]): SideMenu[] {
-  const result: SideMenu[] = [];
-  const newMenus = cloneDeep(menus);
-  console.log(menus);
-  for (let i = 0; i < newMenus.length; i++) {
-    const item = newMenus[i];
+export const filterMenusByPermissions = (menuList: SideMenu[], permissions: string[]) => {
+  const allMenus = cloneDeep(menuList);
 
-    // 处理子数组
-    if (hasChildren(item)) {
-      const filteredChildren = filterMenus(item.children as SideMenu[], permissions);
+  const filterRecursive = (menus: SideMenu[]) => {
+    const accessibleMenus = [];
 
-      // 有子权限数据则保留，否则设置为undefined
-      if (filteredChildren && filteredChildren.length > 0) {
-        item.children = filteredChildren;
-      } else {
-        item.children = undefined;
+    for (const menu of menus) {
+      if (menu.children && menu.children.length > 0) {
+        const accessibleChildren = filterRecursive(menu.children);
+        if (accessibleChildren.length > 0) {
+          menu.children = accessibleChildren;
+        } else {
+          menu.children = undefined;
+        }
       }
+      // 新逻辑：只要菜单存在就有权限，不再检查permissions数组
+      // 只要菜单项存在（无论是否有route_path），都认为有权限
+      accessibleMenus.push(menu);
     }
 
-    const hasItemPermission = hasPermission(item, permissions);
-    const hasValidChildren = item.children && item.children.length > 0;
+    return accessibleMenus;
+  };
 
-    // 有权限或有子数据累加
-    if (hasItemPermission || hasValidChildren) {
-      result.push(item);
-    }
-  }
-  console.log(result);
-  return result;
-}
-/**
- * 在一个【树形结构】的菜单数组中，根据 key 递归查找并返回对应的菜单对象。
- * @param menuTree - 经过处理后的树形菜单数组。
- * @param targetKey - 需要查找的菜单项的 key (通常是 antd Menu 返回的字符串 key)。
- * @returns 找到的菜单对象，如果未找到则返回 undefined。
- */
+  // 从顶层菜单开始执行过滤
+  return filterRecursive(allMenus);
+};
+
 export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu | undefined {
   for (const menu of menuList) {
     // antd 的 key 是字符串，我们的数据 key 可能是数字，统一转为字符串比较更安全
-    if (String(menu.key) === targetKey) {
+    if (String(menu.id) === targetKey) {
       return menu;
     }
 
@@ -165,20 +156,16 @@ export function getFirstMenu(menus: SideMenu[], permissions: string[], result = 
 /**
  * 检查菜单项是否有权限
  * @param menu - 菜单项
- * @param permissions - 权限列表
+ * @param permissions - 权限列表（现在基于菜单存在性判断，只要有菜单就有权限）
  */
 function hasPermission(menu: SideMenu, permissions: string[]): boolean {
-  // 如果菜单项有明确的权限字段，检查该权限
-  if (menu.permission) {
-    return permissions.includes(menu.permission);
-  }
-
-  // 如果没有明确的权限字段，但有路由路径，检查路由权限
+  // 新逻辑：只要菜单存在且有路由路径，就认为有权限
+  // 不再检查permissions数组，因为现在的逻辑是有菜单就有权限
   if (menu.route_path) {
-    return permissions.includes(menu.route_path);
+    return true;
   }
 
-  // 如果既没有权限字段也没有路由路径，可能是纯容器菜单，允许访问
+  // 如果没有路由路径，可能是纯容器菜单，也允许访问
   return true;
 }
 

@@ -1,6 +1,10 @@
 import type { LoginData, LoginResult, UserInfoResponse, PermissionsResponse } from './model';
 import type { SideMenu } from '#/public';
+import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
 import type { FormProps } from 'antd';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Checkbox, message, Form, Button, Input } from 'antd';
 import { getUserInfoServe, login } from '@/servers/login';
 import { setTitle } from '@/utils/helper';
@@ -11,6 +15,8 @@ import { setAccessToken, setRefreshToken } from '@/stores/token';
 import { getPermissions } from '@/servers/login';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
+import { usePublicStore } from '@/stores/public';
+import { useUserStore } from '@/stores/user';
 const CHECK_REMEMBER = 'remember-me';
 
 function Login() {
@@ -21,10 +27,10 @@ function Login() {
   const [isRemember, setRemember] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const { search } = useLocation();
-  const { clearLoginInfo, saveLoginInfo, menuList } = useCommonStore();
+  const { clearLoginInfo, saveLoginInfo } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
   const setThemeValue = usePublicStore((state) => state.setThemeValue);
-  const { setPermissions, setUserInfo } = useUserStore((state) => state);
+  const { setPermissions, setUserInfo, setMenuPermissions } = useUserStore((state) => state);
   const themeCache = (localStorage.getItem(THEME_KEY) ?? 'light') as ThemeType;
 
   //主题色挂载
@@ -56,7 +62,6 @@ function Login() {
     if (!search || !search.includes('?redirect=')) {
       return '';
     }
-
     const urlParams = new URLSearchParams(search);
     return urlParams.get('redirect') || '';
   };
@@ -65,6 +70,7 @@ function Login() {
   const handleGoMenu = async (menus: SideMenu[], userPermissions: string[]) => {
     // 检查是否有重定向URL
     if (search?.includes('?redirect=')) {
+      console.log('re');
       const redirectUrl = getRedirectUrl();
       if (redirectUrl) {
         // 验证重定向URL是否有权限访问
@@ -106,17 +112,22 @@ function Login() {
       const permissionsResponse = await getPermissions({ role: 'admin' });
       const { menus, perms } = permissionsResponse.data;
       setMenuList(menus);
+      console.log(menus);
       // 转换后端菜单数据格式
 
-      // 如果后端没有返回perms或perms为空，从菜单中提取权限
-      let finalPermissions = perms;
+      // 从菜单中提取route_path作为权限（因为权限系统基于路径匹配）
+      const routePermissions = extractRoutePathsFromMenus(menus);
+      console.log('从菜单中提取的权限路径:', routePermissions);
+
+      // 使用路径权限作为最终权限
+      const finalPermissions = routePermissions;
+
       setPermissions(finalPermissions);
       return { menus: menus, perms: finalPermissions };
     } finally {
       setLoading(false);
     }
   };
-
   /**
    * 处理登录
    * @param values - 表单数据
@@ -138,12 +149,13 @@ function Login() {
       console.log('用户信息数据:', user);
       // 获取权限信息 - data 字段直接是 PermissionsData 对象
       const { menus, perms } = await getUserPermissions();
-
+      setMenuPermissions(extractRoutePathsFromMenus(menus));
       // 处理记住我逻辑 - 在登录成功后保存账号密码
       const passwordObj = { value: values.password, expire: 0 };
       handleRemember(values.account, encryption(passwordObj));
 
       if (!perms || !refresh_token) {
+        console.log('权限检查失败 - perms:', perms, 'refresh_token:', refresh_token);
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
       }
       await handleGoMenu(menus, perms);
