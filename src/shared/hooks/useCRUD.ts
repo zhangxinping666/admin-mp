@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { message, type FormInstance } from 'antd';
 import type { BaseFormData } from '#/form';
 import { INIT_PAGINATION } from '@/utils/config';
-import Item from 'antd/es/list/Item';
 
 interface UseCRUDOptions<T> {
   initCreate: Partial<T>;

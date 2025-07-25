@@ -301,39 +301,7 @@ export const itemFormList = (): BaseFormList[] => [
     },
   },
   {
-    label: '图片',
-    name: 'imageUrl',
-    component: 'Upload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
-  },
-  {
-    label: '备注',
+    label: '描述',
     name: 'remark',
     component: 'TextArea',
     componentProps: {

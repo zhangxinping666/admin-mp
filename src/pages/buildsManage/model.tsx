@@ -9,6 +9,8 @@ export interface Building {
   floorCount: number; // 楼层数
   longitude: number; // 经度
   latitude: number; // 纬度
+  address:string;// 地址
+  school_id:number;// 学校id
   createdAt?: string; // 创建时间
   action?: React.ReactNode;
 }
@@ -40,10 +42,11 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '楼层数',
-    dataIndex: 'floorCount',
-    key: 'floorCount',
-    width: 100,
+    title: '地址',
+    dataIndex: 'address',
+    key: 'address',
+    width: 150,
+    ellipsis: true,
   },
   {
     title: '经度',
@@ -91,6 +94,20 @@ export const formList = (): BaseFormList[] => [
       min: 1,
       style: { width: '100%' },
     },
+  },
+  {
+    label: '地址',
+    name: 'address',
+    component: 'Input',
+    placeholder: '请输入地址',
+    rules: FORM_REQUIRED,
+  },
+  {
+    label: '学校',
+    name: 'school_id',
+    component: 'Select',
+    placeholder: '请选择学校',
+    rules: FORM_REQUIRED,
   },
   {
     label: '经度',

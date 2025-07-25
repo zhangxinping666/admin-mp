@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Button, TableColumnsType } from 'antd';
+import { Button, Space, TableColumnsType } from 'antd';
 import BaseContent from '@/components/Content/BaseContent';
 import BaseCard from '@/components/Card/BaseCard';
 import BaseSearch from '@/components/Search/BaseSearch';
@@ -102,36 +102,38 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     <>
       {contextHolder}
       <BaseContent isPermission={true}>
-        {/* 搜索区域 */}
-        <BaseCard>
-          <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
-        </BaseCard>
+        <Space direction="vertical" size={'large'}>
+          {/* 搜索区域 */}
+          <BaseCard>
+            <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
+          </BaseCard>
 
-        {/* 表格区域 */}
-        <BaseCard>
-          <BaseTable
-            isLoading={isLoading}
-            columns={finalColumns as TableColumnsType}
-            getPage={() => {
-              console.log('点击了刷新按钮');
-            }}
-            dataSource={tableData}
-            rowKey="id"
-            pagination={false}
-            rightContent={
-              <Button type="primary" onClick={() => handleCreate(`新增${title}`)}>
-                新增{title}
-              </Button>
-            }
-          />
+          {/* 表格区域 */}
+          <BaseCard>
+            <BaseTable
+              isLoading={isLoading}
+              columns={finalColumns as TableColumnsType}
+              getPage={() => {
+                console.log('点击了刷新按钮');
+              }}
+              dataSource={tableData}
+              rowKey="id"
+              pagination={false}
+              rightContent={
+                <Button type="primary" onClick={() => handleCreate(`新增${title}`)}>
+                  新增{title}
+                </Button>
+              }
+            />
 
-          <BasePagination
-            current={page}
-            pageSize={pageSize}
-            total={total}
-            onChange={handlePageChange}
-          />
-        </BaseCard>
+            <BasePagination
+              current={page}
+              pageSize={pageSize}
+              total={total}
+              onChange={handlePageChange}
+            />
+          </BaseCard>
+        </Space>
       </BaseContent>
 
       {/* 新增/编辑模态框 */}
