@@ -1,3 +1,5 @@
+import type { SideMenu } from '#/public';
+
 /**
  * 【最终修正版】将扁平化菜单数据转换为树形结构的 SideMenu 数组
  * 这个版本能正确构建树，并清理叶子节点上多余的 children 属性。
@@ -15,17 +17,21 @@ export function buildMenuTree(flatMenus: SideMenu[]): SideMenu[] {
 
   // 1. 第一次遍历：将所有节点放入 Map 中，方便快速查找
   //    注意：这一次我们【不】添加 children 属性
+  //    兼容key和id字段
   flatMenus.forEach((item) => {
-    menuMap.set(item.key, { ...item });
+    const itemKey = (item as any).key || (item as any).id;
+    menuMap.set(itemKey, { ...item });
   });
 
   // 2. 第二次遍历：构建树形关系
   flatMenus.forEach((item) => {
-    const node = menuMap.get(item.key);
+    const itemKey = (item as any).key || (item as any).id;
+    const itemPid = (item as any).pid;
+    const node = menuMap.get(itemKey);
 
     // 找到父节点
-    if (item.pid && item.pid !== 0 && menuMap.has(item.pid)) {
-      const parent = menuMap.get(item.pid);
+    if (itemPid && itemPid !== 0 && menuMap.has(itemPid)) {
+      const parent = menuMap.get(itemPid);
 
       // 如果父节点还没有 children 数组，就创建一个
       if (!parent.children) {

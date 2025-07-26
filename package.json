@@ -4,8 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "mock": "vite --mode mock",
+    "dev": "vite --mode localhost",
+    "dev:localhost": "vite --mode localhost",
+    "dev:mock": "vite --mode mock",
+    "dev:dev": "vite --mode development",
     "build": "vite build",
     "build:report": "REPORT=true vite build",
     "build:dev": "vite build --mode dev",

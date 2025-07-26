@@ -25,13 +25,14 @@ export interface PaginationData {
 export interface SideMenu extends Omit<ItemType, 'children' | 'label' | 'icon'> {
   key: number;
   pid: number;
-  children?: SideMenu[];
   label: string;
+  route_name: string;
   icon?: string | React.ReactNode;
+  sort: number;
+  type: number;
   route_path: string;
   component_path: string;
-  sort: number;
-  permission?: string;
+  children?: SideMenu[];
 }
 
 export interface MenuResult {
