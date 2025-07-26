@@ -32,7 +32,8 @@ const processQueue = (error: Error | null, token: string | null = null): void =>
 // --- 创建 Axios 实例 ---
 const request: AxiosInstance = axios.create({
   // 在 .env 文件中配置 中的请求配置
-  baseURL: 'https://m1.apifoxmock.com/m1/6582482-6287977-default',
+  baseURL:
+    import.meta.env.VITE_APP_ENV === 'localhost' ? '/api' : import.meta.env.VITE_API_BASE_URL,
   timeout: 10000, // 请求超时时间
 });
 
