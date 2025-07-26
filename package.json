@@ -10,7 +10,7 @@
     "dev:dev": "vite --mode development",
     "build": "vite build",
     "build:report": "REPORT=true vite build",
-    "build:dev": "vite build --mode dev",
+    "build:dev": "vite build --mode development",
     "build:test": "vite build --mode test",
     "lint": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
     "lint:stylelint": "stylelint --cache --fix \"**/*.{less,postcss,css,scss}\" --cache --cache-location node_modules/.cache/stylelint/",
