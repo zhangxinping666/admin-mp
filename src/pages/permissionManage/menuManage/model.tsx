@@ -13,11 +13,42 @@ export interface Menu {
   route_name: string | null;
   route_path: string | null;
   component_path: string | null;
+  route_params: string | null;
   status: number;
   sort: number;
   desc: string;
-  api_id: number | null;
   children?: Menu[];
+}
+
+export interface MenuAddForm {
+  pid: number;
+  name: string;
+  code: string;
+  icon: string | null;
+  type: number;
+  route_name: string | null;
+  route_path: string | null;
+  component_path: string | null;
+  route_params: string | null;
+  status: number;
+  sort: number;
+  desc: string;
+}
+
+export interface MenuUpdateForm {
+  id: number;
+  pid: number;
+  name: string;
+  code: string;
+  icon: string | null;
+  type: number;
+  route_name: string | null;
+  route_path: string | null;
+  component_path: string | null;
+  route_params: string | null;
+  status: number;
+  sort: number;
+  desc: string;
 }
 
 export interface Pagination {
@@ -35,8 +66,15 @@ export interface MenuListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: Menu[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
+}
+export interface MenuDetailResult {
+  code: number;
+  data: Menu;
 }
 
 // 搜索配置

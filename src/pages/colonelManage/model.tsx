@@ -8,9 +8,30 @@ export interface Colonel {
   name: string;
   phone: number;
   password: string;
+  city_name: string;
+  province: string;
+  status: number;
+}
+
+export interface addColonelForm {
+  name: string;
+  phone: number;
+  password: string;
+  school_id: number;
   city_id: number;
   status: number;
 }
+
+export interface updateColonelForm {
+  id: number;
+  name: string;
+  phone: number;
+  password: string;
+  school_id: number;
+  city_id: number;
+  status: number;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -26,8 +47,11 @@ export interface ColonelListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
-    list: ColonelItem[];
-    pagination: Pagination;
+    list: Colonel[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 

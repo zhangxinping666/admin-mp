@@ -13,6 +13,23 @@ export interface School {
   status: number;
 }
 
+export interface addSchoolForm {
+  name: string;
+  address: string;
+  city_id: number;
+  school_logo: number;
+  status: number;
+}
+
+export interface updateSchoolForm {
+  id: number;
+  name: string;
+  address: string;
+  city_id: number;
+  school_logo: number;
+  status: number;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;

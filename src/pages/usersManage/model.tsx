@@ -14,6 +14,17 @@ export interface User {
   last_time: string;
   status: number;
 }
+export interface updateUserForm {
+  id: number;
+  avatar: string;
+  nickname: string;
+  phone: string;
+  school: string;
+  wechat: string;
+  alipay: string;
+  status: number;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -30,8 +41,16 @@ export interface UserListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: User[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
+}
+
+export interface UserDetailResult {
+  code: number;
+  data: User;
 }
 
 // 搜索配置

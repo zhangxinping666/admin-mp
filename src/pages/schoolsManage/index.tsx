@@ -16,25 +16,6 @@ const initCreate: Partial<School> = {
 };
 
 const SchoolsPage = () => {
-  // const [mockData, setMockData] = useState<School[]>([]);
-
-  // useEffect(() => {
-  //   const fetchSchoolList = async () => {
-  //     try {
-  //       const params = { page: 1, page_size: 10 };
-  //       const res = await getSchoolList(params);
-  //       console.log(res);
-  //       if (res.data && res.data.list) {
-  //         setMockData(res.data.list);
-  //       }
-  //     } catch (error) {
-  //       console.error('获取学校列表失败:', error);
-  //     } finally {
-  //     }
-  //   };
-  //   fetchSchoolList();
-  // }, []);
-
   const mockData: School[] = [
     {
       id: 1,

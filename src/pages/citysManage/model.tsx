@@ -8,6 +8,33 @@ export interface City {
   name: string;
   phone: number;
   password: string;
+  city_name: string;
+  province: string;
+  status: number;
+}
+
+export interface getCityResult {
+  code: number;
+  message: string; // 注意：根据您的JSON数据，这里是 message (单数)
+  data: {
+    list: City[];
+    pagination: Pagination;
+  };
+}
+
+export interface addCityForm {
+  name: string;
+  phone: number;
+  password: string;
+  city_id: number;
+  status: number;
+}
+
+export interface updateCityForm {
+  id: number;
+  name: string;
+  phone: number;
+  password: string;
   city_id: number;
   status: number;
 }
@@ -28,7 +55,10 @@ export interface CityListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: City[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 
