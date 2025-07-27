@@ -219,29 +219,6 @@ function LayoutMenu() {
             onClick={onClickMenu}
             onOpenChange={handleOpenChange}
           />
-          {/* 调试信息 */}
-          {process.env.NODE_ENV === 'development' && (
-            <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                right: 0,
-                background: 'rgba(0,0,0,0.8)',
-                color: 'white',
-                padding: '10px',
-                fontSize: '12px',
-                zIndex: 9999,
-              }}
-            >
-              <div>selectedKeys: {JSON.stringify(selectedKeys)}</div>
-              <div>
-                antdMenuItems:{' '}
-                {JSON.stringify(
-                  antdMenuItems.map((item) => ({ key: item?.key, label: item?.label })),
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         {isPhone && !isCollapsed && (
