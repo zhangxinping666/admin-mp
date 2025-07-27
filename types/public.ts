@@ -26,12 +26,13 @@ export interface SideMenu extends Omit<ItemType, 'children' | 'label' | 'icon'> 
   key: number;
   pid: number;
   label: string;
-  route_name: string;
-  icon?: string | React.ReactNode;
+  route_name: string | null;
+  icon?: string | React.ReactNode | null;
   sort: number;
   type: number;
+  permission: string;
   route_path: string;
-  component_path: string;
+  component_path: string | null;
   children?: SideMenu[];
 }
 

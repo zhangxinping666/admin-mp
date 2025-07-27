@@ -77,8 +77,12 @@ function LayoutMenu() {
     };
 
     const menuItem = findMenuByPath(menuList, currentPath);
+
     if (menuItem) {
-      setSelectedKeys([String(menuItem.id)]);
+      const selectedKey = String((menuItem as any).id || (menuItem as any).key);
+      setSelectedKeys([selectedKey]);
+    } else {
+      setSelectedKeys([]);
     }
 
     const newOpenKeys = getOpenMenuByRouter(currentPath);
@@ -126,16 +130,10 @@ function LayoutMenu() {
 
   const onClickMenu: MenuProps['onClick'] = (e) => {
     const menuItem = getMenuByKey(menuList, e.key);
-
     if (!menuItem || !menuItem.route_path) {
       console.warn('未找到匹配的菜单项或该项无 route_path:', e.key);
       return;
     }
-
-    if (menuItem.route_path === pathname) {
-      return;
-    }
-
     const targetPath = menuItem.route_path;
     const newOpenKeys = getOpenMenuByRouter(targetPath);
 
@@ -221,6 +219,29 @@ function LayoutMenu() {
             onClick={onClickMenu}
             onOpenChange={handleOpenChange}
           />
+          {/* 调试信息 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                background: 'rgba(0,0,0,0.8)',
+                color: 'white',
+                padding: '10px',
+                fontSize: '12px',
+                zIndex: 9999,
+              }}
+            >
+              <div>selectedKeys: {JSON.stringify(selectedKeys)}</div>
+              <div>
+                antdMenuItems:{' '}
+                {JSON.stringify(
+                  antdMenuItems.map((item) => ({ key: item?.key, label: item?.label })),
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {isPhone && !isCollapsed && (
