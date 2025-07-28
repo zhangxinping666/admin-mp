@@ -159,4 +159,4 @@ const menuList = defaultMenus;
 通过根目录`packages`文件中查看对于xxx文件的源码进行修改。
 
 #### 5. 安装新依赖时报错？
-使用了monorepo项目安装新依赖时需要在后面添加`-w`或`--workspace`，否则会报错，比如：`pnpm i mobx -w`。
+使用了monorepo项目安装新依赖时需要在后面添加`-w`或`--workspace`，否则会报错，比如：`pnpm i mobx -w`
