@@ -105,19 +105,10 @@ export const filterMenusByPermissions = (menuList: SideMenu[], permissions: stri
 };
 
 export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu | undefined {
-  console.log('=== getMenuByKey调试信息 ===');
-  console.log('查找的targetKey:', targetKey);
-  console.log('menuList:', menuList);
-  
   for (const menu of menuList) {
-    console.log('检查菜单项:', menu);
-    console.log('菜单项的id:', menu.id);
-    console.log('菜单项的key:', (menu as any).key);
-    
     // antd 的 key 是字符串，我们的数据 key 可能是数字，统一转为字符串比较更安全
     // 同时检查id和key字段
     if (String(menu.id) === targetKey || String((menu as any).key) === targetKey) {
-      console.log('找到匹配的菜单项:', menu);
       return menu;
     }
 
@@ -126,14 +117,10 @@ export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu 
       const found = getMenuByKey(menu.children, targetKey);
       // 如果在子节点中找到了，就立即将结果向上返回
       if (found) {
-        console.log('在子节点中找到匹配的菜单项:', found);
         return found;
       }
     }
   }
-
-  console.log('未找到匹配的菜单项');
-  // 遍历完所有节点及其子孙节点后，仍未找到，则返回 undefined
   return undefined;
 }
 /**

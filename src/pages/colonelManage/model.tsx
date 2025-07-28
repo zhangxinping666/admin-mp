@@ -6,11 +6,35 @@ import { FORM_REQUIRED } from '@/utils/config';
 export interface Colonel {
   id: number;
   name: string;
+  phone: string;
+  password: string;
+  city_name: string;
+  city_id: number;
+  school_name: string;
+  school_id: number;
+  province: string;
+  status: number;
+}
+
+export interface addColonelForm {
+  name: string;
   phone: number;
   password: string;
+  school_id: number;
   city_id: number;
   status: number;
 }
+
+export interface updateColonelForm {
+  id: number;
+  name: string;
+  phone: number;
+  password: string;
+  school_id: number;
+  city_id: number;
+  status: number;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -26,8 +50,11 @@ export interface ColonelListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
-    list: ColonelItem[];
-    pagination: Pagination;
+    list: Colonel[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 
@@ -69,9 +96,15 @@ export const tableColumns: TableColumn[] = [
     width: 100,
   },
   {
-    title: '城市ID',
-    dataIndex: 'city_id',
-    key: 'city_id',
+    title: '城市名称',
+    dataIndex: 'city_name',
+    key: 'city_name',
+    width: 100,
+  },
+  {
+    title: '学校名称',
+    dataIndex: 'school_name',
+    key: 'school_name',
     width: 100,
   },
   {
@@ -84,13 +117,6 @@ export const tableColumns: TableColumn[] = [
     ),
   },
   {
-    title: '团长密码',
-    dataIndex: 'password',
-    key: 'password',
-    width: 120,
-    fixed: 'right',
-  },
-  {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
@@ -100,7 +126,18 @@ export const tableColumns: TableColumn[] = [
 ];
 
 // 表单配置
-export const formList = (): BaseFormList[] => [
+export const formList = ({
+  groupedCityOptions,
+  isLoadingOptions,
+  schoolOptions,
+  isSchoolLoading,
+}: {
+  // 建议使用更具体的类型，但 any[] 也能工作
+  groupedCityOptions: any[];
+  isLoadingOptions: boolean;
+  schoolOptions: any[];
+  isSchoolLoading: boolean;
+}): BaseFormList[] => [
   {
     label: '团长名称',
     name: 'name',
@@ -116,14 +153,30 @@ export const formList = (): BaseFormList[] => [
     rules: FORM_REQUIRED,
   },
   {
-    label: '城市ID',
-    name: 'city_id',
-    component: 'InputNumber',
-    placeholder: '请输入城市ID',
-    rules: FORM_REQUIRED,
+    name: 'city_id', // 这个字段的键名，最终提交给后端
+    label: '选择城市',
+    component: 'Select',
+    required: true,
+    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      loading: isLoadingOptions,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+      options: groupedCityOptions,
+    },
+  },
+  {
+    name: 'school_id', // 这个字段的键名，最终提交给后端
+    label: '选择学校',
+    component: 'Select',
+    required: true,
+    placeholder: isSchoolLoading ? '正在加载学校数据...' : '请选择或搜索学校',
+    componentProps: {
+      loading: isSchoolLoading,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+      options: schoolOptions,
+      disabled: isSchoolLoading,
     },
   },
   {
@@ -131,17 +184,17 @@ export const formList = (): BaseFormList[] => [
     name: 'password',
     component: 'InputNumber',
     placeholder: '请输入团长密码',
-    rules: FORM_REQUIRED,
     componentProps: {
       precision: 6,
       style: { width: '100%' },
     },
   },
-  {
+ {
     label: '状态',
     name: 'status',
     component: 'Select',
     placeholder: '请选择状态',
+    rules: FORM_REQUIRED,
     componentProps: {
       options: [
         { label: '启用', value: 1 },

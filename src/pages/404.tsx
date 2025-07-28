@@ -15,7 +15,7 @@ function NotFound() {
     const menuByKeyProps = { menus: menuList, permissions, key: firstMenu };
     const newItems = getMenuByKey(menuByKeyProps);
     if (newItems?.key) {
-      setActiveKey(newItems.key);
+      setActiveKey(String(newItems.key));
       addTabs(newItems);
     }
   };

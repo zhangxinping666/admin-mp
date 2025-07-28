@@ -48,13 +48,13 @@ type uploadImg = {
     url: string;
   };
 };
-// 楼栋接口定义
+// 定义
 export interface Cert {
   id: number;
   name: string;
   card_id: number;
-  front_img: uploadImg[];
-  back_img: uploadImg[];
+  front: uploadImg[];
+  back: uploadImg[];
   status: number;
 }
 
@@ -62,9 +62,21 @@ export interface CertItem {
   id: number;
   name: string;
   card_id: number;
-  front_img: uploadImg[];
-  back_img: uploadImg[];
+  front: string;
+  back: string;
   status: number;
+}
+export interface UpdateCert {
+  id: number;
+  name: string;
+  card_id: number;
+  front: string;
+  back: string;
+  status: number;
+}
+export interface CertDetailResult {
+  code: number;
+  data: CertItem;
 }
 
 export interface Pagination {
@@ -82,8 +94,11 @@ export interface CertListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
-    list: Cert[];
-    pagination: Pagination;
+    list: CertItem[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 

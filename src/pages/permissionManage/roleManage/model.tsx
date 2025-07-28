@@ -7,12 +7,39 @@ export interface Role {
   id: number;
   name: string;
   code: string;
-  desc: string;
   status: number;
-  permissions: number[];
-  dataPermissions: string[];
 }
 
+export interface RoleItem {
+  id: number;
+  name: string;
+  status: number;
+}
+
+export interface updateRoleForm {
+  id: number;
+  name: string;
+  code: string;
+  status: number;
+}
+export interface addRoleForm {
+  name: string;
+  code: string;
+  status: number;
+}
+export interface RoleDetailResult {
+  code: number;
+  data: Role;
+}
+
+export interface RoleSelectListResult {
+  code: number;
+  data: RoleItem[];
+}
+export interface updateRolePermsForm {
+  id: number;
+  id_list: number[];
+}
 // 菜单权限树节点接口
 export interface MenuTreeNode {
   id: number;
@@ -36,7 +63,10 @@ export interface RoleListResult {
   message: string;
   data: {
     list: Role[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 

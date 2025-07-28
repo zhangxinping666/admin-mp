@@ -5,23 +5,43 @@ import { FORM_REQUIRED } from '@/utils/config';
 // 楼栋接口定义
 export interface School {
   id: number;
-  school_id: number;
   name: string;
   address: string;
   city_id: number;
   school_logo: number;
+  logo_image_url: string;
+  city_name: string;
+  province: string;
+  status: number;
+}
+
+export interface addSchoolForm {
+  name: string;
+  address: string;
+  city_id: number;
+  logo_image_url: string;
+  status: number;
+}
+
+export interface updateSchoolForm {
+  id: number;
+  name: string;
+  address: string;
+  city_id: number;
+  logo_image_url: string;
   status: number;
 }
 
 export interface Pagination {
   page: number;
+  pages: number;
   pageSize: number;
   total: number;
 }
 
 export interface PaginationParams {
   page: number;
-  pageSize: number;
+  page_size: number;
 }
 
 export interface SchoolListResult {
@@ -29,7 +49,10 @@ export interface SchoolListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: School[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 
@@ -79,8 +102,8 @@ export const tableColumns: TableColumn[] = [
   },
   {
     title: '学校logo',
-    dataIndex: 'school_logo',
-    key: 'school_logo',
+    dataIndex: 'logo_image_url',
+    key: 'logo_image_url',
     width: 100,
   },
   {
@@ -130,12 +153,11 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '学校logo',
-    name: 'school_logo',
-    component: 'InputNumber',
+    name: 'logo_image_url',
+    component: 'Input',
     placeholder: '请输入学校logo',
     rules: FORM_REQUIRED,
     componentProps: {
-      precision: 6,
       style: { width: '100%' },
     },
   },
