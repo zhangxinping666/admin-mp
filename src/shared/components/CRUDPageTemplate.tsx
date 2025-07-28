@@ -12,17 +12,19 @@ import type { TableColumn } from '#/public';
 import { useCRUD } from '../hooks/useCRUD';
 import { RightOutlined } from '@ant-design/icons';
 
-interface CRUDPageTemplateProps<T> {
+interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
+  hideCreate?: boolean;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
   formConfig: BaseFormList[];
   initCreate: Partial<T>;
   mockData?: T[];
-  apis?: {
-    fetch?: (params: any) => Promise<any>;
-    create?: (data: any) => Promise<any>;
-    update?: (id: number, data: any) => Promise<any>;
+  onEditOpen?: (record: T) => void;
+  apis: {
+    fetch?: (params?: any) => Promise<any>;
+    create?: (data: Partial<T>) => Promise<any>;
+    update?: (data: Partial<T>) => Promise<any>;
     delete?: (id: number) => Promise<any>;
   };
   optionRender?: (
@@ -43,11 +45,20 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   formConfig,
   initCreate,
   mockData,
+  onEditOpen,
   apis,
   optionRender,
   onCreateClick,
   onFormValuesChange,
+  hideCreate,
 }: CRUDPageTemplateProps<T>) => {
+  const crudOptions = {
+    initCreate,
+    fetchApi: apis?.fetch,
+    createApi: apis?.create,
+    updateApi: apis?.update,
+    deleteApi: apis?.delete,
+  };
   const {
     contextHolder,
     createFormRef,
@@ -70,20 +81,19 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     handleDelete,
     handleModalSubmit,
     fetchTableData,
-  } = useCRUD({ initCreate, ...apis });
+  } = useCRUD(crudOptions);
 
-  // 数据获取副作用
-  useEffect(() => {
-    if (isFetch) {
-      fetchTableData(mockData);
-    }
-  }, [isFetch, page, pageSize]);
-  // 👇 在调用 useCRUD 之前，打印一下最终的参数
-  console.log('传递给 useCRUD Hook 的参数是:', { initCreate, ...apis });
-  // 初始化数据
+  // 👇 确保有这个 useEffect 来触发初次加载
   useEffect(() => {
     setFetch(true);
-  }, []);
+  }, []); // 空依赖数组 [] 确保这个 effect 只在组件首次渲染后运行一次
+
+  // 这个 useEffect 监听 isFetch 的变化，并实际调用 API
+  useEffect(() => {
+    if (isFetch) {
+      fetchTableData();
+    }
+  }, [isFetch, page, pageSize]); // (假设依赖项还包括 page 和 pageSize)
 
   // 处理表格列，添加操作列
   const finalColumns = [
@@ -97,7 +107,8 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       render: (_: any, record: T) =>
         optionRender
           ? optionRender(record, {
-              handleEdit: (rec: T) => handleEdit(`编辑${title}`, rec),
+              // 【修改】在调用 handleEdit 时，将 onEditOpen 作为第三个参数传入
+              handleEdit: (rec: T) => handleEdit(`编辑${title}`, rec, onEditOpen),
               handleDelete,
             })
           : null,
@@ -125,19 +136,21 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             rowKey={(record: any) => record.id}
             pagination={false}
             rightContent={
-              <Button
-                type="primary"
-                onClick={() => {
-                  // 如果有自定义的新增点击处理函数，先调用它
-                  if (onCreateClick) {
-                    onCreateClick();
-                  }
-                  // 然后调用默认的新增处理
-                  handleCreate(`新增${title}`);
-                }}
-              >
-                新增{title}
-              </Button>
+              !hideCreate && (
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    // 如果有自定义的新增点击处理函数，先调用它
+                    if (onCreateClick) {
+                      onCreateClick();
+                    }
+                    // 然后调用默认的新增处理
+                    handleCreate(`新增${title}`);
+                  }}
+                >
+                  新增{title}
+                </Button>
+              )
             }
             expandable={{
               // 明确地告诉表格哪一行是可展开的，这是最佳实践
@@ -148,9 +161,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                 // 如果没有子项，渲染一个占位符来保证该列的对齐
                 if (!hasChildren) {
                   // 这个span的宽度和内联样式是为了和有图标的行在视觉上对齐
-                  return (
-                    <span style={{ display: 'inline-block', width: '20px', marginLeft: '6px' }} />
-                  );
+                  return <span />;
                 }
 
                 // 如果有子项，则渲染我们自定义的图标
@@ -176,7 +187,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               },
             }}
           />
-
           <BasePagination
             current={page}
             pageSize={pageSize}
@@ -202,7 +212,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           ref={createFormRef}
           list={formConfig}
           data={createData}
-          handleFinish={(values) => handleModalSubmit(values, optionRender)}
+          handleFinish={(values) => handleModalSubmit(values)}
           onValuesChange={onFormValuesChange}
         />
       </BaseModal>

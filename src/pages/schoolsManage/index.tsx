@@ -2,49 +2,27 @@ import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type School } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
-import { getSchoolList } from '@/servers/school';
+import { getSchoolList, addSchool, updateSchool, deleteSchool } from '@/servers/school';
 
 // 初始化新增数据
 const initCreate: Partial<School> = {
   id: 0,
-  school_id: 0,
   name: '',
   address: '',
   city_id: 1, // 默认城市ID
-  school_logo: 0, // 默认logo
+  logo_image_url: '',
+  city_name: '',
+  province: '',
   status: 0, // 默认状态
+};
+const schoolApis = {
+  fetch: getSchoolList,
+  create: addSchool,
+  update: updateSchool,
+  delete: deleteSchool,
 };
 
 const SchoolsPage = () => {
-  const mockData: School[] = [
-    {
-      id: 1,
-      school_id: 1,
-      name: '北京大学',
-      address: '北京市海淀区颐和园路5号',
-      city_id: 101,
-      school_logo: 1,
-      status: 1,
-    },
-    {
-      id: 2,
-      school_id: 2,
-      name: '复旦大学',
-      address: '上海市杨浦区邯郸路220号',
-      city_id: 102,
-      school_logo: 2,
-      status: 1,
-    },
-    {
-      id: 3,
-      school_id: 3,
-      name: '清华大学',
-      address: '上海市浦东新区浦东南路1000号',
-      city_id: 103,
-      school_logo: 3,
-      status: 1,
-    },
-  ];
   // 操作列渲染
   const optionRender = (
     record: School,
@@ -61,7 +39,12 @@ const SchoolsPage = () => {
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}
-      mockData={mockData}
+      apis={{
+        fetch: schoolApis.fetch,
+        create: schoolApis.create,
+        update: (data: any) => schoolApis.update(data),
+        delete: (id: number) => schoolApis.delete([id]),
+      }}
       optionRender={optionRender}
     />
   );

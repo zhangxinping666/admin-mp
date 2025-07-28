@@ -6,9 +6,10 @@ import { FORM_REQUIRED } from '@/utils/config';
 export interface City {
   id: number;
   name: string;
-  phone: number;
-  password: string;
+  phone: string;
+  password?: string;
   city_name: string;
+  city_id:number;
   province: string;
   status: number;
 }
@@ -26,7 +27,7 @@ export interface addCityForm {
   name: string;
   phone: number;
   password: string;
-  city_id: number;
+  city_name: string;
   status: number;
 }
 
@@ -35,7 +36,7 @@ export interface updateCityForm {
   name: string;
   phone: number;
   password: string;
-  city_id: number;
+  city_name: string;
   status: number;
 }
 
@@ -87,28 +88,28 @@ export const searchList = (): BaseSearchList[] => [
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
-    title: '运营商名称',
+    title: '城市运营商名称',
     dataIndex: 'name',
     key: 'name',
     width: 150,
     ellipsis: true,
   },
   {
-    title: '运营商电话',
+    title: '城市运营商电话',
     dataIndex: 'phone',
     key: 'phone',
     width: 100,
   },
   {
-    title: '城市ID',
-    dataIndex: 'city_id',
-    key: 'city_id',
+    title: '城市名称',
+    dataIndex: 'city_name',
+    key: 'city_name',
     width: 100,
   },
   {
-    title: '运营商密码',
-    dataIndex: 'password',
-    key: 'password',
+    title: '省份',
+    dataIndex: 'province',
+    key: 'province',
     width: 100,
   },
   {
@@ -130,7 +131,14 @@ export const tableColumns: TableColumn[] = [
 ];
 
 // 表单配置
-export const formList = (): BaseFormList[] => [
+export const formList = ({
+  groupedCityOptions,
+  isLoadingOptions,
+}: {
+  // 建议使用更具体的类型，但 any[] 也能工作
+  groupedCityOptions: any[];
+  isLoadingOptions: boolean;
+}): BaseFormList[] => [
   {
     label: '运营商名称',
     name: 'name',
@@ -145,25 +153,26 @@ export const formList = (): BaseFormList[] => [
     placeholder: '请输入运营商电话',
     rules: FORM_REQUIRED,
   },
+
   {
-    label: '城市ID',
-    name: 'city_id',
-    component: 'InputNumber',
-    placeholder: '请输入城市ID',
-    rules: FORM_REQUIRED,
+    name: 'city_id', // 这个字段的键名，最终提交给后端
+    label: '选择城市',
+    component: 'Select',
+    required: true,
+    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      loading: isLoadingOptions,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+      options: groupedCityOptions,
     },
   },
   {
     label: '运营商密码',
     name: 'password',
     component: 'Input',
-    placeholder: '请输入运营商密码',
-    rules: FORM_REQUIRED,
+    placeholder: '私密不展示密码',
     componentProps: {
-      precision: 6,
       style: { width: '100%' },
     },
   },
@@ -172,6 +181,7 @@ export const formList = (): BaseFormList[] => [
     name: 'status',
     component: 'Select',
     placeholder: '请选择状态',
+    rules: FORM_REQUIRED,
     componentProps: {
       options: [
         { label: '启用', value: 1 },

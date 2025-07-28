@@ -14,7 +14,7 @@ export function getUserDetail(id: string) {
   return request.post<UserDetailResult>(`/backUser/detail/${id}`, { id });
 }
 //修改用户详情
-export function updateUserDetail(data: updateUserForm) {
+export function updateUser(data: updateUserForm) {
   return request.post('/backUser/update', { data });
 }
 
