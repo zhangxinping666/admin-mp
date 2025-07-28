@@ -39,5 +39,5 @@ export function getUserInfoServe() {
 
 // 获取用户权限
 export function getPermissions(data: object) {
-  return request.get<PermissionsResponse>('/getPermissions', { params: data });
+  return request.get<PermissionsResponse>('/backstage/menu', { params: data });
 }
