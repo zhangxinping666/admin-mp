@@ -26,11 +26,10 @@ const fetchList = async (params?: MerchantSortListRequest) => {
   const res = await getMerchantSortList(params);
   console.log('获取分类列表:', res);
   return {
-    items: res.data as MerchantSortListResponse[],
+    data: res.data as MerchantSortListResponse[],
     total: res.data.length,
   };
 };
-
 
 const MerchantSortPage = () => {
   const optionRender = (

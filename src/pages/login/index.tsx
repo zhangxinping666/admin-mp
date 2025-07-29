@@ -105,11 +105,12 @@ function Login() {
   };
 
   //获取用户权限
-  const getUserPermissions = async () => {
+  const getUserPermissions = async (user: any) => {
     try {
       setLoading(true);
+
       // 获取权限信息 - data 字段直接是 PermissionsData 对象
-      const permissionsResponse = await getPermissions({ role: 'admin' });
+      const permissionsResponse = await getPermissions({ role: user.name });
       const { menus, perms } = permissionsResponse.data;
       setMenuList(menus);
       console.log(menus);
@@ -148,7 +149,8 @@ function Login() {
       const user = await getUserInfo();
       console.log('用户信息数据:', user);
       // 获取权限信息 - data 字段直接是 PermissionsData 对象
-      const { menus, perms } = await getUserPermissions();
+      const { menus, perms } = await getUserPermissions(user);
+      console.log(menus);
       setMenuPermissions(extractRoutePathsFromMenus(menus));
       // 处理记住我逻辑 - 在登录成功后保存账号密码
       const passwordObj = { value: values.password, expire: 0 };
@@ -237,8 +239,8 @@ function Login() {
             onFinish={handleFinish}
             onFinishFailed={handleFinishFailed}
             initialValues={{
-              account: 'admin',
-              password: 'admin111',
+              account: '1234561234',
+              password: 'zxc123',
             }}
           >
             <div className="text-#AAA6A6 text-14px mb-8px">{t('login.username')}</div>

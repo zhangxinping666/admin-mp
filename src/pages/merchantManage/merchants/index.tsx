@@ -33,7 +33,7 @@ const MerchantsPage = () => {
   const fetchApi = async (params?: any) => {
     const response = await apis.getMerchantsList(params);
     return {
-      items: response.data.list,
+      data: response.data.list,
       total: response.data.total,
     };
   };

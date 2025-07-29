@@ -77,8 +77,12 @@ function LayoutMenu() {
     };
 
     const menuItem = findMenuByPath(menuList, currentPath);
+
     if (menuItem) {
-      setSelectedKeys([String(menuItem.id)]);
+      const selectedKey = String((menuItem as any).id || (menuItem as any).key);
+      setSelectedKeys([selectedKey]);
+    } else {
+      setSelectedKeys([]);
     }
 
     const newOpenKeys = getOpenMenuByRouter(currentPath);
@@ -126,16 +130,10 @@ function LayoutMenu() {
 
   const onClickMenu: MenuProps['onClick'] = (e) => {
     const menuItem = getMenuByKey(menuList, e.key);
-
     if (!menuItem || !menuItem.route_path) {
       console.warn('未找到匹配的菜单项或该项无 route_path:', e.key);
       return;
     }
-
-    if (menuItem.route_path === pathname) {
-      return;
-    }
-
     const targetPath = menuItem.route_path;
     const newOpenKeys = getOpenMenuByRouter(targetPath);
 

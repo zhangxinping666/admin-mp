@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import {  Modal } from 'antd';
+import { Modal } from 'antd';
 import { useState } from 'react';
 
 // 图片类型定义
@@ -29,15 +29,17 @@ export interface DictionaryItem {
 
 // 字典接口
 export interface Dictionary {
+  id: number;
+  name: string;
   key: string;
   label: string;
   code?: string;
   description?: string;
-  items: DictionaryItem[];
   status: number;
   createdAt: string;
   updatedAt: string;
   action?: React.ReactNode;
+  items: DictionaryItem[];
 }
 
 // 图片预览组件

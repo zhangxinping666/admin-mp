@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type API } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
-// import { getCityList } from '@/servers/city';
+import { getApiList, getApiDetail, addApi, updateApi, deleteApi } from '@/servers/perms/api';
 
 // 初始化新增数据
 const initCreate: Partial<API> = {
@@ -15,56 +15,14 @@ const initCreate: Partial<API> = {
 };
 
 const ApiPage = () => {
-  const mockData: API[] = [
-    {
-      id: 1,
-      path: '/role/delete',
-      detail: '删除角色',
-      group: '角色管理',
-      method: 'DELETE',
-      status: 1,
-    },
-    {
-      id: 2,
-      path: '/role/update',
-      detail: '更新角色',
-      group: '角色管理',
-      method: 'PUT',
-      status: 1,
-    },
-    {
-      id: 3,
-      path: '/role/list',
-      detail: '查询角色',
-      group: '角色管理',
-      method: 'GET',
-      status: 1,
-    },
-    {
-      id: 4,
-      path: '/role/create',
-      detail: '创建角色',
-      group: '用户管理',
-      method: 'POST',
-      status: 1,
-    },
-    {
-      id: 5,
-      path: '/role/detail',
-      detail: '查询角色详情',
-      group: '角色管理',
-      method: 'GET',
-      status: 1,
-    },
-    {
-      id: 6,
-      path: '/role/detail',
-      detail: '查询角色详情',
-      group: '角色管理',
-      method: 'GET',
-      status: 1,
-    },
-  ];
+  // API接口配置
+  const apis = {
+    fetchApi: getApiList,
+    detailApi: getApiDetail,
+    createApi: addApi,
+    updateApi: updateApi,
+    deleteApi: deleteApi,
+  };
 
   const optionRender = (
     record: API,
@@ -81,7 +39,16 @@ const ApiPage = () => {
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}
-      mockData={mockData}
+      apis={{
+        fetch: apis.fetchApi,
+        create: apis.createApi,
+        update: (id: number, data: any) => {
+          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
+          // 然后再调用您的 cityApis.update 函数
+          return apis.updateApi({ ...data, id });
+        },
+        delete: (id: number) => apis.deleteApi([id]),
+      }}
       optionRender={optionRender}
     />
   );

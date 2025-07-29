@@ -40,7 +40,7 @@ function Layout() {
       // 只有在权限为空时才获取权限和菜单信息，避免与Guards.tsx冲突
       if (menuPermissions.length === 0) {
         console.log('Layout检测到权限为空，获取权限和菜单信息');
-        const permissionsResponse = await getPermissions({ role: 'admin' });
+        const permissionsResponse = await getPermissions({ role: userInfo.name });
         console.log('Layout中获取权限和菜单信息:', permissionsResponse);
         const { perms, menus } = permissionsResponse.data;
         console.log('Layout中获取权限和菜单信息:', menus);

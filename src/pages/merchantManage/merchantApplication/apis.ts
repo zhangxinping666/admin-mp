@@ -1,10 +1,10 @@
 import request from '@/utils/request';
 
 const apis = {
-  list: '/approvals/getApproval',
-  delete: '/approvals/batchDelete',
-  update: '/approvals/batchUpdate',
-  create: '/approvals/addApproval',
+  list: '/approval/getApproval',
+  delete: '/approval/batchDelete',
+  update: '/approval/batchUpdate',
+  create: '/approval/addApproval',
 };
 
 // 获取列表请求查询参数接口

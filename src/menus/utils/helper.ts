@@ -107,7 +107,8 @@ export const filterMenusByPermissions = (menuList: SideMenu[], permissions: stri
 export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu | undefined {
   for (const menu of menuList) {
     // antd 的 key 是字符串，我们的数据 key 可能是数字，统一转为字符串比较更安全
-    if (String(menu.id) === targetKey) {
+    // 同时检查id和key字段
+    if (String(menu.id) === targetKey || String((menu as any).key) === targetKey) {
       return menu;
     }
 
@@ -120,8 +121,6 @@ export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu 
       }
     }
   }
-
-  // 遍历完所有节点及其子孙节点后，仍未找到，则返回 undefined
   return undefined;
 }
 /**

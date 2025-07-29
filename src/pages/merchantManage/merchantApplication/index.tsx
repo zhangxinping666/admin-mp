@@ -29,13 +29,13 @@ async function getApplicationList() {
     }));
     console.log('items', items);
     return {
-      items: items,
+      data: items,
       total: res.data.total,
     };
   } catch (err) {
     console.log(err);
     return {
-      items: [],
+      data: [],
       total: 0,
     };
   }

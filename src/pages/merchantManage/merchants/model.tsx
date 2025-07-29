@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { Modal } from 'antd';
+import { message, Modal } from 'antd';
 import { useState } from 'react';
 
 // 添加图片预览组件
@@ -270,38 +270,38 @@ export const formList = (): BaseFormList[] => [
       maxLength: 50,
     },
   },
-  // {
-  //   label: '商家图片',
-  //   name: 'merchant_img',
-  //   component: 'Upload',
-  //   componentProps: {
-  //     accept: 'image/png, image/jpeg, image/jpg',
-  //     listType: 'picture-card',
-  //     beforeUpload: (file: File) => {
-  //       const isLt2M = file.size / 1024 / 1024 < 2;
-  //       if (!isLt2M) {
-  //         message.error('图片大小不能超过2MB!');
-  //         return false;
-  //       }
-  //       return true;
-  //     },
-  //     customRequest: (options: any) => {
-  //       const { file, onSuccess, onError } = options;
+  {
+    label: '商家图片',
+    name: 'merchant_img',
+    component: 'Upload',
+    componentProps: {
+      accept: 'image/png, image/jpeg, image/jpg',
+      listType: 'picture-card',
+      beforeUpload: (file: File) => {
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+          message.error('图片大小不能超过2MB!');
+          return false;
+        }
+        return true;
+      },
+      customRequest: (options: any) => {
+        const { file, onSuccess, onError } = options;
 
-  //       const reader = new FileReader();
-  //       reader.readAsDataURL(file);
-  //       reader.onload = () => {
-  //         setTimeout(() => {
-  //           onSuccess({ url: reader.result });
-  //         }, 500);
-  //       };
-  //       reader.onerror = () => {
-  //         onError(new Error('读取文件失败'));
-  //       };
-  //     },
-  //     maxCount: 1,
-  //   },
-  // },
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          setTimeout(() => {
+            onSuccess({ url: reader.result });
+          }, 500);
+        };
+        reader.onerror = () => {
+          onError(new Error('读取文件失败'));
+        };
+      },
+      maxCount: 1,
+    },
+  },
   {
     label: '学校ID',
     name: 'school_id',

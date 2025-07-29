@@ -1,18 +1,48 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { getMenuSelectList } from '@/servers/perms/menu';
 
 // 角色接口定义
 export interface Role {
   id: number;
   name: string;
   code: string;
-  desc: string;
   status: number;
-  permissions: number[];
-  dataPermissions: string[];
+  permissions?: number[];
+  dataPermissions?: number[];
 }
 
+export interface RoleItem {
+  id: number;
+  name: string;
+  status: number;
+}
+
+export interface updateRoleForm {
+  id: number;
+  name: string;
+  code: string;
+  status: number;
+}
+export interface addRoleForm {
+  name: string;
+  code: string;
+  status: number;
+}
+export interface RoleDetailResult {
+  code: number;
+  data: Role;
+}
+
+export interface RoleSelectListResult {
+  code: number;
+  data: RoleItem[];
+}
+export interface updateRolePermsForm {
+  id: number;
+  id_list: number[];
+}
 // 菜单权限树节点接口
 export interface MenuTreeNode {
   id: number;
@@ -36,7 +66,10 @@ export interface RoleListResult {
   message: string;
   data: {
     list: Role[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 
@@ -115,7 +148,42 @@ function convertMenuToTreeNode(menuList: MenuData[]): MenuTreeNode[] {
   }));
 }
 
-export const getMenuPermissionTree = (): MenuTreeNode[] => {
+export const getMenuPermissionTree = async (): Promise<MenuTreeNode[]> => {
+  try {
+    // 调用真实API获取菜单权限数据
+    const response = await getMenuSelectList({ type: [1, 2, 3] });
+    if (response.code === 2000 && response.data) {
+      // 将API返回的数据转换为MenuData格式
+      const menuData: MenuData[] = response.data.map((item: any) => ({
+        id: item.id,
+        pid: item.pid,
+        name: item.name,
+        code: item.name.toLowerCase().replace(/\s+/g, '_'),
+        icon: null,
+        type: 2,
+        route_name: item.name,
+        route_path: `/${item.name.toLowerCase()}`,
+        component_path: `/${item.name.toLowerCase()}`,
+        status: 1,
+        sort: 1,
+        desc: item.name,
+        api_id: null,
+        children: [],
+      }));
+      
+      const menuTree = buildMenuTree(menuData);
+      return convertMenuToTreeNode(menuTree);
+    }
+  } catch (error) {
+    console.error('获取菜单权限数据失败:', error);
+  }
+  
+  // 如果API调用失败，返回空数组
+  return [];
+};
+
+// 保留原有的模拟数据作为备用
+export const getMockMenuPermissionTree = (): MenuTreeNode[] => {
   const mockMenuData: MenuData[] = [
     {
       id: 1,
@@ -946,7 +1014,6 @@ export const getMenuPermissionTree = (): MenuTreeNode[] => {
   const menuTree = buildMenuTree(mockMenuData);
   return convertMenuToTreeNode(menuTree);
 };
-console.log(getMenuPermissionTree());
 export const getDataPermissionTree = (): MenuTreeNode[] => {
   return [
     {
@@ -1037,13 +1104,6 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '描述',
-    dataIndex: 'desc',
-    key: 'desc',
-    width: 200,
-    ellipsis: true,
-  },
-  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
@@ -1071,12 +1131,15 @@ export const formList = (): BaseFormList[] => [
     rules: FORM_REQUIRED,
   },
   {
-    label: '备注',
-    name: 'desc',
-    component: 'TextArea',
-    placeholder: '请输入',
+    label: '状态',
+    name: 'status',
+    component: 'Select',
+    placeholder: '请选择状态',
     componentProps: {
-      rows: 4,
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
     },
   },
 ];

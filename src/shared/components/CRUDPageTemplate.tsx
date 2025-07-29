@@ -13,9 +13,12 @@ import type { TableColumn } from '#/public';
 import { useCRUD } from '../hooks/useCRUD';
 import { RightOutlined } from '@ant-design/icons';
 
-interface CRUDPageTemplateProps<T> {
+interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
   isAddOpen: boolean;
+  pagination?: boolean;
+  hideCreate?: boolean;
+  onEditOpen?: (record: T) => void;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
   formConfig: BaseFormList[];
@@ -45,11 +48,22 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   formConfig,
   initCreate,
   mockData,
+  onEditOpen,
   apis,
+  pagination,
   optionRender,
   onCreateClick,
   onFormValuesChange,
+  hideCreate,
 }: CRUDPageTemplateProps<T>) => {
+  const crudOptions = {
+    initCreate,
+    pagination,
+    fetchApi: apis?.fetchApi,
+    createApi: apis?.createApi,
+    updateApi: apis?.updateApi,
+    deleteApi: apis?.deleteApi,
+  };
   // 添加选中行的状态
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
@@ -75,20 +89,20 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     handleDelete,
     handleModalSubmit,
     fetchTableData,
-  } = useCRUD({ initCreate, ...apis });
+  } = useCRUD(crudOptions);
 
-  // 数据获取副作用
-  useEffect(() => {
-    if (isFetch) {
-      fetchTableData(mockData);
-    }
-  }, [isFetch, page, pageSize]);
-  // 👇 在调用 useCRUD 之前，打印一下最终的参数
-  console.log('传递给 useCRUD Hook 的参数是:', { initCreate, ...apis });
-  // 初始化数据
+  // 👇 确保有这个 useEffect 来触发初次加载
   useEffect(() => {
     setFetch(true);
-  }, []);
+  }, []); // 空依赖数组 [] 确保这个 effect 只在组件首次渲染后运行一次
+
+  // 这个 useEffect 监听 isFetch 的变化，并实际调用 API
+  useEffect(() => {
+    if (isFetch) {
+      fetchTableData();
+    }
+    console.log(tableData);
+  }, [isFetch, page, pageSize]); // (假设依赖项还包括 page 和 pageSize)
 
   // 处理选中行变化
   const handleSelectionChange = (selectedRowKeys: Key[]) => {
@@ -259,7 +273,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           ref={createFormRef}
           list={formConfig}
           data={createData}
-          handleFinish={(values) => handleModalSubmit(values, optionRender)}
+          handleFinish={(values) => handleModalSubmit(values)}
           onValuesChange={onFormValuesChange}
         />
       </BaseModal>

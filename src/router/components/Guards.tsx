@@ -52,11 +52,11 @@ function Guards() {
         setAccessToken(access_token);
         setRefreshToken(refresh_token);
 
-        const { data: user } = await getUserInfoServe();
+        const { data: userInfo } = await getUserInfoServe();
         setUserInfo(user);
         // 设置token和用户信息
 
-        const permissionsResponse = await getPermissions({ role: 'admin' });
+        const permissionsResponse = await getPermissions({ role: userInfo.name });
         const { menus, perms } = permissionsResponse.data;
         setPermissions(perms);
 

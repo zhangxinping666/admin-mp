@@ -48,13 +48,13 @@ type uploadImg = {
     url: string;
   };
 };
-// 楼栋接口定义
+// 定义
 export interface Cert {
   id: number;
   name: string;
   card_id: number;
-  front_img: uploadImg[];
-  back_img: uploadImg[];
+  front: uploadImg[];
+  back: uploadImg[];
   status: number;
 }
 
@@ -62,9 +62,17 @@ export interface CertItem {
   id: number;
   name: string;
   card_id: number;
-  front_img: uploadImg[];
-  back_img: uploadImg[];
+  front: string;
+  back: string;
   status: number;
+}
+export interface UpdateCert {
+  id: number;
+  status: number;
+}
+export interface CertDetailResult {
+  code: number;
+  data: CertItem;
 }
 
 export interface Pagination {
@@ -82,8 +90,11 @@ export interface CertListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
-    list: Cert[];
-    pagination: Pagination;
+    list: CertItem[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
 
@@ -158,88 +169,6 @@ export const tableColumns: TableColumn[] = [
 
 // 表单配置
 export const formList = (): BaseFormList[] => [
-  {
-    label: '用户名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入用户名称',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: '用户身份证ID',
-    name: 'card_id',
-    component: 'InputNumber',
-    placeholder: '请输入用户身份证ID',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      min: 1,
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '身份证正面',
-    name: 'front_img',
-    component: 'Upload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
-  },
-  {
-    label: '身份证反面',
-    name: 'back_img',
-    component: 'Upload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
-  },
   {
     label: '状态',
     name: 'status',

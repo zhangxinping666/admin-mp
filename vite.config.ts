@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, root);
   // 判断当前是否是本地开发环境
   const isMock = mode === 'mock';
-  const isDev = mode === 'development';
+  const isLoc = mode === 'localhost';
   return {
     plugins: createVitePlugins(mode),
     // 自定义全局常量（在代码中可以用 __APP_ENV__ 获取当前环境，比如 'development'）
@@ -36,14 +36,13 @@ export default defineConfig(({ mode }) => {
       port: 7000, // 开发服务端口
       open: true, // 启动后自动打开浏览器
       historyApiFallback: true, // 支持 BrowserRouter
-      proxy:
-        isDev || isMock
-          ? createProxy([
-              ['/api', env.VITE_API_BASE_URL],
-              ['/ws', env.VITE_WS_BASE_URL],
-              ['/events', env.VITE_SSE_BASE_URL],
-            ])
-          : undefined,
+      proxy: isLoc
+        ? createProxy([
+            ['/api', env.VITE_API_BASE_URL],
+            ['/ws', env.VITE_WS_BASE_URL],
+            ['/events', env.VITE_SSE_BASE_URL],
+          ])
+        : undefined,
     },
     build: buildOptions(),
   };

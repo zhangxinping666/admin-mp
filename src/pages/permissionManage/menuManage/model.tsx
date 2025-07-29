@@ -13,11 +13,42 @@ export interface Menu {
   route_name: string | null;
   route_path: string | null;
   component_path: string | null;
+  route_params: string | null;
   status: number;
   sort: number;
   desc: string;
-  api_id: number | null;
   children?: Menu[];
+}
+
+export interface MenuAddForm {
+  pid: number;
+  name: string;
+  code: string;
+  icon: string;
+  type: number;
+  route_name: string;
+  route_path: string;
+  component_path: string;
+  route_params: string;
+  status: number;
+  sort: number;
+  desc: string;
+}
+
+export interface MenuUpdateForm {
+  id: number;
+  pid: number;
+  name: string;
+  code: string;
+  icon: string;
+  type: number;
+  route_name: string;
+  route_path: string;
+  component_path: string;
+  route_params: string;
+  status: number;
+  sort: number;
+  desc: string;
 }
 
 export interface Pagination {
@@ -35,8 +66,15 @@ export interface MenuListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: Menu[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
+}
+export interface MenuDetailResult {
+  code: number;
+  data: Menu;
 }
 
 // 搜索配置
@@ -185,42 +223,30 @@ export const tableColumns: TableColumn[] = [
   },
 ];
 
-// 获取根级目录选项的函数
-const getDirectoryOptions = () => {
-  // 只返回根级目录选项
-  return [
-    { label: '根目录', value: 0 },
-    { label: '商家管理', value: 2 },
-    { label: '组件', value: 3 },
-    { label: '权限', value: 4 },
-  ];
-};
-
-export const formList = (): BaseFormList[] => [
+export const formList = ({
+  menuOptions,
+  isMenuOptionsLoading,
+}: {
+  menuOptions: any[];
+  isMenuOptionsLoading: boolean;
+}): BaseFormList[] => [
   {
-    name: 'id',
-    label: 'ID',
-    component: 'Input',
-    placeholder: '请输入ID',
-    componentProps: {
-      disabled: true,
-    },
-    showWhen: {
-      name: 'id',
-      value: (value: any) => value && value > 0, // 仅在编辑模式下显示（id有值且大于0）
-    },
-  },
-  {
-    name: 'pid',
     label: '父级菜单',
+    name: 'pid',
+    // 【修改】使用普通的 Select 组件
     component: 'Select',
-    placeholder: '请选择父级菜单',
+    placeholder: isMenuOptionsLoading ? '菜单加载中...' : '请选择父级菜单',
     componentProps: {
-      options: getDirectoryOptions(),
+      // 【修改】直接使用扁平的 options 数组
+      options: menuOptions,
+      loading: isMenuOptionsLoading,
+      showSearch: true, // 仍然可以支持搜索
+      optionFilterProp: 'label',
+      style: { width: '100%' },
     },
     showWhen: {
       name: 'type',
-      value: [2, 3], // 菜单和按钮
+      value: [2,3], // 目录和菜单
     },
   },
   {
