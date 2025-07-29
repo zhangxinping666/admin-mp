@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal } from 'antd';
+import {  Modal } from 'antd';
 import { useState } from 'react';
 
 // 图片类型定义
@@ -18,7 +18,7 @@ interface UploadImg {
 
 // 字典项接口
 export interface DictionaryItem {
-  id: number;
+  key: string;
   label: string;
   value: string | number;
   sort: number;
@@ -29,10 +29,10 @@ export interface DictionaryItem {
 
 // 字典接口
 export interface Dictionary {
-  id: number;
-  name: string;
-  code: string;
-  description: string;
+  key: string;
+  label: string;
+  code?: string;
+  description?: string;
   items: DictionaryItem[];
   status: number;
   createdAt: string;
@@ -301,39 +301,7 @@ export const itemFormList = (): BaseFormList[] => [
     },
   },
   {
-    label: '图片',
-    name: 'imageUrl',
-    component: 'Upload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
-  },
-  {
-    label: '备注',
+    label: '描述',
     name: 'remark',
     component: 'TextArea',
     componentProps: {

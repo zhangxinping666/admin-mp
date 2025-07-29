@@ -28,6 +28,12 @@ export interface addForm {
   status: number;
 }
 
+export interface APIDetailResult {
+  code: number;
+  message: string;
+  data: API;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -120,16 +126,7 @@ export const tableColumns: TableColumn[] = [
     fixed: 'right',
   },
 ];
-// 获取根级目录选项的函数
-const getDirectoryOptions = () => {
-  // 只返回根级目录选项
-  return [
-    { label: '商家管理', value: '商家管理' },
-    { label: '角色管理', value: '角色管理' },
-    { label: '菜单管理', value: '菜单管理' },
-    { label: '学校管理', value: '学校管理' },
-  ];
-};
+
 
 // API类别树形数据结构
 export interface APIGroupTreeNode {

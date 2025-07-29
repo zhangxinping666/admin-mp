@@ -10,7 +10,7 @@ import {
 import request from '@/utils/request';
 // 获取
 export function getRoleList(params: PaginationParams) {
-  return request.post<RoleListResult>('/role/get', { params });
+  return request.get<RoleListResult>('/role/get', { params });
 }
 //详情
 export function getRoleDetail(id: number) {
@@ -28,18 +28,14 @@ export function updateRole(data: updateRoleForm) {
 export function deleteRole(id: Array<number>) {
   return request.delete('/role/delete', { data: { id } });
 }
-//获取角色下拉列表
-export function getRoleSelectList() {
-  return request.get<RoleSelectListResult>(`/role/list`);
-}
 
 //获取api权限
 export function getRoleApiPerms(id: string) {
-  return request.get(`/role/perm/${id}`);
+ return request.get('/role/perm', { params: { id } });
 }
 //获取menu权限
 export function getRoleMenuPerms(id: string) {
-  return request.get(`/role/perm_menu/${id}`);
+  return request.get('/role/perm_menu', { params: { id } });
 }
 
 //更新api权限

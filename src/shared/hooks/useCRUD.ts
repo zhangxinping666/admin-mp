@@ -9,6 +9,7 @@ interface UseCRUDOptions<T> {
   createApi?: (data: any) => Promise<any>;
   updateApi?: (id: number, data: any) => Promise<any>;
   deleteApi?: (id: number) => Promise<any>;
+  pagination?: boolean;
 }
 
 export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) => {
@@ -27,7 +28,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   const [createId, setCreateId] = useState(0);
   const [createData, setCreateData] = useState<Partial<T>>(initCreate);
   const [searchData, setSearchData] = useState<BaseFormData>({});
-
+  const { pagination = true } = options; // 设置默认值为true
   // 分页状态
   const [page, setPage] = useState(INIT_PAGINATION.page);
   const [pageSize, setPageSize] = useState(INIT_PAGINATION.pageSize);
@@ -165,10 +166,15 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     setLoading(true);
     try {
       if (fetchApi) {
-        const { data } = await fetchApi({ ...searchData, page, pageSize });
-        setTableData(data.list || data.data || []);
+        const params: any = { ...searchData };
+        if (pagination) {
+          // 根据选项决定是否添加分页参数
+          params.page = page;
+          params.pageSize = pageSize;
+        }
+        const { data } = await fetchApi(params);
+        setTableData(data.list || data.data || data || []);
         setTotal(data.total || 0);
-        console.log('nhao');
       } else if (mockData) {
         // 使用模拟数据
         setTableData(mockData);
@@ -201,7 +207,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     total,
     tableData,
     setTableData,
-
+    pagination,
     // 方法
     handlePageChange,
     handleSearch,

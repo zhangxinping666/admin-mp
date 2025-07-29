@@ -7,8 +7,8 @@ import {
 } from '../../pages/permissionManage/menuManage/model';
 import request from '@/utils/request';
 // 获取
-export function getMenuList(params: PaginationParams) {
-  return request.post<MenuListResult>('/menu/get', { params });
+export function getMenuList() {
+  return request.post<MenuListResult>('/menu/get');
 }
 //详情
 export function getMenuDetail(id: number) {
@@ -27,6 +27,6 @@ export function deleteMenu(id: Array<number>) {
   return request.delete('/menu/delete', { data: { id } });
 }
 //获取菜单下拉列表
-export function getMenuSelectList() {
-  return request.get(`/menu/list`);
+export function getMenuSelectList(params?: { type?: number[] }) {
+  return request.get(`/menu/list`, { params });
 }
