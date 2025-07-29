@@ -3,13 +3,13 @@ import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { RoleTableActions } from './components/RoleTableActions';
 import PermissionEditModal from './components/PermissionEditModal';
 import { useState } from 'react';
+import { getRoleList, getRoleDetail, addRole, updateRole, deleteRole } from '@/servers/perms/role';
 
 // 初始化新增数据
 const initCreate: Partial<Role> = {
   id: 0,
   name: '',
   code: '',
-  desc: '',
   status: 1, // 默认状态为启用
   permissions: [],
   dataPermissions: [],
@@ -18,35 +18,15 @@ const initCreate: Partial<Role> = {
 const RolesPage = () => {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const mockData: Role[] = [
-    {
-      id: 1,
-      name: '超级管理员',
-      code: 'superAdmin',
-      desc: '系统超级管理员，拥有所有权限',
-      status: 1,
-      permissions: [],
-      dataPermissions: [],
-    },
-    {
-      id: 2,
-      name: '城市运营商',
-      code: 'cityOperator',
-      desc: '城市运营商角色，负责城市级别的运营管理',
-      status: 1,
-      permissions: [],
-      dataPermissions: [],
-    },
-    {
-      id: 3,
-      name: '团长',
-      code: 'leader',
-      desc: '团长角色，负责团队管理',
-      status: 1,
-      permissions: [1, 2],
-      dataPermissions: [],
-    },
-  ];
+
+  // API接口配置
+  const apis = {
+    fetchApi: getRoleList,
+    detailApi: getRoleDetail,
+    createApi: addRole,
+    updateApi: updateRole,
+    deleteApi: deleteRole,
+  };
   // 处理权限编辑
   const handleEditPermissions = (record: Role) => {
     console.log('打开权限编辑模态框:', {
@@ -129,7 +109,16 @@ const RolesPage = () => {
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}
         initCreate={initCreate}
-        mockData={mockData}
+        apis={{
+          fetch: apis.fetchApi,
+          create: apis.createApi,
+          update: (id: number, data: any) => {
+            // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
+            // 然后再调用您的 cityApis.update 函数
+            return apis.updateApi({ ...data, id });
+          },
+          delete: (id: number) => apis.deleteApi([id]),
+        }}
         optionRender={optionRender}
         onFormValuesChange={handleFormValuesChange}
       />
