@@ -14,6 +14,7 @@ import { RightOutlined } from '@ant-design/icons';
 
 interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
+  pagination?: boolean;
   hideCreate?: boolean;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
@@ -47,6 +48,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   mockData,
   onEditOpen,
   apis,
+  pagination,
   optionRender,
   onCreateClick,
   onFormValuesChange,
@@ -54,6 +56,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
 }: CRUDPageTemplateProps<T>) => {
   const crudOptions = {
     initCreate,
+    pagination,
     fetchApi: apis?.fetch,
     createApi: apis?.create,
     updateApi: apis?.update,
@@ -93,6 +96,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     if (isFetch) {
       fetchTableData();
     }
+    console.log(tableData);
   }, [isFetch, page, pageSize]); // (假设依赖项还包括 page 和 pageSize)
 
   // 处理表格列，添加操作列
@@ -161,7 +165,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                 // 如果没有子项，渲染一个占位符来保证该列的对齐
                 if (!hasChildren) {
                   // 这个span的宽度和内联样式是为了和有图标的行在视觉上对齐
-                  return <span />;
+                  return <span style={{ display: 'inline-block', width: '26px' }} />;
                 }
 
                 // 如果有子项，则渲染我们自定义的图标
@@ -187,12 +191,14 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               },
             }}
           />
-          <BasePagination
-            current={page}
-            pageSize={pageSize}
-            total={total}
-            onChange={handlePageChange}
-          />
+          {true && (
+            <BasePagination
+              current={page}
+              pageSize={pageSize}
+              total={total}
+              onChange={handlePageChange}
+            />
+          )}
         </BaseCard>
       </BaseContent>
 

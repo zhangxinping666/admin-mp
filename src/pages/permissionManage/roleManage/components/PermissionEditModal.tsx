@@ -4,6 +4,12 @@ import BaseForm from '@/components/Form/BaseForm';
 import type { BaseFormList } from '#/form';
 import type { Role } from '../model';
 import { getMenuPermissionTree, getDataPermissionTree } from '../model';
+import {
+  getRoleApiPerms,
+  getRoleMenuPerms,
+  updateRoleApiPerms,
+  updateRoleMenuPerms,
+} from '@/servers/perms/role';
 
 interface PermissionEditModalProps {
   visible: boolean;
@@ -15,13 +21,52 @@ interface PermissionEditModalProps {
 const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEditModalProps) => {
   const [functionalPermissions, setFunctionalPermissions] = useState<any[]>([]);
   const [dataPermissions, setDataPermissions] = useState<any[]>([]);
+  const [menuTreeData, setMenuTreeData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (record && visible) {
-      setFunctionalPermissions(record.permissions || []);
-      setDataPermissions(record.dataPermissions || []);
+    if (visible && record && menuTreeData.length > 0) {
+      setLoading(true);
+      Promise.all([
+        getRoleApiPerms({ id: record.id }),
+        getRoleMenuPerms({ id: record.id }),
+      ])
+        .then(([apiResponse, menuResponse]) => {
+          // 设置API权限到数据权限
+          setDataPermissions(apiResponse.data?.api_ids || []);
+          // 设置菜单权限到功能权限
+          const menuIds = menuResponse.data?.menu_ids || [];
+          console.log('获取到的菜单权限ID:', menuIds);
+          console.log('当前菜单树数据:', menuTreeData);
+          setFunctionalPermissions(menuIds);
+        })
+        .catch((error) => {
+          message.error('获取权限数据失败');
+          console.error('获取权限数据失败:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
-  }, [record, visible]);
+  }, [visible, record, menuTreeData]);
+
+  // 异步加载菜单权限数据
+  useEffect(() => {
+    if (visible) {
+      setLoading(true);
+      getMenuPermissionTree()
+        .then((data) => {
+          setMenuTreeData(data);
+        })
+        .catch((error) => {
+          console.error('加载菜单权限数据失败:', error);
+          message.error('加载菜单权限数据失败');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [visible]);
 
   // 功能权限表单配置
   const functionalPermissionForm: BaseFormList[] = [
@@ -31,7 +76,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
       component: 'TreeSelect',
       placeholder: '输入关键字进行过滤',
       componentProps: {
-        treeData: getMenuPermissionTree(),
+        treeData: menuTreeData,
         multiple: true,
         treeCheckable: true,
         showCheckedStrategy: 'SHOW_PARENT',
@@ -44,6 +89,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
         maxTagCount: 'responsive',
         dropdownStyle: { maxHeight: 400, overflow: 'auto' },
         onSelect: () => false, // 阻止选择后自动关闭
+        loading: loading,
         fieldNames: {
           label: 'title',
           value: 'id',
@@ -86,37 +132,49 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
   const handleFunctionalPermissionChange = (changedValues: any, allValues: any) => {
     if (changedValues.permissions !== undefined) {
       setFunctionalPermissions(changedValues.permissions);
-      console.log('功能权限选择变化:', {
-        选中的权限: changedValues.permissions,
-        变化时间: new Date().toLocaleString(),
-      });
     }
   };
 
   const handleDataPermissionChange = (changedValues: any, allValues: any) => {
     if (changedValues.dataPermissions !== undefined) {
       setDataPermissions(changedValues.dataPermissions);
-      console.log('数据权限树选择变化:', {
-        选中的节点: changedValues.dataPermissions,
-        变化时间: new Date().toLocaleString(),
-      });
     }
   };
 
-  const handleOk = () => {
-    const finalValues = {
-      permissions: functionalPermissions,
-      dataPermissions: dataPermissions,
-    };
+  const handleOk = async () => {
+    if (!record) {
+      message.error('角色信息不存在');
+      return;
+    }
+    try {
+      setLoading(true);
+      // 更新API权限 (功能权限对应API权限)
 
-    console.log('权限修改提交:', {
-      角色信息: record,
-      修改的权限: finalValues,
-      提交时间: new Date().toLocaleString(),
-    });
+      await updateRoleApiPerms({
+        id: record.id,
+        id_list: dataPermissions,
+      });
 
-    message.success('权限修改成功！');
-    onOk(finalValues);
+      // 更新菜单权限 (数据权限对应菜单权限)
+      await updateRoleMenuPerms({
+        id: record.id,
+        id_list: functionalPermissions,
+      });
+
+      message.success('权限修改成功');
+
+      const finalValues = {
+        permissions: functionalPermissions,
+        dataPermissions: dataPermissions,
+      };
+
+      onOk(finalValues);
+    } catch (error) {
+      console.error('权限修改失败:', error);
+      message.error('权限修改失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -126,6 +184,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
       onCancel={onCancel}
       onOk={handleOk}
       width={800}
+      confirmLoading={loading}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div>
