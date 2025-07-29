@@ -27,7 +27,6 @@ export interface UserInfo {
   name: string;
   phone: string;
   school_id: number;
-  school_name: string;
   city_id: number;
   role_id: number;
   role_name: string;

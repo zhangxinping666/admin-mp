@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { message, type FormInstance } from 'antd';
 import type { BaseFormData } from '#/form';
 import { INIT_PAGINATION } from '@/utils/config';
-import Item from 'antd/es/list/Item';
 
 interface UseCRUDOptions<T> {
   initCreate: Partial<T>;
@@ -64,131 +63,112 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     setCreateOpen(true);
   };
 
-  // 编辑处理
-  const handleEdit = (title: string, record: T) => {
+  const handleEdit = (
+    title: string,
+    record: T,
+    // 【新增】第三个参数：一个可选的回调函数
+    onOpen?: (record: T) => void,
+  ) => {
     setCreateTitle(title);
     setCreateId(record.id);
     setCreateData(record);
     setCreateOpen(true);
+
+    // 【新增】在设置完所有状态后，如果传入了回调函数，就执行它
+    if (onOpen) {
+      onOpen(record);
+    }
   };
+
+  // 在 useCRUD.ts 文件中
 
   // 删除处理
   const handleDelete = async (id: number) => {
     try {
+      // 确保 deleteApi 存在
       if (deleteApi) {
+        // 1. 调用后端的删除接口
         await deleteApi(id);
+        // 2. 提示用户操作成功
+        messageApi.success('删除成功');
+        // 3. 【核心改动 1】检查并处理分页，提升用户体验
+        if (tableData.length === 1 && page > 1) {
+          setPage(page - 1);
+        }
+        // 4. 【核心改动 2】触发列表重新获取
+        setFetch(true);
       }
-
-      setTableData((prevData) => {
-        const newData = prevData.filter((item) => item.id !== id);
-        return newData;
-      });
-      setTotal((prev) => prev - 1);
-      messageApi.success('删除成功');
     } catch (error) {
+      // 5. 如果接口调用失败，提示错误
       messageApi.error('删除失败');
+      console.error('[CRUD] 删除操作失败:', error);
     }
   };
+  // 在 useCRUD.ts 文件中
 
-  // 模态框提交处理
-  const handleModalSubmit = async (
-    values: BaseFormData,
-    optionRender?: (
-      record: T,
-      actions: {
-        handleEdit: (record: T) => void;
-        handleDelete: (id: number) => void;
-      },
-    ) => React.ReactNode | undefined,
-  ) => {
+  const handleModalSubmit = async (values: BaseFormData) => {
     setCreateLoading(true);
-    console.log(' 表单提交开始:', {
-      操作类型: createId && createId > 0 ? '编辑' : '新增',
-      表单数据: values,
-      时间戳: new Date().toLocaleString(),
+    const isEditing = createId && createId > 0;
+    const operationType = isEditing ? '编辑' : '新增';
+
+    console.log(`[CRUD] ${operationType}操作开始`, {
+      data: values,
+      id: isEditing ? createId : undefined,
+      timestamp: new Date().toISOString(),
     });
 
     try {
-      if (createId && createId > 0) {
-        // 编辑
-        let updateResult;
-        if (updateApi) {
-          updateResult = await updateApi(createId, values);
-          console.log('编辑API调用结果:', updateResult);
+      if (isEditing) {
+        // --- 编辑逻辑 ---
+        if (!updateApi) {
+          console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
+          throw new Error('Update API not configured.');
         }
-        setTableData((prev) => {
-          prev = prev.map((item) => {
-            if (item.id === createId) {
-              return { ...item, ...values } as T;
-            }
-            return item;
-          });
-          return prev;
-        });
-        console.log('编辑操作完成:', {
-          编辑ID: createId,
-          更新数据: values,
-          API结果: updateResult,
-        });
+        const result = await updateApi(createId, values);
+        console.log(`[CRUD] 编辑API调用成功`, { result });
         messageApi.success('编辑成功');
-        // setFetch(true);
+
+        // 【核心】触发列表重新获取
+        setFetch(true);
       } else {
-        // 新增
-        let createResult;
-        if (createApi) {
-          createResult = await createApi(values);
-          console.log('新增API调用结果:', createResult);
-        } else {
-          // 本地新增
+        // --- 新增逻辑 ---
+        if (!createApi) {
+          // 这是在没有提供 createApi 时的本地模拟回退逻辑，可以保留
+          console.warn('[CRUD] 未提供 createApi，执行本地模拟新增。');
           const newId = getNextId();
           const newItem = { ...values, id: newId } as T;
-          console.log('本地新增项目:', newItem);
-          if (optionRender) {
-            (newItem as any).action = optionRender(newItem, {
-              handleEdit: (record) => handleEdit('编辑', record),
-              handleDelete: (id) => handleDelete(id),
-            });
-          }
           setTableData((prev) => [...prev, newItem]);
           setTotal((prev) => prev + 1);
-          createResult = { success: true, data: newItem };
+        } else {
+          const result = await createApi(values);
+          console.log(`[CRUD] 新增API调用成功`, { result });
+          messageApi.success('新增成功');
+          // 【核心】重置到第一页，并触发列表重新获取
+          setPage(1);
+          setFetch(true);
         }
-        console.log('新增操作完成:', {
-          新增数据: values,
-          生成ID: createResult?.data?.id || '本地生成',
-          API结果: createResult,
-        });
-        messageApi.success('新增成功');
       }
-
-      console.log(' 表单提交成功完成:', {
-        操作类型: createId && createId > 0 ? '编辑' : '新增',
-        最终状态: '成功',
-        完成时间: new Date().toLocaleString(),
-      });
-
-      setCreateOpen(false);
+      setCreateOpen(false); // 操作成功，关闭弹窗
     } catch (error) {
-      console.error(' 表单提交失败:', {
-        操作类型: createId && createId > 0 ? '编辑' : '新增',
-        错误信息: error,
-        提交数据: values,
-        失败时间: new Date().toLocaleString(),
+      console.error(`[CRUD] ${operationType}操作失败`, {
+        error,
+        submittedData: values,
+        timestamp: new Date().toISOString(),
       });
-      messageApi.error(createId ? '编辑失败' : '新增失败');
+      messageApi.error(`${operationType}失败`);
     } finally {
       setCreateLoading(false);
     }
   };
-
   // 获取数据
   const fetchTableData = async (mockData?: T[]) => {
     setLoading(true);
     try {
       if (fetchApi) {
-        const response = await fetchApi({ ...searchData, page, pageSize });
-        setTableData(response.items || response.data || []);
-        setTotal(response.total || 0);
+        const { data } = await fetchApi({ ...searchData, page, pageSize });
+        setTableData(data.list || data.data || []);
+        setTotal(data.total || 0);
+        console.log('nhao');
       } else if (mockData) {
         // 使用模拟数据
         setTableData(mockData);

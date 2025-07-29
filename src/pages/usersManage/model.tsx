@@ -6,6 +6,7 @@ import { FORM_REQUIRED } from '@/utils/config';
 export interface User {
   id: number;
   avatar: string;
+  image_id?: number;
   nickname: string;
   phone: string;
   school: string;
@@ -14,6 +15,18 @@ export interface User {
   last_time: string;
   status: number;
 }
+export interface updateUserForm {
+  id: number;
+  avatar: string;
+  image_id?: number;
+  nickname: string;
+  phone: string;
+  school: string;
+  wechat: string;
+  alipay: string;
+  status: number;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -30,8 +43,16 @@ export interface UserListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: User[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
+}
+
+export interface UserDetailResult {
+  code: number;
+  data: User;
 }
 
 // 搜索配置
@@ -63,7 +84,7 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'avatar',
     key: 'avatar',
     width: 100,
-    render: (avatar: string) => <img src={avatar} alt="用户头像" style={{ width: '100%' }} />,
+    render: (avatar: string) => <img src={avatar} alt="用户头像" />,
   },
   {
     title: '用户昵称',
@@ -123,40 +144,42 @@ export const tableColumns: TableColumn[] = [
 // 表单配置
 export const formList = (): BaseFormList[] => [
   {
-    label: '团长名称',
-    name: 'name',
+    label: '用户昵称',
+    name: 'nickname',
     component: 'Input',
     placeholder: '请输入学校名称',
     rules: FORM_REQUIRED,
   },
   {
-    label: '团长电话',
+    label: '用户电话',
     name: 'phone',
     component: 'Input',
-    placeholder: '请输入团长电话',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: '城市ID',
-    name: 'city_id',
-    component: 'InputNumber',
-    placeholder: '请输入城市ID',
-    rules: FORM_REQUIRED,
+    placeholder: '请输入用户电话',
+    rules: [
+      { required: true, message: '请输入用户电话' },
+      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
+    ],
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      maxLength: 11,
     },
   },
   {
-    label: '团长密码',
+    label: '用户密码',
     name: 'password',
-    component: 'InputNumber',
-    placeholder: '请输入团长密码',
+    component: 'Input',
+    placeholder: '请输入用户密码',
     rules: FORM_REQUIRED,
     componentProps: {
       precision: 6,
       style: { width: '100%' },
     },
+  },
+  {
+    label: '用户图片',
+    name: 'image_id',
+    component: 'Select',
+    placeholder: '请输入用户学校',
+    rules: FORM_REQUIRED,
   },
   {
     label: '状态',

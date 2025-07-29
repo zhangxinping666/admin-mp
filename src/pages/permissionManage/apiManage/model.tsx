@@ -12,6 +12,22 @@ export interface API {
   status: number;
 }
 
+export interface APIUpdateForm {
+  id: number;
+  group_id: number;
+  path: string;
+  detail: string;
+  method_id: number;
+  status: number;
+}
+export interface addForm {
+  group_id: number;
+  path: string;
+  detail: string;
+  method_id: number;
+  status: number;
+}
+
 export interface Pagination {
   page: number;
   pageSize: number;
@@ -28,10 +44,16 @@ export interface APIListResult {
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
   data: {
     list: API[];
-    pagination: Pagination;
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
   };
 }
-
+export interface APIDetailResult {
+  code: number;
+  data: API;
+}
 // 搜索配置
 export const searchList = (): BaseSearchList[] => [
   {
