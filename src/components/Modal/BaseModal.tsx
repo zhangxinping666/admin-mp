@@ -100,7 +100,6 @@ function BaseModal(props: Props) {
       onMouseOut={() => setDisabled(true)}
     >
       <span className="cursor-text">{props.title || ''}</span>
-
       {CloseRender()}
     </div>
   );

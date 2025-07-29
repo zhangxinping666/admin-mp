@@ -1,14 +1,15 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, Key } from 'react';
 import { message, type FormInstance } from 'antd';
 import type { BaseFormData } from '#/form';
 import { INIT_PAGINATION } from '@/utils/config';
+import { create } from 'lodash';
 
 interface UseCRUDOptions<T> {
   initCreate: Partial<T>;
   fetchApi?: (params: any) => Promise<any>;
   createApi?: (data: any) => Promise<any>;
-  updateApi?: (id: number, data: any) => Promise<any>;
-  deleteApi?: (id: number) => Promise<any>;
+  updateApi?: (id: Key, data: any) => Promise<any>;
+  deleteApi?: (id: Key | Key[]) => Promise<any>;
 }
 
 export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) => {
@@ -50,6 +51,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
   // 搜索处理
   const handleSearch = (values: BaseFormData) => {
+    console.log('搜索参数:', values);
     setPage(1);
     setSearchData(values);
     setFetch(true);
@@ -58,7 +60,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   // 新增处理
   const handleCreate = (title: string = '新增') => {
     setCreateTitle(title);
-    setCreateId(0);
+    setCreateId(-1);
     setCreateData(initCreate);
     setCreateOpen(true);
   };
@@ -72,18 +74,22 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   };
 
   // 删除处理
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: Key[]) => {
     try {
       if (deleteApi) {
         await deleteApi(id);
       }
 
+      // 处理单个ID或多个ID的情况
+      const idsToDelete = Array.isArray(id) ? id : [id];
+
       setTableData((prevData) => {
-        const newData = prevData.filter((item) => item.id !== id);
+        const newData = prevData.filter((item) => !idsToDelete.includes(item.id));
         return newData;
       });
-      setTotal((prev) => prev - 1);
-      messageApi.success('删除成功');
+
+      setTotal((prev) => prev - idsToDelete.length);
+      messageApi.success(`成功删除${idsToDelete.length}条数据`);
     } catch (error) {
       messageApi.error('删除失败');
     }
@@ -96,16 +102,24 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       record: T,
       actions: {
         handleEdit: (record: T) => void;
-        handleDelete: (id: number) => void;
+        handleDelete: (id: Key[]) => void;
       },
     ) => React.ReactNode | undefined,
   ) => {
     setCreateLoading(true);
+    console.log(' 表单提交开始:', {
+      操作类型: createId !== -1 ? '编辑' : '新增',
+      表单数据: values,
+      时间戳: new Date().toLocaleString(),
+    });
+    console.log('createId', createId);
     try {
-      if (createId && createId > 0) {
+      if (createId !== -1) {
         // 编辑
+        let updateResult;
         if (updateApi) {
-          await updateApi(createId, values);
+          updateResult = await updateApi(createId, values);
+          console.log('编辑API调用结果:', updateResult);
         }
         setTableData((prev) => {
           prev = prev.map((item) => {
@@ -116,17 +130,24 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           });
           return prev;
         });
+        console.log('编辑操作完成:', {
+          编辑ID: createId,
+          更新数据: values,
+          API结果: updateResult,
+        });
         messageApi.success('编辑成功');
         // setFetch(true);
       } else {
         // 新增
+        let createResult;
         if (createApi) {
-          await createApi(values);
+          createResult = await createApi(values);
+          console.log('新增API调用结果:', createResult);
         } else {
           // 本地新增
           const newId = getNextId();
           const newItem = { ...values, id: newId } as T;
-          console.log(newItem);
+          console.log('本地新增项目:', newItem);
           if (optionRender) {
             (newItem as any).action = optionRender(newItem, {
               handleEdit: (record) => handleEdit('编辑', record),
@@ -135,11 +156,30 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           }
           setTableData((prev) => [...prev, newItem]);
           setTotal((prev) => prev + 1);
+          createResult = { success: true, data: newItem };
         }
+        console.log('新增操作完成:', {
+          新增数据: values,
+          生成ID: createResult?.data?.id || '本地生成',
+          API结果: createResult,
+        });
         messageApi.success('新增成功');
       }
+
+      console.log(' 表单提交成功完成:', {
+        操作类型: createId && createId > 0 ? '编辑' : '新增',
+        最终状态: '成功',
+        完成时间: new Date().toLocaleString(),
+      });
+
       setCreateOpen(false);
     } catch (error) {
+      console.error(' 表单提交失败:', {
+        操作类型: createId && createId > 0 ? '编辑' : '新增',
+        错误信息: error,
+        提交数据: values,
+        失败时间: new Date().toLocaleString(),
+      });
       messageApi.error(createId ? '编辑失败' : '新增失败');
     } finally {
       setCreateLoading(false);
@@ -150,8 +190,10 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   const fetchTableData = async (mockData?: T[]) => {
     setLoading(true);
     try {
+      console.log('触发fetchTableData');
       if (fetchApi) {
         const response = await fetchApi({ ...searchData, page, pageSize });
+        console.log('response', response);
         setTableData(response.items || response.data || []);
         setTotal(response.total || 0);
       } else if (mockData) {

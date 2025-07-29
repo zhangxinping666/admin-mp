@@ -6,15 +6,14 @@ import { FORM_REQUIRED } from '@/utils/config';
 // 商家分类数据接口
 export interface MerchantSort {
   id: number;
-  merchantSortName: string;
-  sortIcon: string;
-  school: string;
-  city: string;
+  name: string;
+  icon: string;
+  school_name: string;
+  school_id: number;
+  city_name: string;
+  city_id: number;
   status: number;
-  commission: number;
-  createdAt?: string;
-  updatedAt?: string;
-  action?: React.ReactNode;
+  drawback: number;
 }
 
 // 商家分类列表接口
@@ -25,9 +24,7 @@ export interface MerchantSortList {
 
 // 商家分类查询参数接口
 export interface MerchantSortQuery {
-  merchantName?: string;
-  school?: string;
-  city?: string;
+  name?: string;
   status?: number;
   page?: number;
   pageSize?: number;
@@ -37,18 +34,8 @@ export interface MerchantSortQuery {
 export const searchList = (): BaseSearchList[] => [
   {
     component: 'Input',
-    name: 'merchantName',
-    label: '商家名称',
-  },
-  {
-    component: 'Input',
-    name: 'school',
-    label: '学校名称',
-  },
-  {
-    component: 'Input',
-    name: 'city',
-    label: '城市名字',
+    name: 'name',
+    label: '分类名称',
   },
   {
     component: 'Select',
@@ -67,46 +54,63 @@ export const searchList = (): BaseSearchList[] => [
 export const tableColumns: TableColumn[] = [
   {
     title: '分类名称',
-    dataIndex: 'merchantSortName',
-    key: 'merchantSortName',
+    dataIndex: 'name',
+    key: 'name',
     width: 150,
+    align: 'center',
+    fixed: 'left',
   },
   {
     title: '分类图标',
-    dataIndex: 'sortIcon',
-    key: 'sortIcon',
+    dataIndex: 'icon',
+    key: 'icon',
     width: 120,
+    align: 'center',
+    fixed: 'left',
   },
   {
     title: '学校',
-    dataIndex: 'school',
-    key: 'school',
+    dataIndex: 'school_name',
+    key: 'school_name',
     width: 150,
+    align: 'center',
+    fixed: 'left',
   },
   {
     title: '城市',
-    dataIndex: 'city',
-    key: 'city',
+    dataIndex: 'city_name',
+    key: 'city_name',
     width: 120,
+    align: 'center',
+    fixed: 'left',
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     width: 100,
+    render: (value: unknown, record: object) => {
+      const status = value as number;
+      return status === 1 ? '启用' : '禁用';
+    },
+    align: 'center',
+    fixed: 'left',
   },
   {
-    title: '抽佣(%)',
-    dataIndex: 'commission',
-    key: 'commission',
+    title: '退款比例(%)',
+    dataIndex: 'drawback',
+    key: 'drawback',
     width: 120,
+    align: 'center',
+    fixed: 'left',
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
-    width: 150,
-    fixed: 'right',
+    width: 120,
+    align: 'center',
+    fixed: 'left',
   },
 ];
 
@@ -114,7 +118,7 @@ export const tableColumns: TableColumn[] = [
 export const formList = (): BaseFormList[] => [
   {
     label: '分类名称',
-    name: 'merchantSortName',
+    name: 'name',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
@@ -124,15 +128,15 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '分类图标',
-    name: 'sortIcon',
+    name: 'icon',
     component: 'Input',
     componentProps: {
       placeholder: '请输入图标URL',
     },
   },
   {
-    label: '学校',
-    name: 'school',
+    label: '学校名称',
+    name: 'schoolName',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
@@ -141,8 +145,8 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
-    label: '城市',
-    name: 'city',
+    label: '城市名称',
+    name: 'cityName',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
@@ -164,12 +168,12 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
-    label: '抽佣(%)',
-    name: 'commission',
+    label: '退款比例(%)',
+    name: 'drawback',
     rules: FORM_REQUIRED,
     component: 'InputNumber',
     componentProps: {
-      placeholder: '请输入抽佣比例',
+      placeholder: '请输入退款比例',
       min: 0,
       max: 100,
       precision: 2,

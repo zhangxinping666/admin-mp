@@ -38,7 +38,6 @@ declare global {
   const FORM_REQUIRED: typeof import('../src/utils/config')['FORM_REQUIRED']
   const Fullscreen: typeof import('../src/components/Fullscreen/index')['default']
   const GameSelect: typeof import('../src/components/Business/Selects/GameSelect')['default']
-  const GlobalSearch: typeof import('../src/components/GlobalSearch/index')['default']
   const I18n: typeof import('../src/components/I18n/index')['default']
   const INIT_PAGINATION: typeof import('../src/utils/config')['INIT_PAGINATION']
   const LANG: typeof import('../src/utils/config')['LANG']
@@ -51,20 +50,15 @@ declare global {
   const PASSWORD_RULE: typeof import('../src/utils/config')['PASSWORD_RULE']
   const PartnerSelect: typeof import('../src/components/Business/Selects/PartnerSelect')['default']
   const PasswordStrength: typeof import('../src/components/PasswordStrength/index')['default']
-  const PermissionWrapper: typeof import('../src/components/Permission/PermissionWrapper')['default']
   const ResizableTitle: typeof import('../src/components/Table/components/ResizableTitle')['default']
   const Route: typeof import('react-router-dom')['Route']
   const Routes: typeof import('react-router-dom')['Routes']
   const ScrollContext: typeof import('../src/components/Table/utils/state')['ScrollContext']
-  const SearchFooter: typeof import('../src/components/GlobalSearch/components/SearchFooter')['default']
-  const SearchModal: typeof import('../src/components/GlobalSearch/components/SearchModal')['default']
-  const SearchResult: typeof import('../src/components/GlobalSearch/components/SearchResult')['default']
   const StrengthBar: typeof import('../src/components/PasswordStrength/components/StrengthBar')['default']
   const SubmitBottom: typeof import('../src/components/Bottom/SubmitBottom')['default']
   const THEME_KEY: typeof import('../src/utils/config')['THEME_KEY']
   const TIME_FORMAT: typeof import('../src/utils/config')['TIME_FORMAT']
   const TITLE_SUFFIX: typeof import('../src/utils/config')['TITLE_SUFFIX']
-  const TOKEN: typeof import('../src/utils/config')['TOKEN']
   const TableFilter: typeof import('../src/components/Table/components/TableFilter')['default']
   const Theme: typeof import('../src/components/Theme/index')['default']
   const UpdateBtn: typeof import('../src/components/Buttons/index')['UpdateBtn']
@@ -123,14 +117,11 @@ declare global {
   const useLocation: typeof import('react-router-dom')['useLocation']
   const useMemo: typeof import('react')['useMemo']
   const useMenuStore: typeof import('../src/stores/menu')['useMenuStore']
-  const useMultiplePermissions: typeof import('../src/hooks/usePermissions')['useMultiplePermissions']
   const useNavigate: typeof import('react-router-dom')['useNavigate']
   const useNavigationType: typeof import('react-router-dom')['useNavigationType']
   const useOutlet: typeof import('react-router-dom')['useOutlet']
   const useOutletContext: typeof import('react-router-dom')['useOutletContext']
   const useParams: typeof import('react-router-dom')['useParams']
-  const usePermission: typeof import('../src/hooks/usePermissions')['usePermission']
-  const usePermissions: typeof import('../src/hooks/usePermissions')['usePermissions']
   const usePublicStore: typeof import('../src/stores/public')['usePublicStore']
   const useReducer: typeof import('react')['useReducer']
   const useRef: typeof import('react')['useRef']
@@ -148,12 +139,11 @@ declare global {
   const useUserStore: typeof import('../src/stores/user')['useUserStore']
   const useVirtual: typeof import('../src/components/Table/hooks/useVirtual')['default']
   const useWatermark: typeof import('../src/hooks/useWatermark')['useWatermark']
-  const validateUploadFile: typeof import('../src/components/Form/utils/helper')['validateUploadFile']
 }
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { ApiPageSelectProps, ThemeType, TabsData, FC, BusinessComponents, RangeValue, SearchModalProps, Langs, InitTableState, TableAction, EditorProps, FormData, FormList, SearchList, Men } from './autoImports.d'
+  export type { FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, EditorProps, ThemeType, TabsData } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'

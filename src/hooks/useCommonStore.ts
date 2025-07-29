@@ -5,7 +5,9 @@ import { useMenuStore, usePublicStore, useTabsStore, useUserStore } from '@/stor
  */
 export const useCommonStore = () => {
   // 权限
+  const routePages = useMenuStore((state) => state.routePages);
   const permissions = useUserStore((state) => state.permissions);
+  const menuPermissions = useUserStore((state) => state.menuPermissions);
   // 用户ID
   const userId = useUserStore((state) => state.userInfo?.account_id || '');
   // 用户名
@@ -39,8 +41,10 @@ export const useCommonStore = () => {
   return {
     isMaximize,
     isCollapsed,
+    menuPermissions,
     isPhone,
     isRefresh,
+    routePages,
     isFullscreen,
     nav,
     permissions,

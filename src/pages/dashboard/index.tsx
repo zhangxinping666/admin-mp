@@ -1,3 +1,11 @@
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
+import { useCommonStore } from '@/hooks/useCommonStore';
+import BaseContent from '../../components/Content/BaseContent';
+import BaseCard from '../../components/Card/BaseCard';
+import BaseSearch from '../../components/Search/BaseSearch';
+import type { BaseFormData } from '#/form';
 import { searchList } from './model';
 // import { getDataTrends } from '@/servers/dashboard';
 import Bar from './components/Bar';
@@ -11,9 +19,12 @@ const initSearch = {
 
 function Dashboard() {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
   const [isLoading, setLoading] = useState(false);
-  const { permissions, isPhone } = useCommonStore();
-  const isPermission = checkPermission('/dashboard', permissions);
+  const { isPhone, menuPermissions } = useCommonStore();
+
+  // 检查当前路由是否有权限
+  const isPermission = menuPermissions.includes(pathname);
 
   /**
    * 搜索提交

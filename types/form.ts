@@ -32,6 +32,7 @@ type DefaultDataComponents =
   | 'TextArea'
   | 'InputPassword'
   | 'AutoComplete'
+  | 'Radio'
   | 'customize';
 
 // 下拉组件
@@ -164,6 +165,10 @@ export interface BaseFormList extends FormItemProps {
   component: ComponentType; // 组件
   componentProps?: ComponentProps; // 组件参数
   render?: (props: RenderComponentProps) => ReactNode; // 自定义渲染
+  showWhen?: {
+    name: string; // 依赖的字段
+    value: any; // 依赖字段所需的值
+  };
 }
 
 // 搜索数据
