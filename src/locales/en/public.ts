@@ -71,4 +71,6 @@ export default {
   getPageWarning: 'Missing page acquisition method',
   tableSelectWarning: 'Please select table data',
   menuSearchPlaceholder: 'Please enter the menu name',
+  pageSize: 'Page Size',
+  pageUnit: 'items'
 };

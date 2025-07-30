@@ -1,0 +1,58 @@
+.cursor-pagination {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 40px;
+  box-sizing: border-box;
+  z-index: 999;
+  
+  &-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  &-prev,
+  &-next {
+    margin: 0 7px;
+    background-color: #f4f4f5;
+    
+    &:hover:not(:disabled) {
+      background-color: #e6e6e7;
+    }
+  }
+  
+  &-current {
+    margin: 0 10px;
+    font-size: 14px;
+  }
+  
+  &-size-changer {
+    display: flex;
+    align-items: center;
+    margin-left: 16px;
+    
+    &-text {
+      margin-right: 8px;
+      font-size: 14px;
+    }
+  }
+  
+  &-size-select {
+    width: 100px;
+  }
+}
+
+// 暗黑模式
+.theme-dark {
+  .cursor-pagination {
+    &-prev,
+    &-next {
+      background-color: rgb(29 29 29);
+      
+      &:hover:not(:disabled) {
+        background-color: rgb(45 45 45);
+      }
+    }
+  }
+}

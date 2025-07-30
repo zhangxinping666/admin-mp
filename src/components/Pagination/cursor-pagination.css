@@ -1,0 +1,46 @@
+.cursor-pagination {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 40px;
+  box-sizing: border-box;
+  z-index: 999;
+}
+.cursor-pagination-container {
+  display: flex;
+  align-items: center;
+}
+.cursor-pagination-prev,
+.cursor-pagination-next {
+  margin: 0 7px;
+  background-color: #f4f4f5;
+}
+.cursor-pagination-prev:hover:not(:disabled),
+.cursor-pagination-next:hover:not(:disabled) {
+  background-color: #e6e6e7;
+}
+.cursor-pagination-current {
+  margin: 0 10px;
+  font-size: 14px;
+}
+.cursor-pagination-size-changer {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+.cursor-pagination-size-changer-text {
+  margin-right: 8px;
+  font-size: 14px;
+}
+.cursor-pagination-size-select {
+  width: 100px;
+}
+.theme-dark .cursor-pagination-prev,
+.theme-dark .cursor-pagination-next {
+  background-color: #1d1d1d;
+}
+.theme-dark .cursor-pagination-prev:hover:not(:disabled),
+.theme-dark .cursor-pagination-next:hover:not(:disabled) {
+  background-color: #2d2d2d;
+}
