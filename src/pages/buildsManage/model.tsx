@@ -5,14 +5,33 @@ import { FORM_REQUIRED } from '@/utils/config';
 // 楼栋接口定义
 export interface Building {
   id: number;
-  name: string; // 楼栋名称
-  floorCount: number; // 楼层数
-  longitude: number; // 经度
-  latitude: number; // 纬度
-  address:string;// 地址
-  school_id:number;// 学校id
-  createdAt?: string; // 创建时间
-  action?: React.ReactNode;
+  name: string;
+  school_id: number;
+  address: string;
+  longitude: number;
+  latitude: number;
+  status: number;
+}
+
+// 楼层接口
+export interface Floor {
+  id: number;
+  layer: number;
+  school_building_id: number;
+  status: number;
+}
+
+// 学校接口
+export interface School {
+  id: number;
+  name: string;
+  address: string;
+  city_name: string;
+  province: string;
+  city_manager_id: number;
+  school_logo: number;
+  logo_image_url: string;
+  status: number;
 }
 
 // 搜索配置
@@ -35,14 +54,14 @@ export const tableColumns: TableColumn[] = [
     fixed: 'left',
   },
   {
-    title: '名称',
+    title: '楼栋名称',
     dataIndex: 'name',
     key: 'name',
     width: 150,
     ellipsis: true,
   },
   {
-    title: '地址',
+    title: '楼栋地址',
     dataIndex: 'address',
     key: 'address',
     width: 150,
@@ -53,18 +72,21 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'longitude',
     key: 'longitude',
     width: 120,
+    ellipsis: true,
   },
   {
     title: '纬度',
     dataIndex: 'latitude',
     key: 'latitude',
     width: 120,
+    ellipsis: true,
   },
   {
-    title: '创建时间',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 160,
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 120,
+    ellipsis: true,
   },
   {
     title: '操作',
@@ -85,28 +107,10 @@ export const formList = (): BaseFormList[] => [
     rules: FORM_REQUIRED,
   },
   {
-    label: '楼层数',
-    name: 'floorCount',
-    component: 'InputNumber',
-    placeholder: '请输入楼层数',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      min: 1,
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '地址',
+    label: '楼栋地址',
     name: 'address',
     component: 'Input',
-    placeholder: '请输入地址',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: '学校',
-    name: 'school_id',
-    component: 'Select',
-    placeholder: '请选择学校',
+    placeholder: '请输入楼栋地址',
     rules: FORM_REQUIRED,
   },
   {
@@ -130,5 +134,12 @@ export const formList = (): BaseFormList[] => [
       precision: 6,
       style: { width: '100%' },
     },
+  },
+  {
+    label: '状态',
+    name: 'status',
+    component: 'Select',
+    placeholder: '请选择状态',
+    rules: FORM_REQUIRED,
   },
 ];

@@ -1,4 +1,10 @@
-import { itemTableColumns, itemFormList, type Dictionary, type DictionaryItem } from './model';
+import {
+  formList as DictionaryStyleCol,
+  itemTableColumns,
+  itemFormList,
+  type Dictionary,
+  type DictionaryItem,
+} from './model';
 import {
   Button,
   Modal,
@@ -52,6 +58,7 @@ const DictionaryManagePage = () => {
   const [dictionaryForm] = Form.useForm();
   const [selectedKey, setSelectedKey] = useState<string>('1');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   // 添加选中行的状态
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
@@ -62,6 +69,7 @@ const DictionaryManagePage = () => {
       title: '操作',
       dataIndex: 'operation',
       key: 'operation',
+      fixed: 'right' as const,
       width: 100,
       render: (value: any, record: DictionaryItem, index: number) => (
         <TableActions
@@ -82,6 +90,13 @@ const DictionaryManagePage = () => {
   useEffect(() => {
     fetchTableData();
   }, []);
+
+  // 在获取数据后设置默认选中的key
+  useEffect(() => {
+    if (dictionaryData.length > 0 && !selectedKey) {
+      setSelectedKey(String(dictionaryData[0].id)); // 确保转换为字符串
+    }
+  }, [dictionaryData]);
 
   // 获取字典数据
   const fetchTableData = async () => {
@@ -255,20 +270,31 @@ const DictionaryManagePage = () => {
 
   // 添加renderDictionaryList函数实现
   const renderDictionaryList = () => {
-    // 将dictionaryData转换为Menu组件需要的类型
-    // 为每个菜单项生成唯一key并确保有label属性
     const menuItems = dictionaryData.map((item, index) => ({
       ...item,
       type: 'item',
-      // 使用item.id作为首选key，其次是code，最后使用索引作为保底
       key: item.id || item.code || `dict-item-${index}`,
-      // 确保label属性存在,使用item.name，最后用空字符串
-      label: item.name || '',
+      label: (
+        <div className="flex justify-between items-center">
+          <span>{item.name || ''}</span>
+          <BaseBtn
+            size="small"
+            type="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              dictionaryForm.setFieldsValue(item);
+              setEditModalVisible(true);
+            }}
+          >
+            编辑
+          </BaseBtn>
+        </div>
+      ),
     }));
+
     return (
       <Card
         title="字典列表"
-        style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
         extra={
           <Button type="primary" onClick={openCreateModal} icon={<PlusOutlined />}>
             新增字典
@@ -277,10 +303,8 @@ const DictionaryManagePage = () => {
       >
         <Menu
           items={menuItems as ItemType<MenuItemType>[]}
-          style={{ width: '100%' }}
-          // 使用selectedKey状态来设置默认展开和选中的菜单项
-          defaultOpenKeys={[selectedKey]}
-          selectedKeys={[selectedKey]}
+          selectedKeys={selectedKey ? [String(selectedKey)] : []}
+          defaultOpenKeys={selectedKey ? [String(selectedKey)] : []}
           mode="inline"
           onClick={onClick}
         />
@@ -333,20 +357,32 @@ const DictionaryManagePage = () => {
       .validateFields()
       .then(async (values) => {
         try {
-          // 调用API保存字典
-          await apis.addDictionary({
-            name: values.name,
-            code: values.code,
-            description: values.description,
-            status: values.status,
-          });
-          message.success('字典创建成功');
-
-          // 保存成功后刷新数据
+          if (values.id) {
+            // 编辑模式
+            await apis.updateDictionary({
+              id: values.id,
+              name: values.name,
+              code: values.code,
+              description: values.description,
+              status: values.status,
+            });
+            fetchTableData();
+            setCreateModalVisible(false);
+            message.success('字典更新成功');
+          } else {
+            // 新增模式
+            await apis.addDictionary({
+              name: values.name,
+              code: values.code,
+              description: values.description,
+              status: values.status,
+            });
+            message.success('字典创建成功');
+          }
           fetchTableData();
           setCreateModalVisible(false);
         } catch (error) {
-          message.error('创建失败');
+          message.error('操作失败');
         }
       })
       .catch((error) => {
@@ -358,7 +394,7 @@ const DictionaryManagePage = () => {
   const renderDictionaryItems = () => (
     <Card
       title={selectedDictionary ? `字典项管理: ${selectedDictionary.name}` : '请选择字典'}
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'scroll' }}
+      className="h-full flex flex-col overflow-hidden flex-1 flex flex-col overflow-hidden p-0"
       extra={
         selectedDictionary && (
           <Button
@@ -367,6 +403,7 @@ const DictionaryManagePage = () => {
               itemForm.setFieldsValue(initItemCreate);
               setItemModalVisible(true);
             }}
+            className="ml-2"
           >
             新增字典项
           </Button>
@@ -374,31 +411,37 @@ const DictionaryManagePage = () => {
       }
     >
       {selectedDictionary ? (
-        <>
-          <Popconfirm
-            title="确定要删除选中的项吗？"
-            onConfirm={handleBatchDelete}
-            okText="确定"
-            cancelText="取消"
-            disabled={selectedRowKeys.length === 0}
-          >
-            <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
-              批量删除 ({selectedRowKeys.length})
-            </BaseBtn>
-          </Popconfirm>
-          <Table
-            columns={itemsClo as any}
-            dataSource={selectedDictionary.items}
-            rowKey="id"
-            pagination={false}
-            rowSelection={{
-              selectedRowKeys,
-              onChange: handleSelectionChange,
-            }}
-          />
-        </>
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <Popconfirm
+              title="确定要删除选中的项吗？"
+              onConfirm={handleBatchDelete}
+              okText="确定"
+              cancelText="取消"
+              disabled={selectedRowKeys.length === 0}
+            >
+              <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
+                批量删除 ({selectedRowKeys.length})
+              </BaseBtn>
+            </Popconfirm>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <Table
+              className="w-full"
+              columns={itemsClo as any}
+              dataSource={selectedDictionary.items}
+              scroll={{ x: 'max-content' }}
+              rowKey="id"
+              pagination={false}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: handleSelectionChange,
+              }}
+            />
+          </div>
+        </div>
       ) : (
-        <div style={{ textAlign: 'center', padding: '50px 0', color: '#999' }}>
+        <div className="flex-1 flex items-center justify-center text-gray-500">
           请从左侧选择一个字典
         </div>
       )}
@@ -427,7 +470,7 @@ const DictionaryManagePage = () => {
 
       {/* 字典项编辑弹窗 - 保留原有弹窗逻辑 */}
       <Modal
-        title={isEditMode ? '编辑字典项' : '新增字典项'}
+        title={isEditMode ? `编辑字典项 (ID: ${currentItem?.id})` : '新增字典项'}
         open={itemModalVisible}
         onCancel={() => setItemModalVisible(false)}
         onOk={saveItem}
@@ -460,6 +503,22 @@ const DictionaryManagePage = () => {
       >
         <Form form={dictionaryForm} layout="vertical" initialValues={initCreate}>
           {formList().map((item, index) => (
+            <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
+              {getComponent(t, item as BaseFormList, () => {})}
+            </Form.Item>
+          ))}
+        </Form>
+      </Modal>
+      {/* 字典编辑弹窗  */}
+      <Modal
+        title="编辑字典"
+        open={editModalVisible}
+        onCancel={() => setEditModalVisible(false)}
+        onOk={saveDictionary}
+        width={600}
+      >
+        <Form form={dictionaryForm} layout="vertical" initialValues={initCreate}>
+          {DictionaryStyleCol().map((item, index) => (
             <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
               {getComponent(t, item as BaseFormList, () => {})}
             </Form.Item>

@@ -208,14 +208,14 @@ export const itemTableColumns: TableColumn[] = [
     title: '描述',
     dataIndex: 'description',
     key: 'description',
-    width: 200,
+    width: 100,
     ellipsis: true,
   },
   {
     title: '扩展值',
     dataIndex: 'extend_value',
     key: 'extend_value',
-    width: 200,
+    width: 100,
     ellipsis: true,
   },
 ];

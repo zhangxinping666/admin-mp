@@ -7,7 +7,7 @@ interface UseCRUDOptions<T> {
   initCreate: Partial<T>;
   fetchApi?: (params: any) => Promise<any>;
   createApi?: (data: any) => Promise<any>;
-  updateApi?: (id: Key, data: any) => Promise<any>;
+  updateApi?: (params: any) => Promise<any>;
   deleteApi?: (id: Key | Key[]) => Promise<any>;
   pagination?: boolean;
 }
@@ -126,7 +126,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
           throw new Error('Update API not configured.');
         }
-        const result = await updateApi(createId, values);
+        const result = await updateApi({ id: createId, ...values });
         console.log(`[CRUD] 编辑API调用成功`, { result });
         messageApi.success('编辑成功');
 
@@ -167,6 +167,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     setLoading(true);
     try {
       console.log('触发fetchTableData');
+      console.log('fetchApi:', fetchApi);
       if (fetchApi) {
         const params: any = { ...searchData };
         if (pagination) {
@@ -174,6 +175,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           params.page = page;
           params.pageSize = pageSize;
         }
+        console.log('searchData', params);
         const { data } = await fetchApi(params);
         console.log('fetch了', data);
         setTableData(data.list || data.data || data || []);
