@@ -1,5 +1,6 @@
 import { CRUDPageTemplate, TableActions } from '@/shared';
 import { searchList, tableColumns, formList, type BalanceRecord } from './model';
+import { Key } from 'react';
 
 // 初始化新增数据
 const initCreate: Partial<BalanceRecord> = {
@@ -108,12 +109,13 @@ const BalanceRecordsPage = () => {
     record: BalanceRecord,
     actions: {
       handleEdit: (record: BalanceRecord) => void;
-      handleDelete: (id: number) => void;
+      handleDelete: (id: Key[]) => void;
     },
   ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
 
   return (
     <CRUDPageTemplate
+      isAddOpen={true}
       title="余额明细管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}

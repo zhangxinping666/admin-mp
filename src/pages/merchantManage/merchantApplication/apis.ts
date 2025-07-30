@@ -218,12 +218,12 @@ export function getApplicationList(params?: GetListQueryParams) {
 
 // 删除审批
 export function deleteApplication(params: DeleteRequest) {
-  return request.post<DeleteResponse>(apis.delete, params);
+  return request.delete<DeleteResponse>(apis.delete, { params });
 }
 
 // 更新审批
 export function updateApplication(params: UpdateRequest) {
-  return request.post<UpdateResponse>(apis.update, params);
+  return request.put<UpdateResponse>(apis.update, params);
 }
 // 创建审批
 export function createApplication(params: CreateRequest) {
