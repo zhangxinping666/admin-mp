@@ -95,11 +95,11 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
   return (
     <>
       {component == 'Upload' ? (
-        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} listType="picture">
+        <Comp {...initCompProps(t, component, onPressEnter)} {...props} listType="picture">
           <Button icon={<UploadOutlined />}>Upload png only</Button>
         </Comp>
       ) : (
-        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+        <Comp {...initCompProps(t, component, onPressEnter)} {...props} />
       )}
     </>
   );

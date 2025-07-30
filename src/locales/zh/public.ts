@@ -69,4 +69,6 @@ export default {
   getPageWarning: '缺少获取页面方法',
   tableSelectWarning: '请勾选表格数据',
   menuSearchPlaceholder: '请输入菜单名称',
+  pageSize: '每页条数',
+  pageUnit: '条'
 };

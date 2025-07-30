@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { TFunction } from 'i18next';
 import { valueToLabel } from '@/utils/helper';
 import {
@@ -6,7 +6,7 @@ import {
   getSchoolsByCityId,
   getCitiesByProvince,
 } from '@/servers/trade-blotter/location';
-
+type OptionType = { label: string; value: string | number };
 /**
  * 支付类型、交易状态、分组选项
  */
@@ -29,87 +29,70 @@ export const CATEGORY_OPTIONS = [
   { label: '退款', value: 3 },
 ];
 
-/**
- * 自定义 hook：管理省份 / 城市 / 学校动态选项
- */
-export const useLocationOptions = () => {
-  const [provinceOptions, setProvinceOptions] = useState<any[]>([]);
-  const [cityOptions, setCityOptions] = useState<any[]>([]);
-  const [schoolOptions, setSchoolOptions] = useState<any[]>([]);
+// 默认“全部”选项
+const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部'): OptionType => ({
+  label,
+  value,
+});
 
-  // 初始化省份
+export const useLocationOptions = () => {
+  const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
+  const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
+  const [schoolOptions, setSchoolOptions] = useState<OptionType[]>([]);
+
+  // 加载省份
   useEffect(() => {
     const loadProvinces = async () => {
       try {
-        const response = await getProvinces();
-        const { data } = response;
-
-        // 省份数据部分修改
-        if (data && Array.isArray(data)) {
-          const provinces = [{ province: '全部' }, ...data].map((p) => ({
-            label: p.province,
-            value: p.province,
-          }));
-          setProvinceOptions(provinces);
-        } else {
-          setProvinceOptions([{ label: '全部', value: '全部' }]);
+        const { data } = await getProvinces();
+        if (Array.isArray(data) && data.length > 0) {
+          setProvinceOptions([
+            DEFAULT_ALL_OPTION(),
+            ...data.map((p) => ({ label: p.province, value: p.province })),
+          ]);
         }
-      } catch (err) {
-        console.error('加载省份失败', err);
+      } catch (error) {
+        console.error('加载省份失败', error);
       }
     };
     loadProvinces();
   }, []);
 
   // 加载城市
-  const loadCities = async (province: string) => {
-    if (!province || province === '' || province === '全部') {
+  const loadCities = useCallback(async (province: string) => {
+    if (!province || province === '全部') {
       setCityOptions([]);
       return;
     }
     try {
-      const response = await getCitiesByProvince(province);
-      const { data } = response;
-
-      // 城市数据部分修改
-      if (data && Array.isArray(data)) {
-        const cities = [{ city_name: '全部', id: 0 }, ...data].map((city) => ({
-          label: city.city_name,
-          value: city.id,
-        }));
-        setCityOptions(cities);
-      } else {
-        setCityOptions([{ label: '全部', value: 0 }]);
-      }
-    } catch (err) {
-      console.error('加载城市失败', err);
+      const { data } = await getCitiesByProvince(province);
+      setCityOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((c) => ({ label: c.city_name, value: c.id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载城市失败', error);
+      setCityOptions([DEFAULT_ALL_OPTION('全部', 0)]);
     }
-  };
+  }, []);
 
   // 加载学校
-  const loadSchools = async (cityId: string | number) => {
-    if (!cityId || cityId === '' || cityId === 0) {
+  const loadSchools = useCallback(async (cityId: string | number) => {
+    if (!cityId || cityId === 0) {
       setSchoolOptions([]);
       return;
     }
     try {
-      const response = await getSchoolsByCityId(cityId);
-      const { data } = response;
-
-      // 学校数据部分修改
-      if (data && Array.isArray(data)) {
-        const schools = [{ name: '全部', id: 0 }, ...data].map((school) => ({
-          label: school.name,
-          value: school.id,
-        }));
-        setSchoolOptions(schools);
-      } else {
-        setSchoolOptions([{ label: '全部', value: 0 }]);
-      }
-    } catch (err) {
-      console.error('加载学校失败:', err);
+      const { data } = await getSchoolsByCityId(cityId);
+      setSchoolOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((s) => ({ label: s.name, value: s.id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载学校失败', error);
+      setSchoolOptions([DEFAULT_ALL_OPTION('全部', 0)]);
     }
-  };
+  }, []);
 
   return {
     provinceOptions,
@@ -169,19 +152,17 @@ export const searchList = (
     name: 'province',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => {
-      console.log(form);
-      return {
-        placeholder: t('tradeBlotter.selectProvince'),
-        allowClear: true,
-        options: options.provinceOptions,
-        onChange: async (value: string) => {
-          form.setFieldsValue({ city: undefined, school: undefined });
-          await options.loadCities(value);
-          form.validateFields(['city', 'school']);
-        },
-      };
-    },
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: t('tradeBlotter.selectProvince'),
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市和学校选择
+        form.setFieldsValue({ city: undefined, school: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city', 'school']);
+      },
+    }),
   },
   {
     label: t('tradeBlotter.city'),
@@ -190,6 +171,7 @@ export const searchList = (
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
       const provinceValue = form.getFieldValue('province');
+      console.log(provinceValue);
       return {
         placeholder: t('tradeBlotter.selectCity'),
         allowClear: true,
@@ -261,19 +243,19 @@ export const searchList = (
           form.setFields([
             {
               name: 'amount_range',
-              errors: [error]
-            }
+              errors: [error],
+            },
           ]);
         } else {
           // 清除错误状态
           form.setFields([
             {
               name: 'amount_range',
-              errors: []
-            }
+              errors: [],
+            },
           ]);
         }
-      }
+      },
     }),
     wrapperWidth: 300,
   },
