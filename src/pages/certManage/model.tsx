@@ -2,42 +2,11 @@ import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { message, Modal } from 'antd';
+import { useState } from 'react';
+import { ImagePreview } from '@/components/Upload';
+// 身份证图片预览组件 - 使用新的ImagePreview组件
 const UserPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  const [visible, setVisible] = useState(false);
-
-  // 处理数组格式的图片地址或 base64 数据
-  const displayUrl = Array.isArray(voucherUrl) ? voucherUrl[0] : voucherUrl;
-
-  // 处理可能的 base64 数据
-  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
-  console.log('processedUrl', processedUrl);
-  console.log('displayUrl', displayUrl);
-
-  return (
-    <>
-      {processedUrl ? (
-        <>
-          <img
-            src={processedUrl}
-            alt="用户图片"
-            style={{
-              width: '60px',
-              height: '60px',
-              objectFit: 'cover',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-            onClick={() => setVisible(true)}
-          />
-          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
-            <img src={processedUrl} alt="用户图片预览" style={{ width: '100%', height: 'auto' }} />
-          </Modal>
-        </>
-      ) : (
-        '无图片'
-      )}
-    </>
-  );
+  return <ImagePreview imageUrl={voucherUrl} alt="身份证图片" />;
 };
 type uploadImg = {
   uid: string;
@@ -140,14 +109,14 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'front_img',
     key: 'front_img',
     width: 100,
-    render: (url: uploadImg[]) => <UserPreview voucherUrl={url} />,
+    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="身份证正面" />,
   },
   {
     title: '身份证反面',
     dataIndex: 'back_img',
     key: 'back_img',
     width: 100,
-    render: (url: uploadImg[]) => <UserPreview voucherUrl={url} />,
+    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="身份证反面" />,
   },
   {
     title: '状态',

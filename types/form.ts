@@ -21,6 +21,7 @@ import type { RuleObject } from 'antd/lib/form';
 import type { ServerResult } from '@manpao/request';
 import type { BusinessComponents } from '@/components/Business';
 import type { EditorProps } from '@/components/WangEditor';
+import type { FormInstance } from 'antd/es/form';
 
 // 数据类型
 export type BaseFormData = Record<string, unknown>;
@@ -53,7 +54,7 @@ type UploadComponents = 'Upload';
 // 星级组件
 type RateComponents = 'Rate';
 
-// 穿梭俊组件
+// 穿梭框组件
 type TransferComponents = 'Transfer';
 
 // 滑动输入条组件
@@ -68,6 +69,7 @@ type EditorComponents = 'RichEditor';
 // 密码强度组件
 type PasswordStrength = 'PasswordStrength';
 
+type AmountRangeInput = 'AmountRangeInput';
 // 组件集合
 export type ComponentType =
   | DefaultDataComponents
@@ -82,8 +84,10 @@ export type ComponentType =
   | EditorComponents
   | PasswordStrength
   | TransferComponents
-  | BusinessComponents;
+  | BusinessComponents
+  | AmountRangeInput;
 
+// 接口返回的选项类型
 export interface ApiResult extends Omit<DefaultOptionType, 'value'> {
   label: ReactNode;
   title?: ReactNode;
@@ -91,11 +95,12 @@ export interface ApiResult extends Omit<DefaultOptionType, 'value'> {
   value?: string | number;
 }
 
+// api 函数类型
 export type ApiFn = {
   <T extends unknown[]>(...params: T): Promise<ServerResult<unknown>>;
 };
 
-// api参数
+// api 参数
 interface ApiParam {
   api?: ApiFn;
   params?: object | unknown[];
@@ -108,7 +113,7 @@ export type ApiSelectProps = ApiParam & SelectProps;
 // ApiTreeSelect
 export type ApiTreeSelectProps = ApiParam & TreeSelectProps;
 
-// 组件参数
+// 所有组件的参数类型合集
 export type ComponentProps =
   | InputProps
   | InputNumberProps
@@ -128,7 +133,7 @@ export type ComponentProps =
   | ApiTreeSelectProps
   | EditorProps;
 
-// 组件参数
+// 渲染时可用的组件参数合集
 export type RenderComponentProps = InputProps &
   InputNumberProps &
   SelectProps &
@@ -147,23 +152,23 @@ export type RenderComponentProps = InputProps &
   ApiTreeSelectProps &
   EditorProps;
 
-// 表单规则
+// 表单校验规则
 export type FormRule = RuleObject & {
   trigger?: 'blur' | 'change' | ['change', 'blur'];
 };
 
-// 表单数据
+// 表单项定义
 export interface BaseFormList extends FormItemProps {
   name: string | string[]; // 表单域字段
   label: string; // 标签
   placeholder?: string; // 占位符
   hidden?: boolean; // 是否隐藏
   unit?: string; // 单位，无法和extra一起显示
-  rules?: FormRule[]; // 规则
+  rules?: FormRule[]; // 校验规则
   labelWidth?: number; // label宽度
   wrapperWidth?: number; // 内容宽度
-  component: ComponentType; // 组件
-  componentProps?: ComponentProps; // 组件参数
+  component: ComponentType; // 组件类型
+  componentProps?: ComponentProps | ((form: FormInstance) => ComponentProps); // 支持静态或动态返回组件参数
   render?: (props: RenderComponentProps) => ReactNode; // 自定义渲染
   showWhen?: {
     name: string; // 依赖的字段
@@ -171,8 +176,9 @@ export interface BaseFormList extends FormItemProps {
   };
 }
 
-// 搜索数据
+// 搜索项定义
 export interface BaseSearchList extends BaseFormList {
   labelWidth?: number; // 临时使用
+
   // TODO...
 }

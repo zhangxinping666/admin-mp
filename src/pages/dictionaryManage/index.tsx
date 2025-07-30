@@ -62,6 +62,7 @@ const DictionaryManagePage = () => {
   // 添加选中行的状态
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
+
   // 增加字典项列操作
   const itemsClo = [
     ...itemTableColumns,
@@ -69,7 +70,6 @@ const DictionaryManagePage = () => {
       title: '操作',
       dataIndex: 'operation',
       key: 'operation',
-      fixed: 'right' as const,
       width: 100,
       render: (value: any, record: DictionaryItem, index: number) => (
         <TableActions

@@ -24,7 +24,9 @@ import {
 import { BaseSelect, BaseTreeSelect, ApiSelect, ApiTreeSelect } from '@/components/Selects';
 import BaseTransfer from '@/components/Transfer/BaseTransfer';
 import PasswordStrength from '@/components/PasswordStrength';
+import AmountRangeInput from '@/components/AmountRange';
 import { UploadOutlined } from '@ant-design/icons';
+import { ImageUpload, AdvancedImageUpload, CropImageUpload } from '@/components/Upload';
 
 const componentMap = new Map();
 
@@ -43,6 +45,9 @@ componentMap.set('Switch', Switch);
 componentMap.set('Rate', Rate);
 componentMap.set('Slider', Slider);
 componentMap.set('Upload', Upload);
+componentMap.set('ImageUpload', ImageUpload);
+componentMap.set('AdvancedImageUpload', AdvancedImageUpload);
+componentMap.set('CropImageUpload', CropImageUpload);
 componentMap.set('Transfer', BaseTransfer);
 componentMap.set('DatePicker', BaseDatePicker);
 componentMap.set('RangePicker', BaseRangePicker);
@@ -50,6 +55,7 @@ componentMap.set('TimePicker', BaseTimePicker);
 componentMap.set('TimeRangePicker', BaseTimeRangePicker);
 componentMap.set('ApiSelect', ApiSelect);
 componentMap.set('ApiTreeSelect', ApiTreeSelect);
+componentMap.set('AmountRangeInput', AmountRangeInput);
 componentMap.set('PasswordStrength', PasswordStrength);
 
 // 业务组件注入
@@ -57,9 +63,12 @@ CreateBusiness();
 
 /**
  * 获取组件
+ * @param t - 国际化函数
  * @param item - 表单项
+ * @param onPressEnter - 回车事件
+ * @param form - 表单实例
  */
-export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () => void) {
+export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () => void, form?: any) {
   const { component, componentProps } = item;
 
   // 输入框渲染
@@ -82,14 +91,25 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
   // 获取组件失败直接返回空标签
   if (!Comp) return renderInput;
 
+  // 处理componentProps为函数的情况
+  const props = typeof componentProps === 'function' 
+    ? componentProps(form) 
+    : componentProps;
+
   return (
     <>
       {component == 'Upload' ? (
-        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} listType="picture">
+        <Comp {...initCompProps(t, component, onPressEnter)} {...props} listType="picture">
           <Button icon={<UploadOutlined />}>Upload png only</Button>
         </Comp>
-      ) : (
+      ) : component == 'ImageUpload' ? (
         <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      ) : component == 'AdvancedImageUpload' ? (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      ) : component == 'CropImageUpload' ? (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      ) : (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...props} />
       )}
     </>
   );

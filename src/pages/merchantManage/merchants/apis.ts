@@ -186,6 +186,6 @@ export function deleteMerchantsList(params: DeleteMerchantReq) {
 }
 
 // 更新商家列表
-export function modifyMerchantsList(params: ModifyMerchantReq) {
-  return request.put<ModifyMerchantResponse>(apis.put, params);
+export function modifyMerchantsList(data: ModifyMerchantReq) {
+  return request.put<ModifyMerchantResponse>(apis.put, data);
 }

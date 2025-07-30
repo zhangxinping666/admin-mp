@@ -16,17 +16,17 @@ export function getMenuDetail(id: number) {
 }
 //添加
 export function addMenu(data: MenuAddForm) {
-  return request.post('/menu/add', { data });
+  return request.post('/menu/add', data);
 }
 //更新
 export function updateMenu(data: MenuUpdateForm) {
-  return request.post('/menu/update', { data });
+  return request.post('/menu/update', data);
 }
 //删除
 export function deleteMenu(id: Array<number>) {
-  return request.delete('/menu/delete', { data: { id } });
+  return request.delete('/menu/delete', { data: { id_list: id } });
 }
 //获取菜单下拉列表
 export function getMenuSelectList(params?: { type?: number[] }) {
-  return request.get(`/menu/list`, { params });
+  return request.post(`/menu/list`, params);
 }

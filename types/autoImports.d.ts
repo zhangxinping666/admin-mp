@@ -7,6 +7,8 @@
 export {}
 declare global {
   const ADD_TITLE: typeof import('../src/utils/config')['ADD_TITLE']
+  const AdvancedImageUpload: typeof import('../src/components/Upload/index')['AdvancedImageUpload']
+  const AmountRange: typeof import('../src/components/AmountRange/index')['default']
   const ApiPageSelect: typeof import('../src/components/Selects/ApiPageSelect')['default']
   const ApiSelect: typeof import('../src/components/Selects/index')['ApiSelect']
   const ApiTreeSelect: typeof import('../src/components/Selects/index')['ApiTreeSelect']
@@ -29,6 +31,8 @@ declare global {
   const CopyInput: typeof import('../src/components/Copy/CopyInput')['default']
   const Count: typeof import('../src/components/Count/index')['default']
   const CreateBusiness: typeof import('../src/components/Business/index')['CreateBusiness']
+  const CropImageUpload: typeof import('../src/components/Upload/index')['CropImageUpload']
+  const CursorPagination: typeof import('../src/components/Pagination/CursorPagination')['default']
   const DATE_FORMAT: typeof import('../src/utils/config')['DATE_FORMAT']
   const DeleteBtn: typeof import('../src/components/Buttons/index')['DeleteBtn']
   const EDIT_TITLE: typeof import('../src/utils/config')['EDIT_TITLE']
@@ -40,6 +44,9 @@ declare global {
   const GameSelect: typeof import('../src/components/Business/Selects/GameSelect')['default']
   const I18n: typeof import('../src/components/I18n/index')['default']
   const INIT_PAGINATION: typeof import('../src/utils/config')['INIT_PAGINATION']
+  const ImageCropper: typeof import('../src/components/Upload/index')['ImageCropper']
+  const ImagePreview: typeof import('../src/components/Upload/index')['ImagePreview']
+  const ImageUpload: typeof import('../src/components/Upload/index')['ImageUpload']
   const LANG: typeof import('../src/utils/config')['LANG']
   const Link: typeof import('react-router-dom')['Link']
   const Loading: typeof import('../src/components/Selects/components/Loading')['default']
@@ -143,7 +150,7 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, EditorProps, ThemeType, TabsData } from './autoImports.d'
+  export type { FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'
@@ -151,4 +158,7 @@ declare global {
   // @ts-ignore
   export type { ArrayData, EmptyData, PageServerResult, PaginationData, SideMenu, MenuResult, PagePermission, ColumnsEnum, TableColumn, BaseTableProps, TableOptions } from './public'
   import('./public')
+  // @ts-ignore
+  export type { FlowQueryParams, FlowListParams, FlowRecord, FlowListResponse, ApiResponse, ExportTaskData, ExportTaskStatus, ExportTaskStatusData } from './trade-blotter'
+  import('./trade-blotter')
 }

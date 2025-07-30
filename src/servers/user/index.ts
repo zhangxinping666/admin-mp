@@ -15,10 +15,10 @@ export function getUserDetail(id: string) {
 }
 //修改用户详情
 export function updateUser(data: updateUserForm) {
-  return request.post('/backUser/update', { data });
+  return request.post('/backUser/update', data);
 }
 
 //批量删除用户
 export function deleteUser(id: Array<number>) {
-  return request.post('/backUser/delete', { id });
+  return request.post('/backUser/delete', { id_list: id });
 }

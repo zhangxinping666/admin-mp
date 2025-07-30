@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type City } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
@@ -80,14 +81,14 @@ const CitiesPage = () => {
       })}
       initCreate={initCreate}
       apis={{
-        fetch: cityApis.fetch,
-        create: cityApis.create,
-        update: (id: number, data: any) => {
+        fetchApi: cityApis.fetch,
+        createApi: cityApis.create,
+        updateApi: (id: number, data: any) => {
           // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
           // 然后再调用您的 cityApis.update 函数
           return cityApis.update({ ...data, id });
         },
-        delete: (id: number) => cityApis.delete([id]),
+        deleteApi: (id: Array<number>) => cityApis.delete(id),
       }}
       optionRender={optionRender}
     />

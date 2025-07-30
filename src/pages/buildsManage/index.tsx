@@ -1,10 +1,17 @@
-import { getBuildsList, createBuild } from '@/servers/buildsManage';
 import { searchList, tableColumns, formList, type Building, School, Floor } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { Key } from 'react';
 import * as apis from './apis';
-import { Form, Input, InputNumber, message, Modal, Select, Space } from 'antd';
+import {
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Select,
+  Space,
+} from 'antd';
 import { ImageUploader } from '@/shared/components/ImageUploader';
 
 // 初始化新增数据

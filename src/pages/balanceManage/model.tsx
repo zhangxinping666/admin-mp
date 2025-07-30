@@ -4,6 +4,7 @@ import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { message, Modal } from 'antd';
 import { useState } from 'react';
+import { ImagePreview } from '@/components/Upload';
 
 type uploadImg = {
   uid: string;
@@ -16,66 +17,67 @@ type uploadImg = {
 };
 // 交易凭证预览组件
 
+// 交易凭证预览组件 - 使用新的ImagePreview组件
 const VoucherPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  const [visible, setVisible] = useState(false);
-
-  // 处理数组格式的图片地址或 base64 数据
-  const displayUrl = Array.isArray(voucherUrl) ? voucherUrl[0] : voucherUrl;
-
-  // 处理可能的 base64 数据
-  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
-  console.log('processedUrl', processedUrl);
-  console.log('displayUrl', displayUrl);
-
-  return (
-    <>
-      {processedUrl ? (
-        <>
-          <img
-            src={processedUrl}
-            alt="交易流水图片"
-            style={{
-              width: '60px',
-              height: '60px',
-              objectFit: 'cover',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-            onClick={() => setVisible(true)}
-          />
-          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
-            <img
-              src={processedUrl}
-              alt="交易流水图片预览"
-              style={{ width: '100%', height: 'auto' }}
-            />
-          </Modal>
-        </>
-      ) : (
-        '无图片'
-      )}
-    </>
-  );
+  return <ImagePreview imageUrl={voucherUrl} alt="交易凭证" />;
 };
 
-// 余额明细数据接口
-export interface BalanceRecord {
+export interface Balance {
   id: number; // 编号
+  user_id: number; // 类别
+  total_amount: number; // 金额
+  available_amount: number;
+  frozen_amount: number;
+  status: number;
+  status_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 余额明细数据接口
+export interface BalanceDetail {
+  id: number; // 编号
+  user_id: number;
   category: string; // 类别
   amount: number; // 金额
-  transactionNo: string; // 交易流水号
-  orderNo: string; // 订单号
-  transactionType: 'income' | 'expense'; // 交易收支（收入/支出）
-  voucherUrl: uploadImg[]; // 交易凭证
-  status: string; // 状态
-  initialBalance: number; // 期初余额
-  finalBalance: number; // 期末余额
-  imageUrl: uploadImg[]; // 图片
-  createdAt: string; // 创建时间
+  transaction_no: string; // 交易流水号
+  order_no: string; // 订单号
+  transaction_type: 'income' | 'expense'; // 交易收支（收入/支出）
+  transaction_type_name: string; // 交易收支名称
+  voucher: number; // 交易凭证
+  status: number; // 状态
+  opening_balance: number;
+  closing_balance: number;
+  created_at: string; // 创建时间
+  is_valid: string;
   action?: React.ReactNode;
 }
 
-// 搜索配置
+export interface BalanceDetailResult {
+  code: number;
+  message: string;
+  data: {
+    list: BalanceDetail[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
+  };
+}
+
+export interface BalanceResult {
+  code: number;
+  message: string;
+  data: {
+    list: Balance[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
+  };
+}
+// 余额明细数据接口
+
 export const searchList = (): BaseSearchList[] => [
   {
     label: '交易流水号',
@@ -173,7 +175,7 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'voucherUrl',
     key: 'voucherUrl',
     width: 100,
-    render: (url: uploadImg[]) => <VoucherPreview voucherUrl={url} />,
+    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="交易凭证" />,
   },
   {
     title: '状态',
@@ -221,7 +223,7 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'imageUrl',
     key: 'imageUrl',
     width: 100,
-    render: (url: uploadImg[]) => <VoucherPreview voucherUrl={url} />,
+    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="图片" />,
   },
   {
     title: '交易时间',
@@ -292,7 +294,7 @@ export const formList = (): BaseFormList[] => [
   {
     label: '交易凭证',
     name: 'voucherUrl',
-    component: 'Upload',
+    component: 'ImageUpload',
     componentProps: {
       accept: 'image/png, image/jpeg, image/jpg',
       listType: 'picture-card',
@@ -364,7 +366,7 @@ export const formList = (): BaseFormList[] => [
   {
     label: '图片',
     name: 'imageUrl',
-    component: 'Upload',
+    component: 'ImageUpload',
     componentProps: {
       accept: 'image/png, image/jpeg, image/jpg',
       listType: 'picture-card',

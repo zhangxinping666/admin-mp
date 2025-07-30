@@ -1,9 +1,6 @@
 import {
-  getCityResult,
-  PaginationParams,
-  addCityForm,
-  updateCityForm,
-} from '../../pages/citysManage/model';
+
+} from '../../pages/balanceManage/model';
 import request from '@/utils/request';
 // 获取城市运营商列表
 export function getCityList(params: PaginationParams) {
