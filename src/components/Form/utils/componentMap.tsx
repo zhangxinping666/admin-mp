@@ -25,6 +25,7 @@ import { BaseSelect, BaseTreeSelect, ApiSelect, ApiTreeSelect } from '@/componen
 import BaseTransfer from '@/components/Transfer/BaseTransfer';
 import PasswordStrength from '@/components/PasswordStrength';
 import { UploadOutlined } from '@ant-design/icons';
+import { ImageUpload, AdvancedImageUpload, CropImageUpload } from '@/components/Upload';
 
 const componentMap = new Map();
 
@@ -43,6 +44,9 @@ componentMap.set('Switch', Switch);
 componentMap.set('Rate', Rate);
 componentMap.set('Slider', Slider);
 componentMap.set('Upload', Upload);
+componentMap.set('ImageUpload', ImageUpload);
+componentMap.set('AdvancedImageUpload', AdvancedImageUpload);
+componentMap.set('CropImageUpload', CropImageUpload);
 componentMap.set('Transfer', BaseTransfer);
 componentMap.set('DatePicker', BaseDatePicker);
 componentMap.set('RangePicker', BaseRangePicker);
@@ -88,6 +92,12 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
         <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} listType="picture">
           <Button icon={<UploadOutlined />}>Upload png only</Button>
         </Comp>
+      ) : component == 'ImageUpload' ? (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      ) : component == 'AdvancedImageUpload' ? (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
+      ) : component == 'CropImageUpload' ? (
+        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
       ) : (
         <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
       )}

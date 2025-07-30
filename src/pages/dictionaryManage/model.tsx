@@ -2,84 +2,80 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import {  Modal } from 'antd';
-import { useState } from 'react';
 
-// 图片类型定义
-interface UploadImg {
-  uid: string;
-  name: string;
-  status: string;
-  url: string;
-  response?: {
-    url: string;
-  };
-}
+// // 图片类型定义
+// interface UploadImg {
+//   uid: string;
+//   name: string;
+//   status: string;
+//   url: string;
+//   response?: {
+//     url: string;
+//   };
+// }
 
 // 字典项接口
 export interface DictionaryItem {
-  key: string;
+  id: number;
+  dict_type_code: string;
   label: string;
   value: string | number;
   sort: number;
   status: number;
-  imageUrl: UploadImg[];
-  remark: string;
+  description: string;
+  extend_value: string;
 }
 
 // 字典接口
 export interface Dictionary {
-  key: string;
-  label: string;
-  code?: string;
-  description?: string;
-  items: DictionaryItem[];
+  id: number;
+  name: string;
+  code: string;
   status: number;
-  createdAt: string;
-  updatedAt: string;
-  action?: React.ReactNode;
+  description: string;
+  items: DictionaryItem[];
 }
 
-// 图片预览组件
-const ImagePreview = ({ imgUrl }: { imgUrl: UploadImg[] }) => {
-  const [visible, setVisible] = useState(false);
+// // 图片预览组件
+// const ImagePreview = ({ imgUrl }: { imgUrl: UploadImg[] }) => {
+//   const [visible, setVisible] = useState(false);
 
-  // 处理数组格式的图片地址或 base64 数据
-  const displayUrl = Array.isArray(imgUrl) ? imgUrl[0] : imgUrl;
+//   // 处理数组格式的图片地址或 base64 数据
+//   const displayUrl = Array.isArray(imgUrl) ? imgUrl[0] : imgUrl;
 
-  // 处理可能的 base64 数据
-  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
+//   // 处理可能的 base64 数据
+//   const processedUrl = displayUrl?.url || displayUrl?.response?.url;
 
-  return (
-    <>
-      {processedUrl ? (
-        <>
-          <img
-            src={processedUrl}
-            alt="字典项图片"
-            style={{
-              width: '60px',
-              height: '60px',
-              objectFit: 'cover',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-            onClick={() => setVisible(true)}
-          />
-          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
-            <img
-              src={processedUrl}
-              alt="字典项图片预览"
-              style={{ width: '100%', height: 'auto' }}
-            />
-          </Modal>
-        </>
-      ) : (
-        '无图片'
-      )}
-    </>
-  );
-};
+//   return (
+//     <>
+//       {processedUrl ? (
+//         <>
+//           <img
+//             src={processedUrl}
+//             alt="字典项图片"
+//             style={{
+//               width: '60px',
+//               height: '60px',
+//               objectFit: 'cover',
+//               borderRadius: '4px',
+//               cursor: 'pointer',
+//             }}
+//             onClick={() => setVisible(true)}
+//           />
+//           <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
+//             <img
+//               src={processedUrl}
+//               alt="字典项图片预览"
+//               style={{ width: '100%', height: 'auto' }}
+//             />
+//           </Modal>
+//         </>
+//       ) : (
+//         '无图片'
+//       )}
+//     </>
+//   );
+// };
 
 // 搜索配置
 export const searchList = (): BaseSearchList[] => [
@@ -165,6 +161,12 @@ export const tableColumns: TableColumn[] = [
 // 字典项表格列配置
 export const itemTableColumns: TableColumn[] = [
   {
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
+    width: 150,
+  },
+  {
     title: '字典项名称',
     dataIndex: 'label',
     key: 'label',
@@ -175,6 +177,16 @@ export const itemTableColumns: TableColumn[] = [
     dataIndex: 'value',
     key: 'value',
     width: 150,
+  },
+  {
+    title: '字典项编码',
+    dataIndex: 'dict_type_code',
+    key: 'dict_type_code',
+    width: 150,
+    render: (value: string) => {
+      return value || '-';
+    },
+    fixed: 'left',
   },
   {
     title: '排序',
@@ -191,17 +203,18 @@ export const itemTableColumns: TableColumn[] = [
       <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
     ),
   },
+
   {
-    title: '图片',
-    dataIndex: 'imageUrl',
-    key: 'imageUrl',
-    width: 100,
-    render: (url: UploadImg[]) => <ImagePreview imgUrl={url} />,
+    title: '描述',
+    dataIndex: 'description',
+    key: 'description',
+    width: 200,
+    ellipsis: true,
   },
   {
-    title: '备注',
-    dataIndex: 'remark',
-    key: 'remark',
+    title: '扩展值',
+    dataIndex: 'extend_value',
+    key: 'extend_value',
     width: 200,
     ellipsis: true,
   },
@@ -209,6 +222,17 @@ export const itemTableColumns: TableColumn[] = [
 
 // 字典表单配置
 export const formList = (): BaseFormList[] => [
+  {
+    label: 'ID',
+    name: 'id',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入ID',
+      maxLength: 50,
+      disabled: true,
+    },
+  },
   {
     label: '字典名称',
     name: 'name',
@@ -257,6 +281,17 @@ export const formList = (): BaseFormList[] => [
 // 字典项表单配置
 export const itemFormList = (): BaseFormList[] => [
   {
+    label: 'ID',
+    name: 'id',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入ID',
+      maxLength: 50,
+      disabled: true,
+    },
+  },
+  {
     label: '字典项名称',
     name: 'label',
     rules: FORM_REQUIRED,
@@ -273,6 +308,16 @@ export const itemFormList = (): BaseFormList[] => [
     component: 'Input',
     componentProps: {
       placeholder: '请输入字典项值',
+      maxLength: 50,
+    },
+  },
+  {
+    label: '字典项编码',
+    name: 'dict_type_code',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入字典项编码',
       maxLength: 50,
     },
   },
@@ -302,10 +347,20 @@ export const itemFormList = (): BaseFormList[] => [
   },
   {
     label: '描述',
-    name: 'remark',
+    name: 'description',
+    rules: FORM_REQUIRED,
     component: 'TextArea',
     componentProps: {
-      placeholder: '请输入备注',
+      placeholder: '请输入描述',
+      maxLength: 200,
+    },
+  },
+  {
+    label: '扩展值',
+    name: 'extend_value',
+    component: 'TextArea',
+    componentProps: {
+      placeholder: '请输入扩展值',
       maxLength: 200,
     },
   },
