@@ -104,6 +104,19 @@ const mockData: BalanceRecord[] = [
 ];
 
 const BalanceRecordsPage = () => {
+  // 处理编辑时的数据转换
+  const handleEditOpen = (record: BalanceRecord) => {
+    return {
+      ...record,
+      voucherUrl: Array.isArray(record.voucherUrl) && record.voucherUrl.length > 0 
+        ? record.voucherUrl[0].url 
+        : '',
+      imageUrl: Array.isArray(record.imageUrl) && record.imageUrl.length > 0 
+        ? record.imageUrl[0].url 
+        : '',
+    };
+  };
+
   const optionRender = (
     record: BalanceRecord,
     actions: {
@@ -120,6 +133,7 @@ const BalanceRecordsPage = () => {
       formConfig={formList()}
       initCreate={initCreate}
       mockData={mockData}
+      onEditOpen={handleEditOpen}
       optionRender={optionRender}
     />
   );

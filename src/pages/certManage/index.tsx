@@ -35,13 +35,13 @@ const CertPage = () => {
       initCreate={initCreate}
       optionRender={optionRender}
       apis={{
-        fetch: certApis.fetch,
-        update: (id: number, data: any) => {
+        fetchApi: certApis.fetch,
+        updateApi: (id: number, data: any) => {
           // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
           // 然后再调用您的 certApis.update 函数
           return certApis.update({ ...data, id });
         },
-        delete: (id: number) => certApis.delete([id]),
+        deleteApi: (id: number) => certApis.delete([id]),
       }}
       hideCreate={true}
     />

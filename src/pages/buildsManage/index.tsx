@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { ImageUploader } from '@/shared/components/ImageUploader';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 
 // 初始化新增数据
 const initCreate: Partial<Building> = {
@@ -27,34 +28,6 @@ const initCreate: Partial<Building> = {
   latitude: 0,
   status: 1,
 };
-
-// 模拟数据
-// const mockData: Building[] = [
-//   {
-//     id: 1,
-//     name: '1号宿舍楼',
-//     floorCount: 12,
-//     longitude: 116.326204,
-//     latitude: 40.003304,
-//     createdAt: '2024-01-15 09:30:00',
-//   },
-//   {
-//     id: 2,
-//     name: '2号教学楼',
-//     floorCount: 5,
-//     longitude: 116.310003,
-//     latitude: 39.992806,
-//     createdAt: '2024-01-20 14:20:00',
-//   },
-//   {
-//     id: 3,
-//     name: '行政办公楼',
-//     floorCount: 8,
-//     longitude: 116.338567,
-//     latitude: 40.006789,
-//     createdAt: '2024-02-05 10:15:00',
-//   },
-// ];
 
 const BuildingsPage = () => {
   // 在BuildingsPage组件中添加状态和方法
@@ -302,9 +275,11 @@ const BuildingsPage = () => {
             )}
             <Form.Item label="学校logo">
               {editSchoolMode ? (
-                <ImageUploader
+                <EnhancedImageUploader
                   value={form.getFieldValue('school_logo')}
                   onChange={(url) => form.setFieldsValue({ school_logo: url })}
+                  maxSize={2}
+                  baseUrl="http://192.168.10.7:8082"
                 />
               ) : (
                 <span

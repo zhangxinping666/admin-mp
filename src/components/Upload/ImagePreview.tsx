@@ -18,6 +18,7 @@ export interface ImagePreviewProps {
   width?: number;
   height?: number;
   style?: React.CSSProperties;
+  baseUrl?: string;
 }
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({
@@ -26,26 +27,34 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
   width = 60,
   height = 60,
   style = {},
+  baseUrl = 'http://192.168.10.7:8082',
 }) => {
   const [visible, setVisible] = useState(false);
 
+  // 获取完整图片URL的函数
+  const getFullImageUrl = (url: string): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   // 处理不同格式的图片URL
   const getImageUrl = () => {
-    if (typeof imageUrl === 'string') {
-      return imageUrl;
-    }
+    let rawUrl = '';
     
-    if (Array.isArray(imageUrl)) {
+    if (typeof imageUrl === 'string') {
+      rawUrl = imageUrl;
+    } else if (Array.isArray(imageUrl)) {
       const firstImage = imageUrl[0];
       if (!firstImage) return '';
-      return firstImage.url || firstImage.response?.url || '';
+      rawUrl = firstImage.url || firstImage.response?.url || '';
+    } else if (imageUrl && typeof imageUrl === 'object') {
+      rawUrl = imageUrl.url || imageUrl.response?.url || '';
     }
     
-    if (imageUrl && typeof imageUrl === 'object') {
-      return imageUrl.url || imageUrl.response?.url || '';
-    }
-    
-    return '';
+    return getFullImageUrl(rawUrl);
   };
 
   const processedUrl = getImageUrl();

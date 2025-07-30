@@ -6,8 +6,9 @@ import { useState } from 'react';
 import { ImagePreview } from '@/components/Upload';
 // 身份证图片预览组件 - 使用新的ImagePreview组件
 const UserPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  return <ImagePreview imageUrl={voucherUrl} alt="身份证图片" />;
+  return <ImagePreview imageUrl={voucherUrl} alt="身份证图片" baseUrl="http://192.168.10.7:8082" />;
 };
+
 type uploadImg = {
   uid: string;
   name: string;
@@ -17,6 +18,7 @@ type uploadImg = {
     url: string;
   };
 };
+
 // 定义
 export interface Cert {
   id: number;
@@ -83,7 +85,8 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
+        { label: '全部', value: 0 },
       ],
     },
   },
@@ -106,17 +109,25 @@ export const tableColumns: TableColumn[] = [
   },
   {
     title: '身份证正面',
-    dataIndex: 'front_img',
-    key: 'front_img',
+    dataIndex: 'front',
+    key: 'front',
     width: 100,
-    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="身份证正面" />,
+    render: (url: string) => {
+      // 处理字符串URL，转换为ImagePreview期望的格式
+      const imageData = url ? [{ uid: '1', name: 'front', status: 'done', url }] : [];
+      return <ImagePreview imageUrl={imageData} alt="身份证正面" baseUrl="http://192.168.10.7:8082" />;
+    },
   },
   {
     title: '身份证反面',
-    dataIndex: 'back_img',
-    key: 'back_img',
+    dataIndex: 'back',
+    key: 'back',
     width: 100,
-    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="身份证反面" />,
+    render: (url: string) => {
+      // 处理字符串URL，转换为ImagePreview期望的格式
+      const imageData = url ? [{ uid: '1', name: 'back', status: 'done', url }] : [];
+      return <ImagePreview imageUrl={imageData} alt="身份证反面" baseUrl="http://192.168.10.7:8082" />;
+    },
   },
   {
     title: '状态',
@@ -146,7 +157,7 @@ export const formList = (): BaseFormList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

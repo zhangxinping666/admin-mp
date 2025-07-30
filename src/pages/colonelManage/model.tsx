@@ -183,7 +183,7 @@ export const formList = ({
   {
     label: '团长密码',
     name: 'password',
-    component: 'InputNumber',
+    component: 'Input',
     placeholder: '请输入团长密码',
     componentProps: {
       precision: 6,

@@ -73,7 +73,7 @@ request.interceptors.response.use(
       console.error('Request Error: No config available');
       return Promise.reject(error);
     } // 检查是否是 401 Unauthorized 错误，并且不是刷新 token 的请求本身
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 4010 && !originalRequest._retry) {
       // 如果正在刷新 token，则将当前失败的请求加入队列
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {

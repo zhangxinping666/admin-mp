@@ -17,14 +17,24 @@ type uploadImg = {
   };
 };
 
-const ImagePreview = ({ imgUrl }: { imgUrl: uploadImg[] }) => {
+const ImagePreview = ({ imgUrl, baseUrl = 'http://192.168.10.7:8082' }: { imgUrl: uploadImg[], baseUrl?: string }) => {
   const [visible, setVisible] = useState(false);
+
+  // 获取完整图片URL的函数
+  const getFullImageUrl = (url: string): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   // 处理数组格式的图片地址或 base64 数据
   const displayUrl = Array.isArray(imgUrl) ? imgUrl[0] : imgUrl;
 
   // 处理可能的 base64 数据
-  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
+  const rawUrl = displayUrl?.url || displayUrl?.response?.url || '';
+  const processedUrl = getFullImageUrl(rawUrl);
   console.log('processedUrl', processedUrl);
   console.log('displayUrl', displayUrl);
 
@@ -144,7 +154,7 @@ export const tableColumns: TableColumn[] = [
             url: url,
           }))
         : [];
-      return <ImagePreview imgUrl={imgData} />;
+      return <ImagePreview imgUrl={imgData} baseUrl="http://192.168.10.7:8082" />;
     },
   },
   {

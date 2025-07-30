@@ -1,10 +1,18 @@
-import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal } from 'antd';
-import { useState } from 'react';
 import { ImagePreview } from '@/components/Upload';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
+
+// 获取完整图片URL的函数
+const getFullImageUrl = (url: any): string => {
+  if (!url) return '';
+  const urlStr = String(url);
+  if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+    return urlStr;
+  }
+  return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+};
 
 type uploadImg = {
   uid: string;
@@ -19,7 +27,7 @@ type uploadImg = {
 
 // 交易凭证预览组件 - 使用新的ImagePreview组件
 const VoucherPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  return <ImagePreview imageUrl={voucherUrl} alt="交易凭证" />;
+  return <ImagePreview imageUrl={voucherUrl} alt="交易凭证" baseUrl="http://192.168.10.7:8082" />;
 };
 
 export interface Balance {
@@ -175,7 +183,19 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'voucherUrl',
     key: 'voucherUrl',
     width: 100,
-    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="交易凭证" />,
+    render: (url: any) => {
+      const imageUrl = getFullImageUrl(url);
+      return imageUrl ? (
+        <img
+          src={imageUrl}
+          alt="交易凭证"
+          style={{ width: 50, height: 50, objectFit: 'cover', cursor: 'pointer' }}
+          onClick={() => window.open(imageUrl, '_blank')}
+        />
+      ) : (
+        <span>无图片</span>
+      );
+    },
   },
   {
     title: '状态',
@@ -223,7 +243,19 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'imageUrl',
     key: 'imageUrl',
     width: 100,
-    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="图片" />,
+    render: (url: any) => {
+      const imageUrl = getFullImageUrl(url);
+      return imageUrl ? (
+        <img
+          src={imageUrl}
+          alt="图片"
+          style={{ width: 50, height: 50, objectFit: 'cover', cursor: 'pointer' }}
+          onClick={() => window.open(imageUrl, '_blank')}
+        />
+      ) : (
+        <span>无图片</span>
+      );
+    },
   },
   {
     title: '交易时间',
@@ -294,34 +326,15 @@ export const formList = (): BaseFormList[] => [
   {
     label: '交易凭证',
     name: 'voucherUrl',
-    component: 'ImageUpload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
+    component: 'Custom',
+    render: (value: any, onChange: (value: any) => void) => (
+       <EnhancedImageUploader
+         value={value}
+         onChange={onChange}
+         maxSize={5}
+         baseUrl="http://192.168.10.7:8082"
+       />
+     ),
   },
   {
     label: '状态',
@@ -366,33 +379,14 @@ export const formList = (): BaseFormList[] => [
   {
     label: '图片',
     name: 'imageUrl',
-    component: 'ImageUpload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
+    component: 'Custom',
+    render: (value: any, onChange: (value: any) => void) => (
+       <EnhancedImageUploader
+         value={value}
+         onChange={onChange}
+         maxSize={5}
+         baseUrl="http://192.168.10.7:8082"
+       />
+     ),
   },
 ];
