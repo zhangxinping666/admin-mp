@@ -148,7 +148,7 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { CropImageUploadProps, ImageCropperProps, AdvancedImageUploadProps, UploadImg, ImagePreviewProps, ImageUploadProps, FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, EditorProps, ThemeType, TabsData } from './autoImports.d'
+  export type { FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'

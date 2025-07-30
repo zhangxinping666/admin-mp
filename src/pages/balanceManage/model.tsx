@@ -22,24 +22,62 @@ const VoucherPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
   return <ImagePreview imageUrl={voucherUrl} alt="交易凭证" />;
 };
 
-// 余额明细数据接口
-export interface BalanceRecord {
+export interface Balance {
   id: number; // 编号
+  user_id: number; // 类别
+  total_amount: number; // 金额
+  available_amount: number;
+  frozen_amount: number;
+  status: number;
+  status_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// 余额明细数据接口
+export interface BalanceDetail {
+  id: number; // 编号
+  user_id: number;
   category: string; // 类别
   amount: number; // 金额
-  transactionNo: string; // 交易流水号
-  orderNo: string; // 订单号
-  transactionType: 'income' | 'expense'; // 交易收支（收入/支出）
-  voucherUrl: uploadImg[]; // 交易凭证
-  status: string; // 状态
-  initialBalance: number; // 期初余额
-  finalBalance: number; // 期末余额
-  imageUrl: uploadImg[]; // 图片
-  createdAt: string; // 创建时间
+  transaction_no: string; // 交易流水号
+  order_no: string; // 订单号
+  transaction_type: 'income' | 'expense'; // 交易收支（收入/支出）
+  transaction_type_name: string; // 交易收支名称
+  voucher: number; // 交易凭证
+  status: number; // 状态
+  opening_balance: number;
+  closing_balance: number;
+  created_at: string; // 创建时间
+  is_valid: string;
   action?: React.ReactNode;
 }
 
-// 搜索配置
+export interface BalanceDetailResult {
+  code: number;
+  message: string;
+  data: {
+    list: BalanceDetail[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
+  };
+}
+
+export interface BalanceResult {
+  code: number;
+  message: string;
+  data: {
+    list: Balance[];
+    page: number;
+    page_size: number;
+    pages: number;
+    total: number;
+  };
+}
+// 余额明细数据接口
+
 export const searchList = (): BaseSearchList[] => [
   {
     label: '交易流水号',

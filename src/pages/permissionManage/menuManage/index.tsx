@@ -136,7 +136,7 @@ const MenuPage = () => {
         }
       }}
       apis={{
-        fetch: async (params: any) => {
+        fetchApi: async (params: any) => {
           const response = await menuApis.fetch(params);
           console.log('API 原始响应:', response);
           const flatList = response?.data || [];
@@ -148,11 +148,11 @@ const MenuPage = () => {
             data: treeData,
           };
         },
-        create: menuApis.create,
-        update: (id: number, data: any) => {
+        createApi: menuApis.create,
+        updateApi: (id: number, data: any) => {
           return menuApis.update({ ...data, id });
         },
-        delete: (id: number) => menuApis.delete([id]),
+        deleteApi: (id: number) => menuApis.delete([id]),
       }}
       optionRender={optionRender}
       onFormValuesChange={handleFormValuesChange}

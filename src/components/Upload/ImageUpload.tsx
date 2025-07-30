@@ -39,7 +39,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   // 文件上传前的校验
   const beforeUpload = (file: File) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png';
+    const isJpgOrPng =
+      file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png';
     if (!isJpgOrPng) {
       message.error('只能上传 JPG/PNG 格式的图片!');
       return false;
@@ -55,7 +56,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   // 自定义上传请求
   const customRequest: UploadProps['customRequest'] = (options) => {
     const { file, onSuccess, onError } = options;
-    
+
     const reader = new FileReader();
     reader.readAsDataURL(file as File);
     reader.onload = () => {
@@ -79,7 +80,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   // 移除文件
   const handleRemove = (file: UploadFile) => {
-    const newFileList = value.filter(item => item.uid !== file.uid);
+    const newFileList = value.filter((item) => item.uid !== file.uid);
     onChange?.(newFileList);
   };
 
@@ -116,7 +117,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       >
         {value.length >= maxCount ? null : uploadButton}
       </Upload>
-      
+
       <Modal
         open={previewVisible}
         title={previewTitle}

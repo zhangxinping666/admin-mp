@@ -19,5 +19,5 @@ export function updateCert(data: UpdateCert) {
 }
 //删除
 export function deleteCert(id: Array<number>) {
-  return request.delete(`/backAuth/delete`, { data: { list_id: id } });
+  return request.delete(`/backAuth/delete`, { data: { id_list: id } });
 }

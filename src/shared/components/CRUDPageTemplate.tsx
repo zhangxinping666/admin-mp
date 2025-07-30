@@ -1,4 +1,4 @@
-import { useEffect, Key } from 'react';
+import { useEffect, useState, Key } from 'react';
 import { Button, message, Popconfirm, Space, TableColumnsType } from 'antd';
 import BaseContent from '@/components/Content/BaseContent';
 import BaseCard from '@/components/Card/BaseCard';
@@ -90,19 +90,16 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     handleModalSubmit,
     fetchTableData,
   } = useCRUD(crudOptions);
-
-  // 👇 确保有这个 useEffect 来触发初次加载
   useEffect(() => {
     setFetch(true);
-  }, []); // 空依赖数组 [] 确保这个 effect 只在组件首次渲染后运行一次
+  }, []);
 
-  // 这个 useEffect 监听 isFetch 的变化，并实际调用 API
   useEffect(() => {
     if (isFetch) {
       fetchTableData();
     }
     console.log(tableData);
-  }, [isFetch, page, pageSize]); // (假设依赖项还包括 page 和 pageSize)
+  }, [isFetch, page, pageSize, fetchTableData]);
 
   // 处理选中行变化
   const handleSelectionChange = (selectedRowKeys: Key[]) => {
@@ -138,7 +135,11 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       render: (_: any, record: T) =>
         optionRender
           ? optionRender(record, {
-              handleEdit: (rec: T) => handleEdit(`编辑${title}`, rec),
+              handleEdit: (rec: T) => {
+                // 如果有onEditOpen回调，先调用它进行数据转换
+                const processedRecord = onEditOpen ? onEditOpen(rec) : rec;
+                handleEdit(`编辑${title}`, processedRecord);
+              },
               handleDelete: (id: Key[]) => {
                 // 调用原始的删除函数
                 handleDelete(id);

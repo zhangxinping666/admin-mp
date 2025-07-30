@@ -28,5 +28,5 @@ export function deleteMenu(id: Array<number>) {
 }
 //获取菜单下拉列表
 export function getMenuSelectList(params?: { type?: number[] }) {
-  return request.get(`/menu/list`, { params });
+  return request.post(`/menu/list`, params);
 }

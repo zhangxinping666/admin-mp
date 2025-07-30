@@ -11,8 +11,10 @@ export function getColonelList(params: PaginationParams) {
 }
 //添加团长
 export function addColonel(data: addColonelForm) {
+  console.log(data);
   return request.post('/schoolLeader/addSchoolLeader', data);
 }
+
 //更新团长
 export function updateColonel(data: updateColonelForm) {
   return request.put('/schoolLeader/updateSchoolLeader', data);
