@@ -88,8 +88,16 @@ const apis = {
 
 // // 更新字典类型
 
-// 添加字典类型
-export function addDictionary(data: any) {
+/**
+ * 添加字典类型
+ * @param data 字典类型数据
+ */
+export function addDictionary(data: {
+  code: string;
+  description: string;
+  name: string;
+  status: number;
+}) {
   return request.post(apis.addDictionary, data);
 }
 
@@ -99,13 +107,19 @@ export function queryDictionary() {
 }
 
 // 更新字典类型
-export function updateDictionary(data: any) {
+export function updateDictionary(data: {
+  id: number;
+  name: string;
+  code: string;
+  status: number;
+  description: string;
+}) {
   return request.put(apis.updateDictionary, data);
 }
 
 // 批量删除字典类型
-export function deleteDictionary(data: any) {
-  return request.delete(apis.deleteDictionary, data);
+export function deleteDictionary(param: any) {
+  return request.delete(apis.deleteDictionary, param);
 }
 
 // 查询字典项
@@ -114,16 +128,33 @@ export function queryDictionaryItem(data: any) {
 }
 
 // 添加字典项
-export function addDictionaryItem(data: any) {
+export function addDictionaryItem(data: {
+  dict_type_code: string;
+  label: string;
+  value: string | number;
+  sort: number;
+  status: number;
+  description: string;
+  extend_value: string;
+}) {
   return request.post(apis.addDictionaryItem, data);
 }
 
 // 更新字典项
-export function updateDictionaryItem(data: any) {
+export function updateDictionaryItem(data: {
+  id: number;
+  dict_type_code: string;
+  label: string;
+  value: string | number;
+  sort: number;
+  status: number;
+  description: string;
+  extend_value: string;
+}) {
   return request.put(apis.updateDictionaryItem, data);
 }
 
 // 批量删除字典项
-export function deleteDictionaryItem(data: { code: string; ids: number[] }) {
-  return request.delete(apis.deleteDictionaryItem, { data });
+export function deleteDictionaryItem(param: any) {
+  return request.delete(apis.deleteDictionaryItem, param);
 }

@@ -11,15 +11,15 @@ export function getCityList(params: PaginationParams) {
 }
 //添加城市运营商
 export function addCity(data: addCityForm) {
-  return request.post('/cityLeader/addCityLeader', { data });
+  return request.post('/cityLeader/addCityLeader', data);
 }
 //更新城市运营商
 export function updateCity(data: updateCityForm) {
-  return request.put('/cityLeader/updateCityLeader', { data });
+  return request.put('/cityLeader/updateCityLeader', data);
 }
 //删除城市运营商
 export function deleteCity(id: Array<number>) {
-  return request.delete('/cityLeader/deleteCityLeader', { data: { id } });
+  return request.delete('/cityLeader/deleteCityLeader', { data: { list_id: id } });
 }
 
 //获取城市列表
