@@ -1,5 +1,4 @@
 import request from '@/utils/request';
-import { Key } from 'react';
 
 const apis = {
   addDictionary: '/dict/addType',

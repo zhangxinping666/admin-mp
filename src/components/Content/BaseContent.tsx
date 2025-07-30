@@ -12,8 +12,8 @@ function BaseContent(props: Props) {
   return (
     <>
       {isPermission === true && (
-        <div id="content" className="p-10px">
-          {children}
+        <div id="content" className="p-10px  h-full ">
+          <div className="whitespace-nowrap">{children}</div>
         </div>
       )}
       {isPermission === false && (

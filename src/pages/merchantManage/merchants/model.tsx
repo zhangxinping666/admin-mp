@@ -2,138 +2,161 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal} from 'antd';
-import {  useState } from 'react';
-import { ImagePreview } from '@/components/Upload';
+import { message, Modal } from 'antd';
+import { useState } from 'react';
 
 // 添加图片预览组件
 
-type uploadImg={
-  uid:string,
-  name:string,
-  status:string,
-  url:string,
-  response?:{
-    url:string
-  }
-}
-
-// 商家图片预览组件 - 使用新的ImagePreview组件
-const MerchantImagePreview = ({ imgUrl }: { imgUrl: uploadImg[] }) => {
-  return <ImagePreview imageUrl={imgUrl} alt="商家图片" />;
+type uploadImg = {
+  uid: string;
+  name: string;
+  status: string;
+  url: string;
+  response?: {
+    url: string;
+  };
 };
-// 商家分类数据接口
+
+const ImagePreview = ({ imgUrl }: { imgUrl: uploadImg[] }) => {
+  const [visible, setVisible] = useState(false);
+
+  // 处理数组格式的图片地址或 base64 数据
+  const displayUrl = Array.isArray(imgUrl) ? imgUrl[0] : imgUrl;
+
+  // 处理可能的 base64 数据
+  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
+  console.log('processedUrl', processedUrl);
+  console.log('displayUrl', displayUrl);
+
+  return (
+    <>
+      {processedUrl ? (
+        <>
+          <img
+            src={processedUrl}
+            alt="商家图片"
+            style={{
+              width: '60px',
+              height: '60px',
+              objectFit: 'cover',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            onClick={() => setVisible(true)}
+          />
+          <Modal open={visible} footer={null} onCancel={() => setVisible(false)} width="20%">
+            <img src={processedUrl} alt="商家图片预览" style={{ width: '100%', height: 'auto' }} />
+          </Modal>
+        </>
+      ) : (
+        '无图片'
+      )}
+    </>
+  );
+};
+// 商家数据接口
 export interface Merchant {
+  category?: number;
+  city_id?: number;
+  closed_hour?: string;
   id: number;
-  merchantName: string;
-  merchantImg: object[];
-  schoolId: number;
-  city: string;
-  status: number;
-  createdAt?: string;
-  updatedAt?: string;
-  action?: React.ReactNode;
-  type: string; // 商家类型（校内/校外）
-  address: string; // 地址
-  longitude: number; // 经度
-  latitude: number; // 纬度
-  isDormStore: boolean; // 是否为宿舍商家
-  categoryId: number; // 商家分类
-  storeRecommend: number; // 1：推荐，0：不推荐
+  is_dormitory_store?: boolean;
+  latitude?: number;
+  longitude?: number;
+  merchant?: string;
+  merchant_id?: number;
+  merchant_name?: string;
+  open_hour?: string;
+  phone?: string;
+  recommend?: number;
+  school_id?: number;
+  site?: string;
+  status?: number;
+  store_name?: string;
+  type?: string;
+  [property: string]: any;
 }
 
-// 商家分类列表接口
+// 商家列表接口
 export interface MerchantsList {
   items: Merchant[];
   total: number;
 }
 
-// 商家分类查询参数接口
+// 商家查询参数接口
 export interface MerchantsQuery {
-  merchantName: string;
-  schoolId: number;
-  city: string;
-  status: number;
-  type: string; // 商家类型（校内/校外）
-  categoryId: number; // 商家分类
-  storeRecommend: number; // 1：推荐，0：不推荐
+  city_id: number;
+  merchant_name: string;
+  page: number;
+  page_size: number;
 }
 
 // 搜索配置
 export const searchList = (): BaseSearchList[] => [
   {
     label: '商家名称',
-    name: 'merchantName',
+    name: 'merchant_name',
     component: 'Input',
     placeholder: '请输入商家名称',
   },
   {
-    label: '学校',
-    name: 'schoolId',
-    component: 'Select',
-    placeholder: '请选择学校',
-  },
-  {
     label: '城市',
-    name: 'city',
-    component: 'Input',
-    placeholder: '请输入城市',
-  },
-  {
-    label: '状态',
-    name: 'status',
+    name: 'city_id',
     component: 'Select',
-    placeholder: '请选择状态',
-  },
-  {
-    label: '商家类型',
-    name: 'type',
-    component: 'Select',
-    placeholder: '请选择商家类型',
-  },
-  {
-    label: '商家分类',
-    name: 'categoryId',
-    component: 'Select',
-    placeholder: '请选择商家分类',
-  },
-  {
-    label: '推荐状态',
-    name: 'storeRecommend',
-    component: 'Select',
-    placeholder: '请选择推荐状态',
+    placeholder: '请选择城市',
   },
 ];
 
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
-    title: '商家名称',
-    dataIndex: 'merchantName',
-    key: 'merchantName',
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
+    width: 100,
+  },
+  {
+    title: '店铺名称',
+    dataIndex: 'store_name',
+    key: 'store_name',
     width: 150,
     ellipsis: true,
-    fixed: 'left',
+  },
+  {
+    title: '商家名称',
+    dataIndex: 'merchant_name',
+    key: 'merchant_name',
+    width: 150,
+    ellipsis: true,
   },
   {
     title: '商家图片',
-    dataIndex: 'merchantImg',
-    key: 'merchantImg',
+    dataIndex: 'merchant_img',
+    key: 'merchant_img',
     width: 100,
-    render: (imgUrl: uploadImg[]) => {
-      return <ImagePreview imageUrl={imgUrl} alt="商家图片" />;
+    render: (imgUrl: string[]) => {
+      // 转换数据格式以适配现有组件
+      const imgData = Array.isArray(imgUrl)
+        ? imgUrl.map((url, index) => ({
+            uid: `${index}`,
+            name: `image-${index}`,
+            status: 'done',
+            url: url,
+          }))
+        : [];
+      return <ImagePreview imgUrl={imgData} />;
     },
   },
   {
     title: '学校ID',
-    dataIndex: 'schoolId',
-    key: 'schoolId',
+    dataIndex: 'school_id',
+    key: 'school_id',
     width: 100,
   },
   {
-    title: '城市',
-    dataIndex: 'city',
-    key: 'city',
+    title: '城市ID',
+    dataIndex: 'city_id',
+    key: 'city_id',
     width: 100,
   },
   {
@@ -141,6 +164,9 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'status',
     key: 'status',
     width: 80,
+    render: (value: number) => {
+      return value === 1 ? '启用' : '禁用';
+    },
   },
   {
     title: '商家类型',
@@ -150,8 +176,8 @@ export const tableColumns: TableColumn[] = [
   },
   {
     title: '地址',
-    dataIndex: 'address',
-    key: 'address',
+    dataIndex: 'site',
+    key: 'site',
     width: 200,
     ellipsis: true,
   },
@@ -169,29 +195,74 @@ export const tableColumns: TableColumn[] = [
   },
   {
     title: '宿舍商家',
-    dataIndex: 'isDormStore',
-    key: 'isDormStore',
+    dataIndex: 'is_dormitory_store',
+    key: 'is_dormitory_store',
     width: 100,
+    render: (value: boolean) => {
+      return value ? '是' : '否';
+    },
   },
   {
     title: '商家分类',
-    dataIndex: 'categoryId',
-    key: 'categoryId',
+    dataIndex: 'category',
+    key: 'category',
     width: 100,
   },
   {
     title: '推荐状态',
-    dataIndex: 'storeRecommend',
-    key: 'storeRecommend',
+    dataIndex: 'recommend',
+    key: 'recommend',
     width: 100,
+    render: (value: number) => {
+      return value === 1 ? '推荐' : '不推荐';
+    },
+  },
+  {
+    title: '联系电话',
+    dataIndex: 'phone',
+    key: 'phone',
+    width: 150,
+  },
+  {
+    title: '营业开始时间',
+    dataIndex: 'open_hour',
+    key: 'open_hour',
+    width: 150,
+  },
+  {
+    title: '营业结束时间',
+    dataIndex: 'closed_hour',
+    key: 'closed_hour',
+    width: 150,
   },
 ];
 
 // 表单配置项
 export const formList = (): BaseFormList[] => [
   {
+    label: 'ID',
+    name: 'id',
+    component: 'InputNumber',
+    rules: FORM_REQUIRED,
+    componentProps: {
+      placeholder: '请输入ID',
+      style: { width: '100%' },
+      disabled: true,
+    },
+  },
+  {
+    label: '店铺名称',
+    name: 'store_name',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入店铺名称',
+      maxLength: 50,
+    },
+  },
+  {
     label: '商家名称',
-    name: 'merchantName',
+    name: 'merchant_name',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
@@ -201,12 +272,11 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '商家图片',
-    name: 'merchantImg', // 修改为与接口匹配的名称
-
-    component: 'ImageUpload',
+    name: 'merchant_img',
+    component: 'Upload',
     componentProps: {
       accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card', // 添加图片卡片样式
+      listType: 'picture-card',
       beforeUpload: (file: File) => {
         const isLt2M = file.size / 1024 / 1024 < 2;
         if (!isLt2M) {
@@ -233,26 +303,23 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
-    label: '学校',
-    name: 'schoolId',
+    label: '学校ID',
+    name: 'school_id',
     rules: FORM_REQUIRED,
-    component: 'Select',
+    component: 'InputNumber',
     componentProps: {
-      placeholder: '请选择学校',
-      options: [
-        // 需要根据实际数据填充学校选项
-        // { label: '学校名称', value: 1 }
-      ],
+      placeholder: '请输入学校ID',
+      style: { width: '100%' },
     },
   },
   {
-    label: '城市',
-    name: 'city',
+    label: '城市ID',
+    name: 'city_id',
     rules: FORM_REQUIRED,
-    component: 'Input',
+    component: 'InputNumber',
     componentProps: {
-      placeholder: '请输入城市名称',
-      maxLength: 20,
+      placeholder: '请输入城市ID',
+      style: { width: '100%' },
     },
   },
   {
@@ -283,7 +350,7 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '地址',
-    name: 'address',
+    name: 'site',
     rules: FORM_REQUIRED,
     component: 'TextArea',
     componentProps: {
@@ -321,31 +388,25 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '是否为宿舍商家',
-    name: 'isDormStore',
+    name: 'is_dormitory_store',
     component: 'Switch',
     componentProps: {
-      options: [
-        { label: '是', value: 1 },
-        { label: '否', value: 0 },
-      ],
+      checked: false,
     },
   },
   {
     label: '商家分类',
-    name: 'categoryId',
+    name: 'category',
     rules: FORM_REQUIRED,
-    component: 'Select',
+    component: 'InputNumber',
     componentProps: {
-      placeholder: '请选择商家分类',
-      options: [
-        // 需要根据实际数据填充分类选项
-        // { label: '分类名称', value: 1 }
-      ],
+      placeholder: '请输入商家分类ID',
+      style: { width: '100%' },
     },
   },
   {
     label: '推荐状态',
-    name: 'storeRecommend',
+    name: 'recommend',
     rules: FORM_REQUIRED,
     component: 'Select',
     componentProps: {
@@ -354,6 +415,33 @@ export const formList = (): BaseFormList[] => [
         { label: '推荐', value: 1 },
         { label: '不推荐', value: 0 },
       ],
+    },
+  },
+  {
+    label: '联系电话',
+    name: 'phone',
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入联系电话',
+      maxLength: 20,
+    },
+  },
+  {
+    label: '营业开始时间',
+    name: 'open_hour',
+    component: 'TimePicker',
+    componentProps: {
+      placeholder: '请选择营业开始时间',
+      format: 'HH:mm',
+    },
+  },
+  {
+    label: '营业结束时间',
+    name: 'closed_hour',
+    component: 'TimePicker',
+    componentProps: {
+      placeholder: '请选择营业结束时间',
+      format: 'HH:mm',
     },
   },
 ];

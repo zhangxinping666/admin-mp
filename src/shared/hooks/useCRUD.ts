@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, Key } from 'react';
 import { message, type FormInstance } from 'antd';
 import type { BaseFormData } from '#/form';
 import { INIT_PAGINATION } from '@/utils/config';
@@ -7,8 +7,8 @@ interface UseCRUDOptions<T> {
   initCreate: Partial<T>;
   fetchApi?: (params: any) => Promise<any>;
   createApi?: (data: any) => Promise<any>;
-  updateApi?: (id: number, data: any) => Promise<any>;
-  deleteApi?: (id: number) => Promise<any>;
+  updateApi?: (id: Key, data: any) => Promise<any>;
+  deleteApi?: (id: Key | Key[]) => Promise<any>;
   pagination?: boolean;
 }
 
@@ -51,6 +51,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
   // 搜索处理
   const handleSearch = (values: BaseFormData) => {
+    console.log('搜索参数:', values);
     setPage(1);
     setSearchData(values);
     setFetch(true);
@@ -59,7 +60,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   // 新增处理
   const handleCreate = (title: string = '新增') => {
     setCreateTitle(title);
-    setCreateId(0);
+    setCreateId(-1);
     setCreateData(initCreate);
     setCreateOpen(true);
   };
@@ -84,7 +85,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   // 在 useCRUD.ts 文件中
 
   // 删除处理
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: Key[]) => {
     try {
       // 确保 deleteApi 存在
       if (deleteApi) {
@@ -117,7 +118,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       id: isEditing ? createId : undefined,
       timestamp: new Date().toISOString(),
     });
-
+    console.log('createId', createId);
     try {
       if (isEditing) {
         // --- 编辑逻辑 ---
@@ -165,6 +166,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   const fetchTableData = async (mockData?: T[]) => {
     setLoading(true);
     try {
+      console.log('触发fetchTableData');
       if (fetchApi) {
         const params: any = { ...searchData };
         if (pagination) {
@@ -173,6 +175,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           params.pageSize = pageSize;
         }
         const { data } = await fetchApi(params);
+        console.log('fetch了', data);
         setTableData(data.list || data.data || data || []);
         setTotal(data.total || 0);
       } else if (mockData) {
