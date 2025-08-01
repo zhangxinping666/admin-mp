@@ -151,11 +151,14 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { TableNavigationProps, FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData } from './autoImports.d'
+  export type { TableNavigationProps, FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData, OperationLogReq } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'
   import('./form')
+  // @ts-ignore
+  export type { OperationLogQueryParams, OperationLogListParams, OperationLogRecord, OperationLogListResponse } from './operation-log'
+  import('./operation-log')
   // @ts-ignore
   export type { ArrayData, EmptyData, PageServerResult, PaginationData, SideMenu, MenuResult, PagePermission, ColumnsEnum, TableColumn, BaseTableProps, TableOptions } from './public'
   import('./public')
