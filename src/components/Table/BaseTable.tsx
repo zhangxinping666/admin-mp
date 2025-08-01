@@ -276,6 +276,7 @@ function BaseTable(props: Props) {
           pagination={false}
           loading={isLoading}
           {...props}
+          dataSource={Array.isArray(props.dataSource) ? props.dataSource : []}
           rowClassName={handleRowClassName}
           style={{
             borderRadius: 10,

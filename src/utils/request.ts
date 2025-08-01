@@ -72,7 +72,7 @@ request.interceptors.response.use(
     if (!originalRequest) {
       console.error('Request Error: No config available');
       return Promise.reject(error);
-    } // 检查是否是 401 Unauthorized 错误，并且不是刷新 token 的请求本身
+    } // 检查是否是 4010 Unauthorized 错误，并且不是刷新 token 的请求本身
     if (error.response?.status === 4010 && !originalRequest._retry) {
       // 如果正在刷新 token，则将当前失败的请求加入队列
       if (isRefreshing) {
@@ -100,28 +100,45 @@ request.interceptors.response.use(
       if (!refreshToken) {
         // 如果没有 refresh_token，直接跳转到登录页
         console.error('No refresh token available.');
-        clearTokens(); // window.location.href = '/login'; // 或使用 router.push('/login')
+        clearTokens();
+        processQueue(new Error('No refresh token available'), null);
+        // window.location.href = '/login'; // 或使用 router.push('/login')
         return Promise.reject(new Error('No refresh token, redirect to login.'));
       }
 
+      console.log('Starting token refresh...');
+
       try {
         // --- 调用刷新 Token 的 API ---
-        // 注意：这里需要使用一个不带拦截器的 axios 实例来发请求，避免循环调
-        const response = await axios.post<{
+        // 注意：这里需要使用一个不带拦截器的 axios 实例来发请求，避免循环调用
+        const refreshInstance = axios.create({
+          baseURL:
+            import.meta.env.VITE_APP_ENV === 'localhost'
+              ? '/api'
+              : import.meta.env.VITE_API_BASE_URL,
+          timeout: 10000,
+        });
+
+        const response = await refreshInstance.post<{
           data: {
             access_token: string;
             refresh_token: string;
           };
-        }>('/backstage/login', {
+        }>('/token/refresh', {
           refresh_token: refreshToken,
         });
 
-        const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data.data; // 1. 更新本地存储的 token
+        const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data.data;
 
-        setTokens(newAccessToken, newRefreshToken); // 2. 处理并重发等待队列中的请求
+        console.log('Token refresh successful');
 
-        processQueue(null, newAccessToken); // 3. 重发本次失败的请求
+        // 1. 更新本地存储的 token
+        setTokens(newAccessToken, newRefreshToken);
 
+        // 2. 处理并重发等待队列中的请求
+        processQueue(null, newAccessToken);
+
+        // 3. 重发本次失败的请求
         if (!originalRequest.headers) {
           originalRequest.headers = new axios.AxiosHeaders();
         }

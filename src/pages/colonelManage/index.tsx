@@ -145,15 +145,18 @@ function ColleaguesPage() {
       apis={{
         fetchApi: colonelApis.fetch,
         createApi: colonelApis.create,
-        updateApi: (id: number, data: any) => {
-          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
-          // 然后再调用您的 colonelApis.update 函数
-          return colonelApis.update({ ...data, id });
+        updateApi: (id: number, params: any) => {
+          return colonelApis.update({ id, ...params });
         },
-        deleteApi: (id: number[]) => colonelApis.delete(id),
+        deleteApi: (id: Array<number>) => colonelApis.delete(id),
       }}
       optionRender={optionRender}
-      onFormValuesChange={handleFormValuesChange}
+      onFormValuesChange={(changedValues: any, allValues: any) => {
+        if ('city_id' in changedValues) {
+          const newCityId = changedValues.city_id;
+          handleCityChange(newCityId);
+        }
+      }}
       onEditOpen={onEditOpenCallback}
     />
   );

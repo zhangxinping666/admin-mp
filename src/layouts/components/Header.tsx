@@ -1,6 +1,5 @@
-import type { PasswordModal } from './UpdatePassword';
 import type { MenuProps } from 'antd';
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useAliveController } from 'react-activation';
 import { useNavigate } from 'react-router-dom';
 import { clearTokens } from '@/stores/token';
@@ -12,7 +11,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  FormOutlined,
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import Avatar from '@/assets/images/avatar.png';
@@ -20,10 +18,9 @@ import styles from '../index.module.less';
 import Fullscreen from '@/components/Fullscreen';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
-import UpdatePassword from './UpdatePassword';
 import Nav from './Nav';
 
-type MenuKey = 'password' | 'logout';
+type MenuKey = 'logout';
 
 function Header() {
   const { t } = useTranslation();
@@ -31,7 +28,6 @@ function Header() {
   const { modal } = App.useApp();
   const { isCollapsed, isMaximize, username, nav } = useCommonStore();
   // 是否窗口最大化
-  const passwordRef = useRef<PasswordModal>(null);
   const navigate = useNavigate();
   const toggleCollapsed = useMenuStore((state) => state.toggleCollapsed);
   const clearInfo = useUserStore((state) => state.clearInfo);
@@ -39,11 +35,6 @@ function Header() {
 
   // 下拉菜单内容
   const items: MenuProps['items'] = [
-    {
-      key: 'password',
-      label: <span>{t('public.changePassword')}</span>,
-      icon: <FormOutlined className="mr-1" />,
-    },
     {
       key: 'logout',
       label: <span>{t('public.signOut')}</span>,
@@ -54,10 +45,6 @@ function Header() {
   /** 点击菜单 */
   const onClick: MenuProps['onClick'] = (e) => {
     switch (e.key as MenuKey) {
-      case 'password':
-        passwordRef.current?.open();
-        break;
-
       case 'logout':
         handleLogout();
         break;
@@ -148,8 +135,6 @@ function Header() {
 
         <RightRender />
       </header>
-
-      <UpdatePassword passwordRef={passwordRef} />
     </>
   );
 }

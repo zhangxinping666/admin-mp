@@ -56,7 +56,7 @@ const ColleaguesPage = () => {
           // 然后再调用您的 userApis.update 函数
           return userApis.update({ ...data, id });
         },
-        deleteApi: (id: number) => userApis.delete([id]),
+        deleteApi: (id: number[]) => userApis.delete(id),
       }}
       optionRender={optionRender}
     />

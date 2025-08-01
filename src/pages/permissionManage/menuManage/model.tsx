@@ -61,6 +61,12 @@ export interface PaginationParams {
   page: number;
   pageSize: number;
 }
+
+// 菜单筛选参数接口
+export interface MenuSearchParams {
+  name?: string;
+  status?: number;
+}
 export interface MenuListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
@@ -91,23 +97,11 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Select',
     placeholder: '请选择状态',
     componentProps: {
+      allowClear: true,
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
-    },
-  },
-  {
-    label: '菜单类型',
-    name: 'type',
-    component: 'Select',
-    placeholder: '请选择菜单类型',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: [
-        { label: '目录', value: 1 },
-        { label: '菜单', value: 2 },
-        { label: '按钮', value: 3 },
+        { label: '禁用', value: 2 },
+        { label: '全部', value: 0 },
       ],
     },
   },
@@ -130,7 +124,7 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '菜单代码',
+    title: '权限标识',
     dataIndex: 'code',
     key: 'code',
     width: 100,
@@ -246,7 +240,7 @@ export const formList = ({
     },
     showWhen: {
       name: 'type',
-      value: [2,3], // 目录和菜单
+      value: [2, 3], // 目录和菜单
     },
   },
   {
@@ -337,7 +331,7 @@ export const formList = ({
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

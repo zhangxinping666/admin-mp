@@ -71,7 +71,8 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
+        { label: '全部', value: 3 },
       ],
     },
   },
@@ -202,7 +203,6 @@ export const formList = (): BaseFormList[] => [
     name: 'password',
     component: 'Input',
     placeholder: '请输入用户密码',
-    rules: FORM_REQUIRED,
     componentProps: {
       precision: 6,
       style: { width: '100%' },
@@ -230,10 +230,11 @@ export const formList = (): BaseFormList[] => [
     name: 'status',
     component: 'Select',
     placeholder: '请选择状态',
+    rules: FORM_REQUIRED,
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

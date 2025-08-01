@@ -67,6 +67,7 @@ declare global {
   const TIME_FORMAT: typeof import('../src/utils/config')['TIME_FORMAT']
   const TITLE_SUFFIX: typeof import('../src/utils/config')['TITLE_SUFFIX']
   const TableFilter: typeof import('../src/components/Table/components/TableFilter')['default']
+  const TableNavigation: typeof import('../src/components/Navigation/index')['TableNavigation']
   const Theme: typeof import('../src/components/Theme/index')['default']
   const UpdateBtn: typeof import('../src/components/Buttons/index')['UpdateBtn']
   const VERSION: typeof import('../src/utils/config')['VERSION']
@@ -150,7 +151,7 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData } from './autoImports.d'
+  export type { TableNavigationProps, FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'

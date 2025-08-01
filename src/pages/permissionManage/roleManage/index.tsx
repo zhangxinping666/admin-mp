@@ -29,21 +29,12 @@ const RolesPage = () => {
   };
   // 处理权限编辑
   const handleEditPermissions = (record: Role) => {
-    console.log('打开权限编辑模态框:', {
-      角色信息: record,
-      操作时间: new Date().toLocaleString(),
-    });
     setSelectedRole(record);
     setPermissionModalVisible(true);
   };
 
   // 处理权限保存
   const handlePermissionSave = (values: any) => {
-    console.log('保存权限修改:', {
-      角色: selectedRole,
-      新权限: values,
-      保存时间: new Date().toLocaleString(),
-    });
     setPermissionModalVisible(false);
     setSelectedRole(null);
   };
@@ -63,35 +54,6 @@ const RolesPage = () => {
       onEditPermissions={handleEditPermissions}
     />
   );
-
-  // 表单值变化处理函数
-  const handleFormValuesChange = (changedValues: any, allValues: any) => {
-    // 如果数据权限字段发生变化，打印选择的节点信息
-    if (changedValues.dataPermissions) {
-      console.log('数据权限树选择变化:', {
-        选中的节点: changedValues.dataPermissions,
-        变化时间: new Date().toLocaleString(),
-        完整表单数据: allValues,
-      });
-    }
-
-    // 如果功能权限字段发生变化
-    if (changedValues.permissions) {
-      console.log('功能权限选择变化:', {
-        选中的权限: changedValues.permissions,
-        变化时间: new Date().toLocaleString(),
-        完整表单数据: allValues,
-      });
-    }
-
-    // 打印所有表单变化
-    console.log('角色表单数据变化:', {
-      变化的字段: changedValues,
-      所有字段值: allValues,
-      变化时间: new Date().toLocaleString(),
-    });
-  };
-
   return (
     <>
       <PermissionEditModal
@@ -117,10 +79,9 @@ const RolesPage = () => {
             // 然后再调用您的 cityApis.update 函数
             return apis.updateApi({ ...data, id });
           },
-          deleteApi: (id: number) => apis.deleteApi([id]),
+          deleteApi: (id: number[]) => apis.deleteApi(id),
         }}
         optionRender={optionRender}
-        onFormValuesChange={handleFormValuesChange}
       />
     </>
   );

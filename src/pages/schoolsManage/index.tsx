@@ -57,7 +57,7 @@ const SchoolsPage = () => {
           // 然后再调用您的 userApis.update 函数
           return schoolApis.update({ ...data, id });
         },
-        deleteApi: (id: number) => schoolApis.delete([id]),
+        deleteApi: (id: number[]) => schoolApis.delete(id),
       }}
       optionRender={optionRender}
     />

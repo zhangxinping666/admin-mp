@@ -41,7 +41,7 @@ const CertPage = () => {
           // 然后再调用您的 certApis.update 函数
           return certApis.update({ ...data, id });
         },
-        deleteApi: (id: number) => certApis.delete([id]),
+        deleteApi: (id: number[]) => certApis.delete(id),
       }}
       hideCreate={true}
     />

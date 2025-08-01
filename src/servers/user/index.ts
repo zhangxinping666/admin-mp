@@ -20,5 +20,5 @@ export function updateUser(data: updateUserForm) {
 
 //批量删除用户
 export function deleteUser(id: Array<number>) {
-  return request.post('/backUser/delete', { id_list: id });
+  return request.delete('/backUser/delete', { data: { id_list: id } });
 }

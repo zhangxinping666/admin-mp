@@ -290,10 +290,6 @@ function Login() {
             <Checkbox name="remember" checked={isRemember} onChange={onRemember}>
               {t('login.rememberMe')}
             </Checkbox>
-
-            <div className="text-blue-500 cursor-pointer" onClick={onForgetPassword}>
-              {t('login.forgetPassword')}
-            </div>
           </div>
         </div>
       </div>

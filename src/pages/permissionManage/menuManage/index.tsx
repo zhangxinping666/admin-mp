@@ -10,6 +10,7 @@ import {
   deleteMenu,
   getMenuSelectList,
 } from '@/servers/perms/menu'; // 导入您的真实API
+import { refreshSidebarMenu } from '@/utils/menuRefresh';
 
 function buildTree(flatList: Menu[]): Menu[] {
   if (!Array.isArray(flatList) || flatList.length === 0) {
@@ -33,9 +34,30 @@ function buildTree(flatList: Menu[]): Menu[] {
 
 const menuApis = {
   fetch: getMenuList,
-  create: addMenu,
-  update: updateMenu,
-  delete: deleteMenu,
+  create: async (data: any) => {
+    const result = await addMenu(data);
+    // 创建成功后刷新侧边栏菜单
+    if (result) {
+      await refreshSidebarMenu();
+    }
+    return result;
+  },
+  update: async (data: any) => {
+    const result = await updateMenu(data);
+    // 更新成功后刷新侧边栏菜单
+    if (result) {
+      await refreshSidebarMenu();
+    }
+    return result;
+  },
+  delete: async (id: Array<number>) => {
+    const result = await deleteMenu(id);
+    // 删除成功后刷新侧边栏菜单
+    if (result) {
+      await refreshSidebarMenu();
+    }
+    return result;
+  },
 };
 
 const initCreate = {
@@ -116,19 +138,11 @@ const MenuPage = () => {
       initCreate={initCreate}
       onFormValuesChange={handleFormValuesChange}
       onEditOpen={(record) => {
-        // 当编辑时，设置父级菜单的值
-        // 如果有父级菜单(pid不为0)，显示父级菜单；否则显示根目录(pid为0)
         const parentId = record.pid || 0;
         console.log('编辑菜单，父级菜单ID:', parentId, '菜单数据:', record);
-
-        // 根据当前编辑菜单的类型，动态获取对应的父级菜单选项
         if (record.type) {
           fetchMenuOptionsByType(record.type);
         }
-
-        // 确保表单能正确显示父级菜单
-        // 由于我们已经在menuOptions中包含了"根目录"选项(value: 0)
-        // 所以无论pid是什么值，都能在下拉选项中找到对应的显示
         if (parentId === 0) {
           console.log('当前菜单为顶级菜单，父级为根目录');
         } else {
@@ -137,11 +151,19 @@ const MenuPage = () => {
       }}
       apis={{
         fetchApi: async (params: any) => {
-          const response = await menuApis.fetch(params);
-          console.log('API 原始响应:', response);
+          // 处理搜索参数，过滤掉空值和无效值
+          const searchParams: any = {};
+          // 菜单名称筛选
+          if (params.name && params.name.trim()) {
+            searchParams.name = params.name.trim();
+          }
+          // 状态筛选
+          if (params.status !== undefined && params.status !== null) {
+            searchParams.status = params.status;
+          }
+          const response = await menuApis.fetch(searchParams);
           const flatList = response?.data || [];
-          console.log('提取出的扁平列表:', flatList);
-          // 3. 调用您自己的函数进行转换
+          // 调用树形转换函数
           const treeData = buildTree(flatList);
           console.log('转换后的树形数据:', treeData);
           return {
@@ -152,7 +174,7 @@ const MenuPage = () => {
         updateApi: (id: number, data: any) => {
           return menuApis.update({ ...data, id });
         },
-        deleteApi: (id: number) => menuApis.delete([id]),
+        deleteApi: (id: number[]) => menuApis.delete(id),
       }}
       optionRender={optionRender}
       onFormValuesChange={handleFormValuesChange}

@@ -71,6 +71,12 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     // 【新增】第三个参数：一个可选的回调函数
     onOpen?: (record: T) => void,
   ) => {
+    console.log(record);
+    if (!record || record.id === undefined) {
+      console.error('handleEdit: record is undefined or missing id property');
+      messageApi.error('编辑失败：数据异常');
+      return;
+    }
     setCreateTitle(title);
     setCreateId(record.id);
     setCreateData(record);
@@ -107,7 +113,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     }
   };
   // 在 useCRUD.ts 文件中
-
   const handleModalSubmit = async (values: BaseFormData) => {
     setCreateLoading(true);
     const isEditing = createId && createId > 0;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Modal, message } from 'antd';
 import BaseForm from '@/components/Form/BaseForm';
 import type { BaseFormList } from '#/form';
@@ -19,62 +19,74 @@ interface PermissionEditModalProps {
 }
 
 const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEditModalProps) => {
-  const [functionalPermissions, setFunctionalPermissions] = useState<any[]>([]);
-  const [dataPermissions, setDataPermissions] = useState<any[]>([]);
+  const [functionalPermissions, setFunctionalPermissions] = useState<string[]>([]);
+  const [dataPermissions, setDataPermissions] = useState<string[]>([]);
+  const treeSelectRef = useRef<any>(null);
   const [menuTreeData, setMenuTreeData] = useState<any[]>([]);
+  const [dataPermissionTreeData, setDataPermissionTreeData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false);
+  // 移除不再需要的状态变量
 
+  // 统一加载所有数据
   useEffect(() => {
-    if (visible && record && menuTreeData.length > 0) {
-      setLoading(true);
+    if (visible && record) {
+      setInitialLoading(true);
+      // 并行加载权限树数据和角色权限数据
       Promise.all([
-        getRoleApiPerms({ id: record.id }),
-        getRoleMenuPerms({ id: record.id }),
+        getMenuPermissionTree(),
+        getDataPermissionTree(),
+        getRoleApiPerms(record.id.toString()),
+        getRoleMenuPerms(record.id.toString()),
       ])
-        .then(([apiResponse, menuResponse]) => {
+        .then(([menuData, dataPermissionData, apiResponse, menuResponse]) => {
+          // 设置权限树数据
+          setMenuTreeData(menuData);
+          setDataPermissionTreeData(dataPermissionData);
+
           // 设置API权限到数据权限
-          setDataPermissions(apiResponse.data?.api_ids || []);
+          const apiData = apiResponse.data || [];
+          // 处理API权限数据，提取ID并转换为带前缀的格式
+          const convertedApiIds = apiData.map((item: any) => {
+            // 如果是对象，提取id；如果是数字，直接使用
+            const id = typeof item === 'object' ? item.id : item;
+            return `api-${id}`;
+          });
+          setDataPermissions(convertedApiIds);
+
           // 设置菜单权限到功能权限
           const menuIds = menuResponse.data?.menu_ids || [];
-          console.log('获取到的菜单权限ID:', menuIds);
-          console.log('当前菜单树数据:', menuTreeData);
           setFunctionalPermissions(menuIds);
         })
         .catch((error) => {
-          message.error('获取权限数据失败');
-          console.error('获取权限数据失败:', error);
+          console.error('加载权限数据失败:', error);
+          message.error('加载权限数据失败');
         })
         .finally(() => {
-          setLoading(false);
+          setInitialLoading(false);
         });
     }
-  }, [visible, record, menuTreeData]);
+  }, [visible, record]);
 
-  // 异步加载菜单权限数据
+  // 重置状态当Modal关闭时
   useEffect(() => {
-    if (visible) {
-      setLoading(true);
-      getMenuPermissionTree()
-        .then((data) => {
-          setMenuTreeData(data);
-        })
-        .catch((error) => {
-          console.error('加载菜单权限数据失败:', error);
-          message.error('加载菜单权限数据失败');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+    if (!visible) {
+      setFunctionalPermissions([]);
+      setDataPermissions([]);
+      setMenuTreeData([]);
+      setDataPermissionTreeData([]);
+      setInitialLoading(false);
     }
   }, [visible]);
 
   // 功能权限表单配置
   const functionalPermissionForm: BaseFormList[] = [
     {
-      label: '功能权限',
+      label: '页面权限',
       name: 'permissions',
       component: 'TreeSelect',
       placeholder: '输入关键字进行过滤',
+      rules: FORM_REQUIRED,
       componentProps: {
         treeData: menuTreeData,
         multiple: true,
@@ -89,7 +101,6 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
         maxTagCount: 'responsive',
         dropdownStyle: { maxHeight: 400, overflow: 'auto' },
         onSelect: () => false, // 阻止选择后自动关闭
-        loading: loading,
         fieldNames: {
           label: 'title',
           value: 'id',
@@ -102,15 +113,25 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
   // 数据权限表单配置
   const dataPermissionForm: BaseFormList[] = [
     {
-      label: '数据权限',
+      label: 'API权限',
       name: 'dataPermissions',
       component: 'TreeSelect',
       placeholder: '输入关键字进行过滤',
+      rules: FORM_REQUIRED,
       componentProps: {
-        treeData: getDataPermissionTree(),
+        // 处理树形数据，移除父节点（分组）的复选框
+        treeData: dataPermissionTreeData?.map((node: any) => ({
+          ...node,
+          checkable: !node.value?.startsWith('group-'), // 分组节点不显示复选框
+          children: node.children?.map((child: any) => ({
+            ...child,
+            checkable: !child.value?.startsWith('group-'), // 子分组节点不显示复选框
+          })),
+        })),
         multiple: true,
         treeCheckable: true,
-        showCheckedStrategy: 'SHOW_PARENT',
+        treeCheckStrictly: true, // 严格模式，父子节点选择状态不关联
+        showCheckedStrategy: 'SHOW_CHILD', // 只显示子节点
         placeholder: '输入关键字进行过滤',
         style: { width: '100%' },
         treeDefaultExpandAll: true,
@@ -119,10 +140,25 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
         treeNodeFilterProp: 'path',
         maxTagCount: 'responsive',
         dropdownStyle: { maxHeight: 400, overflow: 'auto' },
-        onSelect: () => false, // 阻止选择后自动关闭
+        dropdownMatchSelectWidth: false,
+        // 基础配置
+        ref: treeSelectRef,
+        autoClearSearchValue: false,
+        // 在选择后保持下拉框打开
+        onSelect: () => {
+          // 选择后重新打开下拉框
+          setTimeout(() => {
+            if (treeSelectRef.current) {
+              treeSelectRef.current.focus();
+              // 模拟点击打开下拉框
+              const event = new MouseEvent('mousedown', { bubbles: true });
+              treeSelectRef.current.querySelector('.ant-select-selector')?.dispatchEvent(event);
+            }
+          }, 50);
+        },
         fieldNames: {
-          label: 'path',
-          value: 'id',
+          label: 'title',
+          value: 'value',
           children: 'children',
         },
       },
@@ -137,7 +173,17 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
 
   const handleDataPermissionChange = (changedValues: any, allValues: any) => {
     if (changedValues.dataPermissions !== undefined) {
-      setDataPermissions(changedValues.dataPermissions);
+      // 处理 treeCheckStrictly 模式下的数据格式
+      let processedPermissions = changedValues.dataPermissions;
+
+      // 如果是对象数组格式，提取 value 值
+      if (Array.isArray(processedPermissions) && processedPermissions.length > 0) {
+        if (typeof processedPermissions[0] === 'object' && processedPermissions[0].value) {
+          processedPermissions = processedPermissions.map((item: any) => item.value);
+        }
+      }
+
+      setDataPermissions(processedPermissions);
     }
   };
 
@@ -146,13 +192,36 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
       message.error('角色信息不存在');
       return;
     }
+
+    // 验证权限不能为空
+    if (!functionalPermissions || functionalPermissions.length === 0) {
+      message.error('请至少选择一个功能权限');
+      return;
+    }
+
+    if (!dataPermissions || dataPermissions.length === 0) {
+      message.error('请至少选择一个数据权限');
+      return;
+    }
+
     try {
       setLoading(true);
       // 更新API权限 (功能权限对应API权限)
+      // 只提交API ID，过滤掉分组ID
+      const convertedDataPermissions = dataPermissions
+        .filter((value: string) => {
+          // 只保留以 'api-' 开头的值，过滤掉分组
+          return typeof value === 'string' && value.startsWith('api-');
+        })
+        .map((value: string) => {
+          // 将 'api-' 前缀转换为纯数字 ID
+          return parseInt(value.replace('api-', ''), 10);
+        })
+        .filter((id: any) => !isNaN(id) && id !== null && id !== undefined);
 
       await updateRoleApiPerms({
         id: record.id,
-        id_list: dataPermissions,
+        id_list: convertedDataPermissions,
       });
 
       // 更新菜单权限 (数据权限对应菜单权限)
@@ -165,7 +234,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
 
       const finalValues = {
         permissions: functionalPermissions,
-        dataPermissions: dataPermissions,
+        dataPermissions: convertedDataPermissions,
       };
 
       onOk(finalValues);
@@ -186,26 +255,66 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
       width={800}
       confirmLoading={loading}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div>
-          <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 600 }}>功能权限</h3>
-          <BaseForm
-            list={functionalPermissionForm}
-            data={{ permissions: functionalPermissions }}
-            handleFinish={() => {}}
-            onValuesChange={handleFunctionalPermissionChange}
-          />
+      {initialLoading ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '300px',
+            fontSize: '14px',
+            color: '#666',
+          }}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                marginBottom: '12px',
+                width: '32px',
+                height: '32px',
+                border: '3px solid #f3f3f3',
+                borderTop: '3px solid #1890ff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto',
+              }}
+            ></div>
+            <div>正在加载权限数据...</div>
+            <style>{`
+               @keyframes spin {
+                 0% { transform: rotate(0deg); }
+                 100% { transform: rotate(360deg); }
+               }
+             `}</style>
+          </div>
         </div>
-        <div>
-          <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 600 }}>数据权限</h3>
-          <BaseForm
-            list={dataPermissionForm}
-            data={{ dataPermissions: dataPermissions }}
-            handleFinish={() => {}}
-            onValuesChange={handleDataPermissionChange}
-          />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div>
+            <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 600 }}>功能权限</h3>
+            <BaseForm
+              list={functionalPermissionForm}
+              data={{ permissions: functionalPermissions }}
+              handleFinish={() => {}}
+              onValuesChange={handleFunctionalPermissionChange}
+            />
+          </div>
+          <div>
+            <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 600 }}>数据权限</h3>
+            <BaseForm
+              list={dataPermissionForm}
+              data={{
+                dataPermissions: dataPermissions.map((value: string) => ({
+                  value: value,
+                  label: value,
+                })),
+              }}
+              handleFinish={() => {}}
+              onValuesChange={handleDataPermissionChange}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </Modal>
   );
 };

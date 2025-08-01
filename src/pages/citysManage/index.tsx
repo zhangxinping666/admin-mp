@@ -84,8 +84,6 @@ const CitiesPage = () => {
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,
         updateApi: (id: number, data: any) => {
-          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
-          // 然后再调用您的 cityApis.update 函数
           return cityApis.update({ ...data, id });
         },
         deleteApi: (id: Array<number>) => cityApis.delete(id),
