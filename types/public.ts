@@ -19,6 +19,7 @@ export interface PageServerResult<T = unknown> {
 export interface PaginationData {
   page?: number;
   pageSize?: number;
+  total?: number;
 }
 
 // 侧边菜单

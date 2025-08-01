@@ -18,7 +18,7 @@ export const INIT_PAGINATION = {
 
 // 日期格式化
 export const DATE_FORMAT = 'YYYY-MM-DD';
-export const TIME_FORMAT = 'YYYY-MM-DD hh:mm:ss';
+export const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 // 公共组件默认值
 export const FORM_REQUIRED = [{ required: true }]; // 表单必填校验

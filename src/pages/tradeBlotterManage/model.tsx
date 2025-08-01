@@ -6,6 +6,7 @@ import {
   getSchoolsByCityId,
   getCitiesByProvince,
 } from '@/servers/trade-blotter/location';
+import { TIME_FORMAT } from '@/utils/config';
 type OptionType = { label: string; value: string | number };
 /**
  * 支付类型、交易状态、分组选项
@@ -144,6 +145,8 @@ export const searchList = (
     componentProps: {
       placeholder: [t('tradeBlotter.startTime'), t('tradeBlotter.endTime')],
       allowClear: true,
+      showTime: true,
+      format: TIME_FORMAT
     },
     wrapperWidth: 220, // 已有固定宽度
   },
