@@ -46,3 +46,8 @@ export function getPermissions(data: object) {
 export function refreshToken(refresh_token: string) {
   return request.post('/token/refresh', { refresh_token });
 }
+
+//获取验证码
+export function getCode() {
+  return request.get('/backstage/captcha');
+}

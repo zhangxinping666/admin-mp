@@ -2,6 +2,8 @@
 export interface LoginData {
   account: string;
   password: string;
+  captcha_code: string;
+  captcha_id?: string;
 }
 
 // 登录接口返回数据

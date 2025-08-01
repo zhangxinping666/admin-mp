@@ -41,16 +41,26 @@ const BuildingsPage = () => {
   const [editFloorMode, setEditFloorMode] = useState(false);
   const [form] = Form.useForm();
 
-  const handleShowSchool = (record: Building) => {
+  const handleShowSchool = async (record: Building) => {
     setCurrentBuilding(record);
-    getSchoolInfo(record.school_id);
-    setSchoolModalVisible(true);
+    try {
+      await getSchoolInfo(record.school_id);
+      setSchoolModalVisible(true);
+    } catch (error) {
+      console.error('Failed to get school info:', error);
+      // 401错误会被响应拦截器处理，这里不需要特殊处理
+    }
   };
 
-  const handleShowFloor = (record: Building) => {
+  const handleShowFloor = async (record: Building) => {
     setCurrentBuilding(record);
-    getFloorInfo(record.id);
-    setFloorModalVisible(true);
+    try {
+      await getFloorInfo(record.id);
+      setFloorModalVisible(true);
+    } catch (error) {
+      console.error('Failed to get floor info:', error);
+      // 401错误会被响应拦截器处理，这里不需要特殊处理
+    }
   };
 
   // 获取学校信息
@@ -58,7 +68,11 @@ const BuildingsPage = () => {
     try {
       const res = await apis.querySchool({ id: id });
       setCurrentSchool(res.data.list[0]);
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是401错误，重新抛出让拦截器处理token刷新
+      if (error.response?.status === 401) {
+        throw error;
+      }
       message.error('获取学校信息失败');
     }
   };
@@ -68,7 +82,11 @@ const BuildingsPage = () => {
     try {
       const res = await apis.queryFloorItem({ school_building_id: id });
       setCurrentFloor(res.data.list[0]);
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是401错误，重新抛出让拦截器处理token刷新
+      if (error.response?.status === 401) {
+        throw error;
+      }
       message.error('获取楼层信息失败');
     }
   };
@@ -86,7 +104,11 @@ const BuildingsPage = () => {
       message.success('学校信息更新成功');
       setSchoolModalVisible(false);
       getSchoolInfo(currentSchool?.id || 1);
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是401错误，重新抛出让拦截器处理token刷新
+      if (error.response?.status === 401) {
+        throw error;
+      }
       message.error('学校信息更新失败');
     }
   };
@@ -103,7 +125,11 @@ const BuildingsPage = () => {
       message.success('楼层信息更新成功');
       setFloorModalVisible(false);
       getFloorInfo(currentFloor?.id || 1);
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是401错误，重新抛出让拦截器处理token刷新
+      if (error.response?.status === 401) {
+        throw error;
+      }
       message.error('楼层信息更新失败');
     }
   };
@@ -135,7 +161,11 @@ const BuildingsPage = () => {
   async function getBuildsFn(param?: object) {
     try {
       const res = await apis.queryBuilding();
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是401错误，重新抛出让拦截器处理token刷新
+      if (error.response?.status === 401) {
+        throw error;
+      }
       console.error('获取楼栋列表失败:', error);
       message.error('获取楼栋列表失败');
     }
@@ -155,7 +185,11 @@ const BuildingsPage = () => {
       // 创建成功后刷新列表
       await getBuildsFn();
       return res;
-    } catch (error) {
+    } catch (error: any) {
+      // 如果是401错误，重新抛出让拦截器处理token刷新
+      if (error.response?.status === 401) {
+        throw error;
+      }
       console.error('创建记录失败:', error);
       message.error('创建记录失败');
       throw error;
@@ -165,7 +199,15 @@ const BuildingsPage = () => {
   // 数据获取副作用
   useEffect(() => {
     // 请求楼栋信息
-    getBuildsFn();
+    const fetchData = async () => {
+      try {
+        await getBuildsFn();
+      } catch (error) {
+        console.error('Failed to fetch buildings:', error);
+        // 401错误会被响应拦截器处理，这里不需要特殊处理
+      }
+    };
+    fetchData();
   }, []);
 
   return (
