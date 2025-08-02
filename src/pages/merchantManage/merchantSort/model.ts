@@ -114,8 +114,20 @@ export const tableColumns: TableColumn[] = [
   },
 ];
 
-// 表单配置项
+// 编辑表单配置项
 export const formList = (): BaseFormList[] => [
+  {
+    label: '分类ID',
+    name: 'id',
+    component: 'InputNumber',
+    componentProps: {
+      placeholder: '请输入分类ID',
+      min: 0,
+      precision: 2,
+      style: { width: '100%' },
+      disabled: true,
+    },
+  },
   {
     label: '分类名称',
     name: 'name',
@@ -135,23 +147,51 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
-    label: '学校名称',
-    name: 'schoolName',
+    label: '状态',
+    name: 'status',
     rules: FORM_REQUIRED,
-    component: 'Input',
+    component: 'Select',
     componentProps: {
-      placeholder: '请输入学校名称',
-      maxLength: 100,
+      placeholder: '请选择状态',
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
     },
   },
   {
-    label: '城市名称',
-    name: 'cityName',
+    label: '退款比例(%)',
+    name: 'drawback',
+    rules: FORM_REQUIRED,
+    component: 'InputNumber',
+    componentProps: {
+      placeholder: '请输入退款比例',
+      min: 0,
+      max: 100,
+      precision: 2,
+      style: { width: '100%' },
+    },
+  },
+];
+
+// 新增表单配置项
+export const addFormList = (): BaseFormList[] => [
+  {
+    label: '分类名称',
+    name: 'name',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
-      placeholder: '请输入城市名称',
+      placeholder: '请输入分类名称',
       maxLength: 50,
+    },
+  },
+  {
+    label: '分类图标',
+    name: 'icon',
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入图标URL',
     },
   },
   {

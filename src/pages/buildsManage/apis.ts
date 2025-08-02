@@ -34,8 +34,8 @@ export function addBuilding(data: {
 }
 
 // 查询楼栋
-export function queryBuilding() {
-  return request.get(apis.getBuildsList);
+export function queryBuilding(params?: any) {
+  return request.get(apis.getBuildsList, { params });
 }
 
 // 更新楼栋
@@ -55,18 +55,22 @@ export function updateBuilding(data: {
  * 批量删除楼栋
  * @param param id_list
  *  */
-export function deleteBuilding(param: any) {
-  return request.delete(apis.deleteBuilding, param);
+export function deleteBuilding(data: any) {
+  return request.delete(apis.deleteBuilding, {
+    data: {
+      id_list: data,
+    },
+  });
 }
 
 /**
- * 
- * @param data 
+ *查询楼层
+ * @param data
  * school_building_id
- * @returns 
+ * @returns
  */
-export function queryFloorItem(data:any) {
-  return request.get(apis.getFloorList, data);
+export function queryFloorItem(params?: any) {
+  return request.get(apis.getFloorList, { params });
 }
 
 // 添加楼层
@@ -81,7 +85,7 @@ export function updateFloor(data: {
   school_building_id?: number;
   status?: number;
 }) {
-  return request.put(apis.updateFloor, data);
+  return request.put(apis.updateFloor, { data: data });
 }
 
 /**
@@ -89,8 +93,8 @@ export function updateFloor(data: {
  * @param param id_list
  * @returns
  */
-export function deleteFloor(param: any) {
-  return request.delete(apis.deleteFloor, param);
+export function deleteFloor(data: any) {
+  return request.delete(apis.deleteFloor, { data: { id_list: data } });
 }
 
 /**
@@ -98,8 +102,8 @@ export function deleteFloor(param: any) {
  * @param param id 学校id
  * @returns
  */
-export function querySchool(param?: any) {
-  return request.get(apis.getSchoolsList, param);
+export function querySchool(params?: any) {
+  return request.get(apis.getSchoolsList, { params });
 }
 
 /**
@@ -128,13 +132,13 @@ export function updateSchool(data: {
   school_logo?: string;
   status?: number;
 }) {
-  return request.put(apis.updateSchool, data);
+  return request.put(apis.updateSchool, { data: data });
 }
 
 /**
  * 删除学校
  * @param param id_list 学校id列表
  */
-export function deleteSchool(param: any) {
-  return request.delete(apis.deleteSchool, param);
+export function deleteSchool(data: any) {
+  return request.delete(apis.deleteSchool, { data: { id_list: data } });
 }

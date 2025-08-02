@@ -25,7 +25,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   const [isCreateLoading, setCreateLoading] = useState(false);
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState('新增');
-  const [createId, setCreateId] = useState(0);
+  const [createId, setCreateId] = useState(-1);
   const [createData, setCreateData] = useState<Partial<T>>(initCreate);
   const [searchData, setSearchData] = useState<BaseFormData>({});
   const { pagination = true } = options; // 设置默认值为true
@@ -90,9 +90,10 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       // 确保 deleteApi 存在
       if (deleteApi) {
         // 1. 调用后端的删除接口
-        await deleteApi(id);
+        console.log('deleteApi', id);
+        deleteApi(id);
         // 2. 提示用户操作成功
-        messageApi.success('删除成功');
+        messageApi.success('handleDelete删除成功');
         // 3. 【核心改动 1】检查并处理分页，提升用户体验
         if (tableData.length === 1 && page > 1) {
           setPage(page - 1);
@@ -110,7 +111,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
   const handleModalSubmit = async (values: BaseFormData) => {
     setCreateLoading(true);
-    const isEditing = createId && createId > 0;
+    const isEditing = createId != -1;
     const operationType = isEditing ? '编辑' : '新增';
 
     console.log(`[CRUD] ${operationType}操作开始`, {
@@ -126,7 +127,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
           throw new Error('Update API not configured.');
         }
-        const result = await updateApi({ id: createId, ...values });
+        console.log('editCreateId', createId);
+        const idList = Array.isArray(createId) ? createId : [createId];
+        const result = await updateApi({ id: idList, ...values });
         console.log(`[CRUD] 编辑API调用成功`, { result });
         messageApi.success('编辑成功');
 

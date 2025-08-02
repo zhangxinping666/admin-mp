@@ -3,15 +3,7 @@ import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { Key } from 'react';
 import * as apis from './apis';
-import {
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Modal,
-  Select,
-  Space,
-} from 'antd';
+import { Form, Input, InputNumber, message, Modal, Select, Skeleton, Space } from 'antd';
 import { ImageUploader } from '@/shared/components/ImageUploader';
 
 // 初始化新增数据
@@ -79,8 +71,9 @@ const BuildingsPage = () => {
   // 获取学校信息
   const getSchoolInfo = async (id: number) => {
     try {
-      const res = await apis.querySchool({ id: id });
-      setCurrentSchool(res.data.list[0]);
+      const res = await apis.querySchool();
+      const school = res.data.list.find((item: School) => item.id === id);
+      setCurrentSchool(school);
     } catch (error) {
       message.error('获取学校信息失败');
     }
@@ -89,8 +82,9 @@ const BuildingsPage = () => {
   // 获取楼层信息
   const getFloorInfo = async (id: number) => {
     try {
-      const res = await apis.queryFloorItem({ school_building_id: id });
-      setCurrentFloor(res.data.list[0]);
+      const res = await apis.queryFloorItem();
+      const floor = res.data.list.find((item: Floor) => item.school_building_id === id);
+      setCurrentFloor(floor);
     } catch (error) {
       message.error('获取楼层信息失败');
     }
@@ -222,7 +216,7 @@ const BuildingsPage = () => {
         footer={null}
         width={800}
       >
-        {currentSchool && (
+        {currentSchool ? (
           <Form form={form} initialValues={currentSchool} layout="vertical">
             <Form.Item label="学校名称" name="name">
               {editSchoolMode ? (
@@ -320,16 +314,18 @@ const BuildingsPage = () => {
             <Space>
               {editSchoolMode ? (
                 <>
-                  <BaseBtn
-                    type="primary"
-                    onClick={(e) => {
-                      handleUpdateSchool(form.getFieldsValue());
-                      setEditSchoolMode(false);
-                    }}
-                  >
-                    保存
-                  </BaseBtn>
-                  <BaseBtn onClick={() => setEditSchoolMode(false)}>取消</BaseBtn>
+                  <Space size={20}>
+                    <BaseBtn
+                      type="primary"
+                      onClick={(e) => {
+                        handleUpdateSchool(form.getFieldsValue());
+                        setEditSchoolMode(false);
+                      }}
+                    >
+                      保存
+                    </BaseBtn>
+                    <BaseBtn onClick={() => setEditSchoolMode(false)}>取消</BaseBtn>
+                  </Space>
                 </>
               ) : (
                 <BaseBtn type="primary" onClick={() => setEditSchoolMode(true)}>
@@ -338,6 +334,10 @@ const BuildingsPage = () => {
               )}
             </Space>
           </Form>
+        ) : (
+          <div style={{ padding: 24 }}>
+            <Skeleton active paragraph={{ rows: 6 }} title={{ width: '50%' }} />
+          </div>
         )}
       </Modal>
       <Modal
@@ -347,26 +347,16 @@ const BuildingsPage = () => {
         footer={null}
         width={800}
       >
-        {currentFloor && (
-          <Form
-            form={form}
-            onFinish={handleUpdateFloor}
-            initialValues={{
-              school: currentSchool?.name,
-              building: currentBuilding?.name,
-              status: currentFloor.status,
-              layer: currentFloor.layer,
-            }}
-          >
-            <Form.Item label="所属学校" name="school">
-              {editFloorMode ? (
-                <Input />
-              ) : (
+        {currentFloor ? (
+          <Form form={form} onFinish={handleUpdateFloor} initialValues={currentFloor}>
+            {!editFloorMode && (
+              <Form.Item label="所属学校" name="school">
                 <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
                   {currentSchool?.name || '暂无数据'}
                 </span>
-              )}
-            </Form.Item>
+              </Form.Item>
+            )}
+
             <Form.Item label="所属楼栋" name="building">
               {editFloorMode ? (
                 <Input />
@@ -412,22 +402,28 @@ const BuildingsPage = () => {
             <Form.Item>
               {editFloorMode ? (
                 <>
-                  <BaseBtn
-                    type="primary"
-                    onClick={async () => {
-                      await handleUpdateFloor(form.getFieldsValue());
-                      setEditFloorMode(false);
-                    }}
-                  >
-                    保存
-                  </BaseBtn>
-                  <BaseBtn onClick={() => setEditFloorMode(false)}>取消</BaseBtn>
+                  <Space size={20}>
+                    <BaseBtn
+                      type="primary"
+                      onClick={async () => {
+                        await handleUpdateFloor(form.getFieldsValue());
+                        setEditFloorMode(false);
+                      }}
+                    >
+                      保存
+                    </BaseBtn>
+                    <BaseBtn onClick={() => setEditFloorMode(false)}>取消</BaseBtn>
+                  </Space>
                 </>
               ) : (
                 <BaseBtn onClick={() => setEditFloorMode(true)}>编辑</BaseBtn>
               )}
             </Form.Item>
           </Form>
+        ) : (
+          <div style={{ padding: 24 }}>
+            <Skeleton active paragraph={{ rows: 5 }} title={{ width: '50%' }} />
+          </div>
         )}
       </Modal>
     </>

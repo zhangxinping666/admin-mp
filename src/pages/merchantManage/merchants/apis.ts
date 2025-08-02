@@ -182,7 +182,7 @@ export function getMerchantsList(params: MerchantsListRequest) {
 
 // 删除商家列表
 export function deleteMerchantsList(params: DeleteMerchantReq) {
-  return request.delete<DeleteMerchantResponse>(apis.delete, { params });
+  return request.delete<DeleteMerchantResponse>(apis.delete, { data: params });
 }
 
 // 更新商家列表

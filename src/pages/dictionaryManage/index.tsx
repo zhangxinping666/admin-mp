@@ -1,7 +1,8 @@
 import {
   formList as DictionaryStyleCol,
   itemTableColumns,
-  itemFormList,
+  itemEditFormList,
+  itemAddFormList,
   type Dictionary,
   type DictionaryItem,
 } from './model';
@@ -18,6 +19,7 @@ import {
   Menu,
   MenuProps,
   Popconfirm,
+  Popover,
 } from 'antd';
 import { useState, useEffect, Key } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -59,9 +61,10 @@ const DictionaryManagePage = () => {
   const [selectedKey, setSelectedKey] = useState<string>('1');
   const [isEditMode, setIsEditMode] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [isEditDictionary, setIsEditDictionary] = useState(false);
+
   // 添加选中行的状态
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-
 
   // 增加字典项列操作
   const itemsClo = [
@@ -70,6 +73,7 @@ const DictionaryManagePage = () => {
       title: '操作',
       dataIndex: 'operation',
       key: 'operation',
+      fixed: 'right',
       width: 100,
       render: (value: any, record: DictionaryItem, index: number) => (
         <TableActions
@@ -175,20 +179,28 @@ const DictionaryManagePage = () => {
   };
 
   // 删除函数
-  function handleDelete(keys: Key[]) {
-    apis
-      .deleteDictionary({ ids: keys })
-      .then((res) => {
-        message.success('删除成功');
-        fetchTableData(); // 删除后刷新数据
-        // 重置选中状态
-        setSelectedRowKeys([]);
-        setSelectedDictionary(null);
-      })
-      .catch((error) => {
-        message.error('删除失败');
+  const handleDelete = async (keys: Key[]) => {
+    // 新增：确保selectedDictionary和code存在
+    if (!selectedDictionary || !selectedDictionary.code) {
+      message.error('请先选择字典');
+      return;
+    }
+    const idList = Array.isArray(keys) ? keys : [keys];
+    try {
+      await apis.deleteDictionary({ id_list: idList });
+      message.success('删除成功');
+      // 只刷新当前字典的项数据，而非整个字典列表
+      const itemRes = await apis.queryDictionaryItem({
+        dict_type_code: selectedDictionary.code,
       });
-  }
+      setSelectedDictionary((prev) => (prev ? { ...prev, items: itemRes.data.list } : prev));
+      // 重置选中状态
+      setSelectedRowKeys([]);
+      setSelectedDictionary(null);
+    } catch (error) {
+      message.error('删除失败');
+    }
+  };
 
   // 批量删除处理
   const handleBatchDelete = async () => {
@@ -205,12 +217,15 @@ const DictionaryManagePage = () => {
 
     try {
       await apis.deleteDictionaryItem({
-        code: selectedDictionary.code, // 这里不再使用可选链
-        ids: selectedRowKeys as number[], // 确保ids是number[]类型
+        id_list: selectedRowKeys as number[], // 确保id_list是number[]类型
       });
       message.success('删除成功');
       setSelectedRowKeys([]);
-      fetchTableData(); // 删除后刷新数据
+      // 只刷新当前字典的项数据，而非整个字典列表
+      const itemRes = await apis.queryDictionaryItem({
+        dict_type_code: selectedDictionary.code,
+      });
+      setSelectedDictionary((prev) => (prev ? { ...prev, items: itemRes.data.list } : prev));
     } catch (error) {
       message.error('删除失败');
     }
@@ -235,6 +250,7 @@ const DictionaryManagePage = () => {
               extend_value: values.extend_value,
             });
             message.success('字典项更新成功');
+            setIsEditMode(false);
           } else {
             // 新增字典项
             await apis.addDictionaryItem({
@@ -261,12 +277,12 @@ const DictionaryManagePage = () => {
       });
   };
 
-  const fetchDictionariesData: MenuProps['onSelect'] = (e) => {
-    dictionaryData.map((item) => {
-      if (`${item.id}` === e.key) handleDictionarySelect(item);
-    });
-    message.success('更改字典成功');
-  };
+  // const fetchDictionariesData: MenuProps['onSelect'] = (e) => {
+  //   dictionaryData.map((item) => {
+  //     if (`${item.id}` === e.key) handleDictionarySelect(item);
+  //   });
+  //   message.success('更改字典成功');
+  // };
 
   // 添加renderDictionaryList函数实现
   const renderDictionaryList = () => {
@@ -275,19 +291,39 @@ const DictionaryManagePage = () => {
       type: 'item',
       key: item.id || item.code || `dict-item-${index}`,
       label: (
-        <div className="flex justify-between items-center">
-          <span>{item.name || ''}</span>
-          <BaseBtn
-            size="small"
-            type="primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              dictionaryForm.setFieldsValue(item);
-              setEditModalVisible(true);
-            }}
-          >
-            编辑
-          </BaseBtn>
+        <div className="flex justify-between items-center w-full">
+          <Popover content={item.name}>
+            <span className="flex-1 truncate">{item.name || ''}</span>
+          </Popover>
+          <Space className="ml-4">
+            <BaseBtn
+              size="small"
+              type="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                dictionaryForm.setFieldsValue(item);
+                console.log('item', item);
+                setEditModalVisible(true);
+                setIsEditDictionary(true);
+              }}
+            >
+              编辑
+            </BaseBtn>
+            <BaseBtn
+              size="small"
+              danger
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!item.id) {
+                  message.error('字典类型ID不存在,不能删除');
+                  return;
+                }
+                handleDelete([item.id]);
+              }}
+            >
+              删除
+            </BaseBtn>
+          </Space>
         </div>
       ),
     }));
@@ -349,6 +385,7 @@ const DictionaryManagePage = () => {
   const openCreateModal = () => {
     dictionaryForm.setFieldsValue(initCreate);
     setCreateModalVisible(true);
+    setIsEditDictionary(false);
   };
 
   // 保存新字典
@@ -356,8 +393,9 @@ const DictionaryManagePage = () => {
     dictionaryForm
       .validateFields()
       .then(async (values) => {
+        console.log('values', values);
         try {
-          if (values.id) {
+          if (isEditDictionary) {
             // 编辑模式
             await apis.updateDictionary({
               id: values.id,
@@ -367,7 +405,8 @@ const DictionaryManagePage = () => {
               status: values.status,
             });
             fetchTableData();
-            setCreateModalVisible(false);
+            setEditModalVisible(false);
+            setIsEditDictionary(false);
             message.success('字典更新成功');
           } else {
             // 新增模式
@@ -483,11 +522,17 @@ const DictionaryManagePage = () => {
             </div>
 
             <Form form={itemForm} layout="vertical" initialValues={currentItem || initItemCreate}>
-              {itemFormList().map((item, index) => (
-                <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-                  {getComponent(t, item, () => {})}
-                </Form.Item>
-              ))}
+              {isEditMode
+                ? itemEditFormList().map((item, index) => (
+                    <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
+                      {getComponent(t, item, () => {})}
+                    </Form.Item>
+                  ))
+                : itemAddFormList().map((item, index) => (
+                    <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
+                      {getComponent(t, item, () => {})}
+                    </Form.Item>
+                  ))}
             </Form>
           </>
         )}
@@ -509,6 +554,7 @@ const DictionaryManagePage = () => {
           ))}
         </Form>
       </Modal>
+
       {/* 字典编辑弹窗  */}
       <Modal
         title="编辑字典"

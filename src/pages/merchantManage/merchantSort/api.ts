@@ -113,5 +113,9 @@ export function updateMerchantSort(data: UpdateMerchantSortRequest) {
 }
 // 请求删除商家分类
 export function deleteMerchantSort(data: DeleteMerchantSortRequest) {
-  return request.delete<DeleteMerchantSortResponse>(api.delete, { data });
+  return request.delete<DeleteMerchantSortResponse>(api.delete, {
+    data: {
+      ids: data,
+    },
+  });
 }

@@ -1,6 +1,7 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import SelectSchoolOptions from './useSelectSchoolOptions';
 
 // 楼栋接口定义
 export interface Building {
@@ -99,6 +100,15 @@ export const tableColumns: TableColumn[] = [
 
 // 表单配置
 export const formList = (): BaseFormList[] => [
+  {
+    label:'学校ID',
+    name:'school_id',
+    component:'Select',
+    placeholder:'请选择学校',
+    componentProps: {
+      options: SelectSchoolOptions(),
+    },
+  },
   {
     label: '楼栋名称',
     name: 'name',

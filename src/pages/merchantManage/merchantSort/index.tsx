@@ -1,5 +1,5 @@
 import { CRUDPageTemplate, TableActions } from '@/shared';
-import { searchList, tableColumns, formList, type MerchantSort } from './model';
+import { searchList, tableColumns, formList, type MerchantSort, addFormList } from './model';
 import { Key } from 'react';
 import {
   createMerchantSort,
@@ -47,6 +47,7 @@ const MerchantSortPage = () => {
       searchConfig={searchList()}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
+      addFormConfig={addFormList()}
       initCreate={initCreate}
       optionRender={optionRender}
       apis={{

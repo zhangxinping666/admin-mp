@@ -278,8 +278,8 @@ export const formList = (): BaseFormList[] => [
   },
 ];
 
-// 字典项表单配置
-export const itemFormList = (): BaseFormList[] => [
+// 字典项编辑表单配置
+export const itemEditFormList = (): BaseFormList[] => [
   {
     label: 'ID',
     name: 'id',
@@ -291,6 +291,83 @@ export const itemFormList = (): BaseFormList[] => [
       disabled: true,
     },
   },
+  {
+    label: '字典项名称',
+    name: 'label',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入字典项名称',
+      maxLength: 50,
+    },
+  },
+  {
+    label: '字典项值',
+    name: 'value',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入字典项值',
+      maxLength: 50,
+    },
+  },
+  {
+    label: '字典项编码',
+    name: 'dict_type_code',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      placeholder: '请输入字典项编码',
+      maxLength: 50,
+    },
+  },
+  {
+    label: '排序',
+    name: 'sort',
+    rules: FORM_REQUIRED,
+    component: 'InputNumber',
+    componentProps: {
+      placeholder: '请输入排序号',
+      min: 0,
+      style: { width: '100%' },
+    },
+  },
+  {
+    label: '状态',
+    name: 'status',
+    rules: FORM_REQUIRED,
+    component: 'Select',
+    componentProps: {
+      placeholder: '请选择状态',
+      options: [
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 0 },
+      ],
+    },
+  },
+  {
+    label: '描述',
+    name: 'description',
+    rules: FORM_REQUIRED,
+    component: 'TextArea',
+    componentProps: {
+      placeholder: '请输入描述',
+      maxLength: 200,
+    },
+  },
+  {
+    label: '扩展值',
+    name: 'extend_value',
+    component: 'TextArea',
+    componentProps: {
+      placeholder: '请输入扩展值',
+      maxLength: 200,
+    },
+  },
+];
+
+// 字典项新增表单配置
+export const itemAddFormList = (): BaseFormList[] => [
   {
     label: '字典项名称',
     name: 'label',

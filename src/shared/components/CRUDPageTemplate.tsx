@@ -16,6 +16,8 @@ import { RightOutlined } from '@ant-design/icons';
 interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
   isAddOpen: boolean;
+  isApplication?: boolean;
+  addFormConfig?: BaseFormList[];
   pagination?: boolean;
   hideCreate?: boolean;
   onEditOpen?: (record: T) => void;
@@ -42,8 +44,10 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
 }
 export const CRUDPageTemplate = <T extends { id: number }>({
   isAddOpen = true,
+  addFormConfig,
   title,
   searchConfig,
+  isApplication,
   columns,
   formConfig,
   initCreate,
@@ -123,6 +127,26 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     }
   };
 
+  // 批量更新处理
+  const handleBatchUpdate = async (apply_status: number) => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请至少选择一条数据');
+      return;
+    }
+    try {
+      console.log('selectedRowKeys', selectedRowKeys);
+      await apis?.updateApi?.({
+        ids: selectedRowKeys,
+        apply_status,
+      });
+      message.success('批量更新成功');
+      setSelectedRowKeys([]);
+      fetchTableData();
+    } catch (error) {
+      message.error('批量更新失败');
+    }
+  };
+
   // 处理表格列，添加操作列
   const finalColumns = [
     ...columns,
@@ -138,11 +162,16 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               handleEdit: (rec: T) => {
                 // 如果有onEditOpen回调，先调用它进行数据转换
                 const processedRecord = onEditOpen ? onEditOpen(rec) : rec;
+                console.log('processedRecord', processedRecord);
+                if (!processedRecord) {
+                  message.error('编辑数据不存在');
+                  return;
+                }
                 handleEdit(`编辑${title}`, processedRecord);
               },
               handleDelete: (id: Key[]) => {
                 // 调用原始的删除函数
-                handleDelete(id);
+                Array.isArray(id) ? handleDelete(id) : handleDelete([id]);
                 // 更新选中状态，移除已删除的项
                 setSelectedRowKeys((prev) => prev.filter((key) => !id.includes(key)));
               },
@@ -163,17 +192,51 @@ export const CRUDPageTemplate = <T extends { id: number }>({
 
           {/* 表格区域 */}
           <BaseCard>
-            <Popconfirm
-              title="确定要删除选中的项吗？"
-              onConfirm={handleBatchDelete}
-              okText="确定"
-              cancelText="取消"
-              disabled={selectedRowKeys.length === 0}
-            >
-              <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
-                批量删除 ({selectedRowKeys.length})
-              </BaseBtn>
-            </Popconfirm>
+            <Space size={20}>
+              <Popconfirm
+                title={`确定要删除选中的${selectedRowKeys.length}条数据吗？`}
+                onConfirm={handleBatchDelete}
+                okText="确定"
+                cancelText="取消"
+                disabled={selectedRowKeys.length === 0}
+              >
+                <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
+                  批量删除 ({selectedRowKeys.length})
+                </BaseBtn>
+              </Popconfirm>
+              {/* 只有需要审批的时候才开放按钮 */}
+              {isApplication && (
+                <>
+                  <Popconfirm
+                    title={`确定要同意选中的${selectedRowKeys.length}条数据吗？`}
+                    onConfirm={() => {
+                      handleBatchUpdate(1);
+                    }}
+                    okText="确定"
+                    cancelText="取消"
+                    disabled={selectedRowKeys.length === 0}
+                  >
+                    <BaseBtn type="primary" disabled={selectedRowKeys.length === 0}>
+                      批量同意({selectedRowKeys.length})
+                    </BaseBtn>
+                  </Popconfirm>
+                  <Popconfirm
+                    title={`确定要拒绝选中的${selectedRowKeys.length}条数据吗？`}
+                    onConfirm={() => {
+                      handleBatchUpdate(2);
+                    }}
+                    okText="确定"
+                    cancelText="取消"
+                    disabled={selectedRowKeys.length === 0}
+                  >
+                    <BaseBtn type="primary" disabled={selectedRowKeys.length === 0}>
+                      批量拒绝({selectedRowKeys.length})
+                    </BaseBtn>
+                  </Popconfirm>
+                </>
+              )}
+            </Space>
+
             <BaseTable
               isLoading={isLoading}
               columns={finalColumns as TableColumnsType}
@@ -272,7 +335,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       >
         <BaseForm
           ref={createFormRef}
-          list={formConfig}
+          list={!createTitle.includes('编辑') && addFormConfig ? addFormConfig : formConfig}
           data={createData}
           handleFinish={(values) => handleModalSubmit(values)}
           onValuesChange={onFormValuesChange}

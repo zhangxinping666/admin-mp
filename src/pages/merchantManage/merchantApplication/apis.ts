@@ -1,4 +1,5 @@
 import request from '@/utils/request';
+import { Update } from 'vite/types/hmrPayload';
 
 const apis = {
   list: '/approval/getApproval',
@@ -213,19 +214,19 @@ export interface CreateResponse {
 
 // 获取审批列表
 export function getApplicationList(params?: GetListQueryParams) {
-  return request.get<GetListResponse>(apis.list, { params });
+  return request.get<GetListResponse>(apis.list, { params: params });
 }
 
-// 删除审批
+// 删除审批 参数必须写{data:{ids:[]}}
 export function deleteApplication(params: DeleteRequest) {
-  return request.delete<DeleteResponse>(apis.delete, { params });
+  return request.delete<DeleteResponse>(apis.delete, { data: { ids: params.ids } });
 }
 
 // 更新审批
 export function updateApplication(params: UpdateRequest) {
-  return request.put<UpdateResponse>(apis.update, params);
+  return request.put<UpdateResponse>(apis.update, { data: params });
 }
 // 创建审批
 export function createApplication(params: CreateRequest) {
-  return request.post<CreateResponse>(apis.create, params);
+  return request.post<CreateResponse>(apis.create, { data: params });
 }

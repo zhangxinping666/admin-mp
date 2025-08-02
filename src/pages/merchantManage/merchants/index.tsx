@@ -39,7 +39,22 @@ const MerchantsPage = () => {
   };
 
   const updateApi = async (params: any) => {
-    const response = await apis.modifyMerchantsList(params);
+    const newParams = {
+      id: params.id,
+      store_name: params.store_name,
+      phone: params.phone,
+      site: params.site,
+      status: params.status,
+      type: params.type,
+      category: params.category,
+      longitude: params.longitude,
+      latitude: params.latitude,
+      is_dormitory_store: params.is_dormitory_store,
+      recommend: params.recommend,
+      open_hour: params.open_hour,
+      closed_hour: params.closed_hour,
+    };
+    const response = await apis.modifyMerchantsList(newParams);
     return response.data;
   };
 

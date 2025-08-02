@@ -2,8 +2,6 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal } from 'antd';
-import { useState } from 'react';
 import { ImagePreview } from '@/components/Upload';
 
 type uploadImg = {
@@ -80,47 +78,41 @@ export interface BalanceResult {
 
 export const searchList = (): BaseSearchList[] => [
   {
-    label: '交易流水号',
-    name: 'transactionNo',
-    component: 'Input',
-    placeholder: '请输入交易流水号',
+    label: '用户ID',
+    name: 'user_id',
+    component: 'InputNumber',
+    placeholder: '请输入用户ID',
   },
   {
-    label: '订单号',
-    name: 'orderNo',
-    component: 'Input',
-    placeholder: '请输入订单号',
-  },
-  {
-    label: '交易类型',
-    name: 'transactionType',
+    label: '余额变动类别',
+    name: 'category',
     component: 'Select',
-    placeholder: '请选择交易类型',
+    placeholder: '请选择余额变动类别',
     componentProps: {
       options: [
+        { label: '全部', value: '' },
         { label: '收入', value: 'income' },
         { label: '支出', value: 'expense' },
       ],
     },
   },
   {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    placeholder: '请选择状态',
+    label: '开始时间',
+    name: 'start_time',
+    component: 'DatePicker',
+    placeholder: '请选择开始时间',
     componentProps: {
-      options: [
-        { label: '成功', value: 'success' },
-        { label: '失败', value: 'failed' },
-        { label: '处理中', value: 'processing' },
-      ],
+      format: 'YYYY-MM-DD',
     },
   },
   {
-    label: '交易时间',
-    name: 'createdAt',
-    component: 'RangePicker',
-    placeholder: '请选择交易时间范围',
+    label: '结束时间',
+    name: 'end_time',
+    component: 'DatePicker',
+    placeholder: '请选择结束时间',
+    componentProps: {
+      format: 'YYYY-MM-DD',
+    },
   },
 ];
 
@@ -133,103 +125,60 @@ export const tableColumns: TableColumn[] = [
     width: 80,
   },
   {
-    title: '类别',
-    dataIndex: 'category',
-    key: 'category',
-    width: 100,
+    title: '用户ID',
+    dataIndex: 'user_id',
+    key: 'user_id',
+    width: 80,
   },
   {
-    title: '金额',
-    dataIndex: 'amount',
-    key: 'amount',
-    width: 100,
-    render: (value: number) => `¥${value.toFixed(2)}`,
+    title: '余额总额',
+    dataIndex: 'total_amount',
+    key: 'total_amount',
+    width: 80,
   },
   {
-    title: '交易流水号',
-    dataIndex: 'transactionNo',
-    key: 'transactionNo',
-    width: 180,
-    ellipsis: true,
+    title: '可用余额',
+    dataIndex: 'available_amount',
+    key: 'available_amount',
+    width: 80,
   },
   {
-    title: '订单号',
-    dataIndex: 'orderNo',
-    key: 'orderNo',
-    width: 180,
-    ellipsis: true,
-  },
-  {
-    title: '交易收支',
-    dataIndex: 'transactionType',
-    key: 'transactionType',
-    width: 100,
-    render: (value: 'income' | 'expense') => (
-      <span style={{ color: value === 'income' ? 'green' : 'red' }}>
-        {value === 'income' ? '收入' : '支出'}
-      </span>
-    ),
-  },
-  {
-    title: '交易凭证',
-    dataIndex: 'voucherUrl',
-    key: 'voucherUrl',
-    width: 100,
-    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="交易凭证" />,
+    title: '冻结余额',
+    dataIndex: 'frozen_amount',
+    key: 'frozen_amount',
+    width: 80,
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
-    render: (value: string) => {
+    width: 80,
+    render: (value) => {
       let color = '';
       switch (value) {
-        case 'success':
+        case 1:
           color = 'green';
-          break;
-        case 'failed':
-          color = 'red';
-          break;
-        case 'processing':
-          color = 'orange';
-          break;
-        default:
+          return <span style={{ color }}>正常</span>;
+        case 2:
           color = 'black';
+          return <span style={{ color }}>冻结</span>;
+        case 3:
+          color = 'red';
+          return <span style={{ color }}>已提现</span>;
       }
-      return (
-        <span style={{ color }}>
-          {value === 'success' ? '成功' : value === 'failed' ? '失败' : '处理中'}
-        </span>
-      );
     },
   },
   {
-    title: '期初余额',
-    dataIndex: 'initialBalance',
-    key: 'initialBalance',
-    width: 120,
-    render: (value: number) => `¥${value.toFixed(2)}`,
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: 80,
   },
   {
-    title: '期末余额',
-    dataIndex: 'finalBalance',
-    key: 'finalBalance',
-    width: 120,
-    render: (value: number) => `¥${value.toFixed(2)}`,
-  },
-  {
-    title: '图片',
-    dataIndex: 'imageUrl',
-    key: 'imageUrl',
-    width: 100,
-    render: (url: uploadImg[]) => <ImagePreview imageUrl={url} alt="图片" />,
-  },
-  {
-    title: '交易时间',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 180,
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    key: 'updated_at',
+    width: 80,
   },
 ];
 
@@ -292,38 +241,6 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
-    label: '交易凭证',
-    name: 'voucherUrl',
-    component: 'ImageUpload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
-  },
-  {
     label: '状态',
     name: 'status',
     rules: FORM_REQUIRED,
@@ -361,38 +278,6 @@ export const formList = (): BaseFormList[] => [
       step: 0.01,
       precision: 2,
       style: { width: '100%' },
-    },
-  },
-  {
-    label: '图片',
-    name: 'imageUrl',
-    component: 'ImageUpload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
     },
   },
 ];

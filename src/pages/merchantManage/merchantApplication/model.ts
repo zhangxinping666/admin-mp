@@ -118,6 +118,15 @@ export const tableColumns: TableColumn[] = [
     key: 'apply_status',
     width: 120,
     ellipsis: true,
+    render: (text) => {
+      if (text === 1) {
+        return '待审核';
+      } else if (text === 2) {
+        return '审核通过';
+      } else if (text === 3) {
+        return '审核拒绝';
+      }
+    },
   },
   {
     title: '支付状态',
@@ -125,6 +134,13 @@ export const tableColumns: TableColumn[] = [
     key: 'pay_status',
     width: 120,
     ellipsis: true,
+    render: (text) => {
+      if (text === 1) {
+        return '未支付';
+      } else if (text === 2) {
+        return '已支付';
+      }
+    },
   },
   {
     title: '地址',
@@ -167,93 +183,13 @@ export const tableColumns: TableColumn[] = [
 export const formList = (): BaseFormList[] => [
   {
     label: '商家ID',
-    name: 'merchant_id',
+    name: 'id',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
       placeholder: '请输入商家ID',
       maxLength: 11,
       disabled: true,
-    },
-  },
-  {
-    label: '商家名称',
-    name: 'name',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入商家名称',
-      maxLength: 50,
-    },
-  },
-  {
-    label: '手机号',
-    name: 'phone',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入手机号',
-      maxLength: 11,
-    },
-  },
-  {
-    label: '商家类型',
-    name: 'merchant_type',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入商家类型',
-      maxLength: 20,
-    },
-  },
-  {
-    label: '支付金额',
-    name: 'amount',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入支付金额',
-      maxLength: 11,
-    },
-  },
-  {
-    label: '费用说明',
-    name: 'fee_description',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入费用说明',
-      maxLength: 200,
-    },
-  },
-  {
-    label: '类型',
-    name: 'type',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入类型',
-      maxLength: 200,
-    },
-  },
-  {
-    label: '支付渠道',
-    name: 'pay_channel',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入支付渠道',
-      maxLength: 200,
-    },
-  },
-  {
-    label: '订单号',
-    name: 'order_number',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入订单号',
-      maxLength: 200,
     },
   },
   {
@@ -268,59 +204,6 @@ export const formList = (): BaseFormList[] => [
         { label: '审核通过', value: 1 },
         { label: '审核拒绝', value: 2 },
       ],
-    },
-  },
-  {
-    label: '支付状态',
-    name: 'pay_status',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择支付状态',
-      options: [
-        { label: '未支付', value: 0 },
-        { label: '已支付', value: 1 },
-      ],
-    },
-  },
-  {
-    label: '地址',
-    name: 'address',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入地址',
-      maxLength: 200,
-    },
-  },
-  {
-    label: '店铺类别ID',
-    name: 'category_id',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入店铺类别ID',
-      maxLength: 11,
-    },
-  },
-  {
-    label: '关闭时间',
-    name: 'close_hour',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入关闭时间',
-      maxLength: 20,
-    },
-  },
-  {
-    label: '开业时间',
-    name: 'open_hour',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入开业时间',
-      maxLength: 20,
     },
   },
 ];
