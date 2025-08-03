@@ -1,7 +1,7 @@
 import { DeleteBtn, BaseBtn } from '@/components/Buttons';
 import type { BaseEntity } from '../types/common';
 import { Key } from 'react';
-import { Space } from 'antd';
+import { Space, Tooltip } from 'antd';
 
 interface TableActionsProps<T extends BaseEntity> {
   record: T;
@@ -9,6 +9,8 @@ interface TableActionsProps<T extends BaseEntity> {
   onDelete: (id: Key[]) => void;
   editText?: string;
   deleteText?: string;
+  disableEdit?: boolean;
+  disableDelete?: boolean;
 }
 
 export const TableActions = <T extends BaseEntity>({
@@ -17,12 +19,23 @@ export const TableActions = <T extends BaseEntity>({
   onDelete,
   editText = '编辑',
   deleteText,
+  disableEdit = false,
+  disableDelete = false,
 }: TableActionsProps<T>) => (
   <Space direction="horizontal" size={20}>
-    <BaseBtn onClick={() => onEdit(record)}>{editText}</BaseBtn>
-    <DeleteBtn
-      handleDelete={() => onDelete(Array.isArray(record.id) ? record.id : [record.id as Key])}
-      name={deleteText}
-    />
+    <Tooltip title={disableEdit ? '无权限操作' : ''}>
+      <BaseBtn onClick={() => !disableEdit && onEdit(record)} disabled={disableEdit}>
+        {editText}
+      </BaseBtn>
+    </Tooltip>
+    <Tooltip title={disableDelete ? '无权限操作' : ''}>
+      <DeleteBtn
+        handleDelete={() =>
+          !disableDelete && onDelete(Array.isArray(record.id) ? record.id : [record.id as Key])
+        }
+        name={deleteText}
+        disabled={disableDelete}
+      />
+    </Tooltip>
   </Space>
 );

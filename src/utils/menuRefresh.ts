@@ -28,9 +28,14 @@ export const refreshSidebarMenu = async () => {
     // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
     const routePermissions = extractRoutePathsFromMenus(menus);
     console.log('从菜单中提取的权限路径:', routePermissions);
+    console.log('后端返回的perms权限:', perms);
 
-    // 更新权限数据（使用路径权限作为最终权限）
-    setPermissions(routePermissions);
+    // 合并路径权限和功能权限（与登录逻辑保持一致）
+    const finalPermissions = [...routePermissions, ...perms];
+    console.log('合并后的最终权限:', finalPermissions);
+
+    // 更新权限数据（使用合并后的权限）
+    setPermissions(finalPermissions);
 
     // 构建菜单树并更新菜单数据
     const menuTree = buildMenuTree(menus);

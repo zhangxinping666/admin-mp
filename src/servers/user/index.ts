@@ -7,7 +7,7 @@ import {
 import request from '@/utils/request';
 // 获取用户详情列表
 export function getUserList(params: PaginationParams) {
-  return request.post<UserListResult>('/backUser/get', { params });
+  return request.get<UserListResult>('/backUser/get', { params });
 }
 //获取用户详情
 export function getUserDetail(id: string) {

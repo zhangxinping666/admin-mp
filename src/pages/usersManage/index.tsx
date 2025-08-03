@@ -2,6 +2,8 @@ import { searchList, tableColumns, formList, type User } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getUserList, updateUser, deleteUser } from '@/servers/user';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 // 初始化新增数据
 const initCreate: Partial<User> = {
   id: 0,
@@ -21,6 +23,13 @@ const userApis = {
 };
 
 const ColleaguesPage = () => {
+  const { permissions } = useUserStore();
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
+
   // 编辑时的数据转换
   const handleEditOpen = (record: User) => {
     // 将 avatar 字段映射到 image 字段，因为表单期望的是 image 字段
@@ -37,7 +46,20 @@ const ColleaguesPage = () => {
       handleEdit: (record: User) => void;
       handleDelete: (id: number) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:user:update');
+    const canDelete = hasPermission('mp:user:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   return (
     <CRUDPageTemplate
@@ -47,8 +69,8 @@ const ColleaguesPage = () => {
       formConfig={formList()}
       initCreate={initCreate}
       onEditOpen={handleEditOpen}
-      hideCreate={false}
-      isAddOpen={false}
+      isAddOpen={true}
+      disableCreate={true}
       apis={{
         fetchApi: userApis.fetch,
         updateApi: (id: number, data: any) => {

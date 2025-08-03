@@ -127,9 +127,10 @@ function Login() {
       // 从菜单中提取route_path作为权限（因为权限系统基于路径匹配）
       const routePermissions = extractRoutePathsFromMenus(menus);
       console.log('从菜单中提取的权限路径:', routePermissions);
+      console.log('后端返回的perms权限:', perms);
 
-      // 使用路径权限作为最终权限
-      const finalPermissions = routePermissions;
+      // 合并路径权限和功能权限
+      const finalPermissions = [...routePermissions, ...perms];
 
       setPermissions(finalPermissions);
       return { menus: menus, perms: finalPermissions };

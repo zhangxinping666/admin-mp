@@ -1,5 +1,5 @@
 import { useEffect, useState, Key } from 'react';
-import { Button, message, Popconfirm, Space, TableColumnsType } from 'antd';
+import { Button, message, Popconfirm, Space, TableColumnsType, Tooltip } from 'antd';
 import BaseContent from '@/components/Content/BaseContent';
 import BaseCard from '@/components/Card/BaseCard';
 import BaseSearch from '@/components/Search/BaseSearch';
@@ -18,7 +18,7 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
   isAddOpen: boolean;
   pagination?: boolean;
-  hideCreate?: boolean;
+  disableCreate?: boolean;
   onEditOpen?: (record: T) => T | void;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
@@ -63,7 +63,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   optionRender,
   onCreateClick,
   onFormValuesChange,
-  hideCreate,
+  disableCreate = false,
   // 导航相关配置
   showNavigation = true,
   customNavActions,
@@ -177,7 +177,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               breadcrumbItems={breadcrumbItems}
             />
           )}
-          
+
           {/* 搜索区域 */}
           <BaseCard>
             <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
@@ -217,19 +217,23 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               }}
               rightContent={
                 isAddOpen ? (
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      // 如果有自定义的新增点击处理函数，先调用它
-                      if (onCreateClick) {
-                        onCreateClick();
-                      }
-                      // 然后调用默认的新增处理
-                      handleCreate(`新增${title}`);
-                    }}
-                  >
-                    新增{title}
-                  </Button>
+                  <Tooltip title={disableCreate ? '无权限操作' : ''}>
+                    <Button
+                      type="primary"
+                      disabled={disableCreate}
+                      onClick={() => {
+                        if (disableCreate) return;
+                        // 如果有自定义的新增点击处理函数，先调用它
+                        if (onCreateClick) {
+                          onCreateClick();
+                        }
+                        // 然后调用默认的新增处理
+                        handleCreate(`新增${title}`);
+                      }}
+                    >
+                      新增{title}
+                    </Button>
+                  </Tooltip>
                 ) : null
               }
               expandable={{

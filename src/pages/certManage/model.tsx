@@ -48,13 +48,13 @@ export interface CertDetailResult {
 
 export interface Pagination {
   page: number;
-  pageSize: number;
+  page_size: number;
   total: number;
 }
 
 export interface PaginationParams {
   page: number;
-  pageSize: number;
+  page_size: number;
 }
 
 export interface CertListResult {

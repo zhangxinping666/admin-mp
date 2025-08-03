@@ -22,6 +22,9 @@ function DeleteBtn(props: Props) {
   delete params.handleDelete;
 
   const showConfirm = () => {
+    if (props.disabled) {
+      return;
+    }
     modal.confirm({
       title: t('public.kindTips'),
       icon: <ExclamationCircleOutlined />,

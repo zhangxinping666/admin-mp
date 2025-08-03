@@ -4,6 +4,10 @@ import { RoleTableActions } from './components/RoleTableActions';
 import PermissionEditModal from './components/PermissionEditModal';
 import { useState } from 'react';
 import { getRoleList, getRoleDetail, addRole, updateRole, deleteRole } from '@/servers/perms/role';
+import { refreshSidebarMenu } from '@/utils/menuRefresh';
+import { message } from 'antd';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 // 初始化新增数据
 const initCreate: Partial<Role> = {
@@ -19,13 +23,32 @@ const RolesPage = () => {
   const [permissionModalVisible, setPermissionModalVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  // API接口配置
+  // 权限检查
+  const { permissions } = useUserStore();
+  const hasPermission = (permission: string) => checkPermission(permission, permissions);
+
+  // API接口配置 - 包装原始API以添加权限刷新功能
   const apis = {
     fetchApi: getRoleList,
     detailApi: getRoleDetail,
-    createApi: addRole,
-    updateApi: updateRole,
-    deleteApi: deleteRole,
+    createApi: async (data: any) => {
+      const result = await addRole(data);
+      // 角色创建成功后刷新权限
+      refreshSidebarMenu();
+      return result;
+    },
+    updateApi: async (data: any) => {
+      const result = await updateRole(data);
+      // 角色更新成功后刷新权限
+      refreshSidebarMenu();
+      return result;
+    },
+    deleteApi: async (ids: number[]) => {
+      const result = await deleteRole(ids);
+      // 角色删除成功后刷新权限
+      refreshSidebarMenu();
+      return result;
+    },
   };
   // 处理权限编辑
   const handleEditPermissions = (record: Role) => {
@@ -46,14 +69,23 @@ const RolesPage = () => {
       handleEdit: (record: Role) => void;
       handleDelete: (id: number) => void;
     },
-  ) => (
-    <RoleTableActions
-      record={record}
-      onEdit={actions.handleEdit}
-      onDelete={actions.handleDelete}
-      onEditPermissions={handleEditPermissions}
-    />
-  );
+  ) => {
+    const canEdit = hasPermission('mp:role:update');
+    const canDelete = hasPermission('mp:role:delete');
+    const canPermissionEdit = hasPermission('mp:role:permissionUpdate');
+
+    return (
+      <RoleTableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        onEditPermissions={handleEditPermissions}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+        disablePermissionEdit={!canPermissionEdit}
+      />
+    );
+  };
   return (
     <>
       <PermissionEditModal
@@ -71,6 +103,7 @@ const RolesPage = () => {
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}
         initCreate={initCreate}
+        disableCreate={!hasPermission('mp:role:add')}
         apis={{
           fetchApi: apis.fetchApi,
           createApi: apis.createApi,

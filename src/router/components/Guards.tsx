@@ -58,7 +58,7 @@ function Guards() {
 
         const permissionsResponse = await getPermissions({ role: userInfo.name });
         const { menus, perms } = permissionsResponse.data;
-        
+
         // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
         const routePermissions = extractRoutePathsFromMenus(menus);
         setPermissions(routePermissions);
@@ -90,18 +90,22 @@ function Guards() {
         navigate(`/login`, { replace: true });
         return;
       }
-      
+
       const permissionsResponse = await getPermissions({ role: currentUserInfo.name });
       const { menus, perms } = permissionsResponse.data;
-      
+
       // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
       const routePermissions = extractRoutePathsFromMenus(menus);
-      setPermissions(routePermissions);
+      console.log('Guards中后端返回的perms权限:', perms);
+
+      // 合并路径权限和功能权限
+      const finalPermissions = [...routePermissions, ...perms];
+      setPermissions(finalPermissions);
 
       const menuTree = buildMenuTree(menus);
       console.log('Guards中转换后的菜单树:', menuTree);
       setMenuList(menus);
-      setMenuPermissions(routePermissions);
+      setMenuPermissions(finalPermissions);
       setIsDataLoaded(true); // 标记数据加载完成
     } catch (error) {
       navigate(`/login`, { replace: true });

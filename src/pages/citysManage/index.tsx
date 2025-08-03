@@ -10,6 +10,8 @@ import {
   getProvinceList,
   getCityName,
 } from '@/servers/city';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 // 定义 Select 组件分组选项的最终结构
 interface GroupedOption {
   label: string; // 省份名
@@ -31,8 +33,14 @@ const initCreate: Partial<City> = {
 };
 
 const CitiesPage = () => {
+  const { permissions } = useUserStore();
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
   useEffect(() => {
     const fetchAndGroupData = async () => {
       setIsLoadingOptions(true);
@@ -62,13 +70,27 @@ const CitiesPage = () => {
     };
     fetchAndGroupData();
   }, []);
+  // 操作列渲染
   const optionRender = (
     record: City,
     actions: {
       handleEdit: (record: City) => void;
       handleDelete: (id: number) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:city:update');
+    const canDelete = hasPermission('mp:city:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   return (
     <CRUDPageTemplate
@@ -80,6 +102,7 @@ const CitiesPage = () => {
         isLoadingOptions,
       })}
       initCreate={initCreate}
+      disableCreate={!hasPermission('mp:city:add')}
       apis={{
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,

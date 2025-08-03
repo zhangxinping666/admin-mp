@@ -10,6 +10,7 @@ import {
   updateRoleApiPerms,
   updateRoleMenuPerms,
 } from '@/servers/perms/role';
+import { refreshSidebarMenu } from '@/utils/menuRefresh';
 
 interface PermissionEditModalProps {
   visible: boolean;
@@ -231,6 +232,9 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
       });
 
       message.success('权限修改成功');
+
+      // 刷新侧边栏菜单以使权限变更立即生效
+      refreshSidebarMenu();
 
       const finalValues = {
         permissions: functionalPermissions,
