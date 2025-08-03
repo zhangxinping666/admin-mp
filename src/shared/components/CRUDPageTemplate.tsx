@@ -152,7 +152,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     try {
       console.log('selectedRowKeys', selectedRowKeys);
       await apis?.updateApi?.({
-        ids: selectedRowKeys,
+        id: selectedRowKeys,
         apply_status,
       });
       message.success('批量更新成功');

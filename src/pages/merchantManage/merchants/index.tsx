@@ -61,6 +61,8 @@ const MerchantsPage = () => {
       open_hour: params.open_hour,
       closed_hour: params.closed_hour,
     };
+    newParams.is_dormitory_store = Number(params.is_dormitory_store);
+    console.log('newParams', newParams);
     const response = await apis.modifyMerchantsList(newParams);
     return response.data;
   };

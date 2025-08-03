@@ -94,7 +94,8 @@ const MerchantApplicationPage = () => {
           return res;
         },
         updateApi: (params: any) => {
-          const idList = Array.isArray(params.ids) ? params.ids : [params.ids];
+          console.log('updata', params);
+          const idList = Array.isArray(params.id) ? params.id : [params.id];
           console.log('params', params);
           return apis.updateApplication({ ids: idList, apply_status: params.apply_status });
         },
