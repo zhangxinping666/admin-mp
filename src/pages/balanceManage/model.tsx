@@ -1,8 +1,18 @@
-import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { ImagePreview } from '@/components/Upload';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
+
+// 获取完整图片URL的函数
+const getFullImageUrl = (url: any): string => {
+  if (!url) return '';
+  const urlStr = String(url);
+  if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+    return urlStr;
+  }
+  return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+};
 
 type uploadImg = {
   uid: string;
@@ -17,19 +27,23 @@ type uploadImg = {
 
 // 交易凭证预览组件 - 使用新的ImagePreview组件
 const VoucherPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  return <ImagePreview imageUrl={voucherUrl} alt="交易凭证" />;
+  return <ImagePreview imageUrl={voucherUrl} alt="交易凭证" baseUrl="http://192.168.10.7:8082" />;
 };
 
 export interface Balance {
   id: number; // 编号
-  user_id: number; // 类别
-  total_amount: number; // 金额
-  available_amount: number;
-  frozen_amount: number;
-  status: number;
-  status_name: string;
-  created_at: string;
-  updated_at: string;
+  user_id: number; // 用户ID
+  category: string; //业务类别
+  amount: number; //变动金额
+  transaction_no: string; //交易流水号
+  order_no: string; //订单号
+  transaction_type: string; //交易收支（1-收入/2-支出）
+  transaction_type_name: string; //交易收支名称
+  voucher: number; //交易凭证
+  status: number; //状态:1-处理中，2-成功，3-失败
+  opening_balance: number; //变动前余额
+  closing_balance: number; //变动后余额
+  created_at: string; //创建时间
 }
 
 // 余额明细数据接口
@@ -131,23 +145,62 @@ export const tableColumns: TableColumn[] = [
     width: 80,
   },
   {
-    title: '余额总额',
-    dataIndex: 'total_amount',
-    key: 'total_amount',
+    title: '业务类别',
+    dataIndex: 'category',
+    key: 'category',
     width: 80,
   },
   {
-    title: '可用余额',
-    dataIndex: 'available_amount',
-    key: 'available_amount',
+    title: '变动金额',
+    dataIndex: 'amount',
+    key: 'amount',
     width: 80,
   },
   {
-    title: '冻结余额',
-    dataIndex: 'frozen_amount',
-    key: 'frozen_amount',
+    title: '变动前余额',
+    dataIndex: 'opening_balance',
+    key: 'opening_balance',
     width: 80,
   },
+  {
+    title: '变动后余额',
+    dataIndex: 'closing_balance',
+    key: 'closing_balance',
+    width: 80,
+  },
+  {
+    title: '交易流水号',
+    dataIndex: 'transaction_no',
+    key: 'transaction_no',
+    width: 80,
+  },
+  {
+    title: '订单号',
+    dataIndex: 'order_no',
+    key: 'order_no',
+    width: 80,
+  },
+  {
+    title: '交易类型',
+    dataIndex: 'transaction_type',
+    key: 'transaction_type',
+    width: 80,
+    render: (value) => {
+      if (value === '1') {
+        return <span style={{ color: 'green' }}>收入</span>;
+      }
+      if (value === '2') {
+        return <span style={{ color: 'red' }}>支出</span>;
+      }
+    },
+  },
+  {
+    title: '交易收支',
+    dataIndex: 'transaction_type_name',
+    key: 'transaction_type_name',
+    width: 80,
+  },
+
   {
     title: '状态',
     dataIndex: 'status',

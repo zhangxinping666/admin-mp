@@ -4,6 +4,9 @@ import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { message, Modal } from 'antd';
 import { useState } from 'react';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
+import { RuleObject } from 'antd/es/form';
+import { StoreValue } from 'antd/es/form/interface';
 
 // 添加图片预览组件
 
@@ -17,14 +20,30 @@ type uploadImg = {
   };
 };
 
-const ImagePreview = ({ imgUrl }: { imgUrl: uploadImg[] }) => {
+const ImagePreview = ({
+  imgUrl,
+  baseUrl = 'http://192.168.10.7:8082',
+}: {
+  imgUrl: uploadImg[];
+  baseUrl?: string;
+}) => {
   const [visible, setVisible] = useState(false);
+
+  // 获取完整图片URL的函数
+  const getFullImageUrl = (url: string): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   // 处理数组格式的图片地址或 base64 数据
   const displayUrl = Array.isArray(imgUrl) ? imgUrl[0] : imgUrl;
 
   // 处理可能的 base64 数据
-  const processedUrl = displayUrl?.url || displayUrl?.response?.url;
+  const rawUrl = displayUrl?.url || displayUrl?.response?.url || '';
+  const processedUrl = getFullImageUrl(rawUrl);
   console.log('processedUrl', processedUrl);
   console.log('displayUrl', displayUrl);
 
@@ -60,7 +79,7 @@ export interface Merchant {
   city_id?: number;
   closed_hour?: string;
   id: number;
-  is_dormitory_store?: boolean;
+  is_dormitory_store?: number | boolean;
   latitude?: number;
   longitude?: number;
   merchant?: string;
@@ -92,18 +111,32 @@ export interface MerchantsQuery {
 }
 
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
+export const searchList = (
+  groupedCityOptions: {
+    label: string;
+    value: number;
+  }[],
+  isLoadingOptions: boolean,
+): BaseSearchList[] => [
   {
-    label: '商家名称',
-    name: 'merchant_name',
+    label: '店铺名称',
+    name: 'store_name',
     component: 'Input',
-    placeholder: '请输入商家名称',
+    placeholder: '请输入店铺名称',
   },
   {
-    label: '城市',
-    name: 'city_id',
+    name: 'city_id', // 这个字段的键名，最终提交给后端
+    label: '选择城市',
     component: 'Select',
-    placeholder: '请选择城市',
+    style: { width: 200 },
+    required: true,
+    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
+    componentProps: {
+      loading: isLoadingOptions,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+      options: groupedCityOptions,
+    },
   },
 ];
 
@@ -129,24 +162,40 @@ export const tableColumns: TableColumn[] = [
     width: 150,
     ellipsis: true,
   },
-  {
-    title: '商家图片',
-    dataIndex: 'merchant_img',
-    key: 'merchant_img',
-    width: 100,
-    render: (imgUrl: string[]) => {
-      // 转换数据格式以适配现有组件
-      const imgData = Array.isArray(imgUrl)
-        ? imgUrl.map((url, index) => ({
-            uid: `${index}`,
-            name: `image-${index}`,
-            status: 'done',
-            url: url,
-          }))
-        : [];
-      return <ImagePreview imgUrl={imgData} />;
-    },
-  },
+  // {
+  //   title: '商家图片',
+  //   dataIndex: 'merchant_img',
+  //   key: 'merchant_img',
+  //   width: 100,
+  //   render: (merchant_img: any) => {
+  //     const getFullImageUrl = (url: any) => {
+  //       if (!url) return '';
+  //       // 确保url是字符串类型
+  //       const urlStr = String(url);
+  //       if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+  //         return urlStr;
+  //       }
+  //       return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+  //     };
+
+  //     const displayUrl = getFullImageUrl(merchant_img);
+
+  //     return displayUrl ? (
+  //       <img
+  //         src={displayUrl}
+  //         alt="商家图片"
+  //         style={{
+  //           width: '50px',
+  //           height: '50px',
+  //           objectFit: 'cover',
+  //           borderRadius: '4px',
+  //         }}
+  //       />
+  //     ) : (
+  //       <span style={{ color: '#999' }}>无图片</span>
+  //     );
+  //   },
+  // },
   {
     title: '学校ID',
     dataIndex: 'school_id',
@@ -238,7 +287,15 @@ export const tableColumns: TableColumn[] = [
 ];
 
 // 表单配置项
-export const formList = (): BaseFormList[] => [
+export const formList = ({
+  groupedCityOptions,
+  isLoadingOptions,
+  categoryOptions,
+}: {
+  groupedCityOptions: any;
+  isLoadingOptions: boolean;
+  categoryOptions: any;
+}): BaseFormList[] => [
   {
     label: 'ID',
     name: 'id',
@@ -270,58 +327,46 @@ export const formList = (): BaseFormList[] => [
       maxLength: 50,
     },
   },
-  {
-    label: '商家图片',
-    name: 'merchant_img',
-    component: 'Upload',
-    componentProps: {
-      accept: 'image/png, image/jpeg, image/jpg',
-      listType: 'picture-card',
-      beforeUpload: (file: File) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-          message.error('图片大小不能超过2MB!');
-          return false;
-        }
-        return true;
-      },
-      customRequest: (options: any) => {
-        const { file, onSuccess, onError } = options;
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setTimeout(() => {
-            onSuccess({ url: reader.result });
-          }, 500);
-        };
-        reader.onerror = () => {
-          onError(new Error('读取文件失败'));
-        };
-      },
-      maxCount: 1,
-    },
-  },
-  {
-    label: '学校ID',
-    name: 'school_id',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入学校ID',
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '城市ID',
-    name: 'city_id',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入城市ID',
-      style: { width: '100%' },
-    },
-  },
+  // {
+  //   label: '商家图片',
+  //   name: 'merchant_img',
+  //   component: 'customize',
+  //   rules: FORM_REQUIRED,
+  //   render: (props: any) => {
+  //     const { value, onChange } = props;
+  //     return (
+  //       <EnhancedImageUploader
+  //         value={value}
+  //         onChange={onChange}
+  //         maxSize={2}
+  //         baseUrl="http://192.168.10.7:8082"
+  //       />
+  //     );
+  //   },
+  // },
+  // {
+  //   label: '学校ID',
+  //   name: 'school_id',
+  //   rules: FORM_REQUIRED,
+  //   component: 'InputNumber',
+  //   componentProps: {
+  //     placeholder: '请输入学校ID',
+  //     style: { width: '100%' },
+  //   },
+  // },
+  // {
+  //   name: 'city_id', // 这个字段的键名，最终提交给后端
+  //   label: '选择城市',
+  //   component: 'Select',
+  //   required: true,
+  //   placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
+  //   componentProps: {
+  //     loading: isLoadingOptions,
+  //     showSearch: true, // 开启搜索功能
+  //     optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+  //     options: groupedCityOptions,
+  //   },
+  // },
   {
     label: '状态',
     name: 'status',
@@ -389,19 +434,24 @@ export const formList = (): BaseFormList[] => [
   {
     label: '是否为宿舍商家',
     name: 'is_dormitory_store',
-    component: 'Switch',
+    component: 'Select',
     componentProps: {
-      checked: false,
+      placeholder: '请选择是否为宿舍商家',
+      options: [
+        { label: '是', value: 1 },
+        { label: '否', value: 0 },
+      ],
     },
   },
   {
     label: '商家分类',
     name: 'category',
     rules: FORM_REQUIRED,
-    component: 'InputNumber',
+    component: 'Select',
     componentProps: {
-      placeholder: '请输入商家分类ID',
+      placeholder: '请选择商家分类',
       style: { width: '100%' },
+      options: categoryOptions,
     },
   },
   {
@@ -420,6 +470,7 @@ export const formList = (): BaseFormList[] => [
   {
     label: '联系电话',
     name: 'phone',
+    rules: PHONE_RULE(true, '请输入正确的联系电话'),
     component: 'Input',
     componentProps: {
       placeholder: '请输入联系电话',
@@ -429,6 +480,7 @@ export const formList = (): BaseFormList[] => [
   {
     label: '营业开始时间',
     name: 'open_hour',
+    rules: FORM_REQUIRED,
     component: 'TimePicker',
     componentProps: {
       placeholder: '请选择营业开始时间',
@@ -438,6 +490,7 @@ export const formList = (): BaseFormList[] => [
   {
     label: '营业结束时间',
     name: 'closed_hour',
+    rules: FORM_REQUIRED,
     component: 'TimePicker',
     componentProps: {
       placeholder: '请选择营业结束时间',

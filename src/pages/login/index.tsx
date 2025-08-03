@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Checkbox, message, Form, Button, Input } from 'antd';
-import { getUserInfoServe, login } from '@/servers/login';
+import { getUserInfoServe, login, getCode } from '@/servers/login';
 import { setTitle } from '@/utils/helper';
 import { encryption, decryption } from '@manpao/utils';
 import { getFirstMenu } from '@/menus/utils/helper';
@@ -17,6 +17,10 @@ import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
 import { usePublicStore } from '@/stores/public';
 import { useUserStore } from '@/stores/user';
+import { THEME_KEY, PASSWORD_RULE } from '@/utils/config';
+import { ThemeType } from '@/stores/public';
+import I18n from '@/components/I18n';
+import Theme from '@/components/Theme';
 const CHECK_REMEMBER = 'remember-me';
 
 function Login() {
@@ -26,6 +30,8 @@ function Login() {
   const [isLoading, setLoading] = useState(false);
   const [isRemember, setRemember] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const [captchaUrl, setCaptchaUrl] = useState<string>('');
+  const [captchaId, setCaptchaId] = useState<string>('');
   const { search } = useLocation();
   const { clearLoginInfo, saveLoginInfo } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
@@ -50,6 +56,8 @@ function Login() {
     if (rememberStatus !== null) {
       setRemember(rememberStatus === 'true');
     }
+    // 初始化时获取验证码
+    handleGetCaptcha();
   }, []);
 
   // 语言切换修改title
@@ -136,7 +144,13 @@ function Login() {
   const handleFinish: FormProps['onFinish'] = async (values: LoginData) => {
     try {
       setLoading(true);
-      const loginResponse = await login(values);
+      // 添加验证码信息到登录数据
+      const loginData = {
+        ...values,
+        captcha_id: captchaId,
+        captcha_code: values.captcha_code,
+      };
+      const loginResponse = await login(loginData);
       saveLoginInfo(values.account, values.password);
       const loginResult = loginResponse.data;
       // 从 LoginResult 对象中，访问其内部的 data 属性，再获取 token
@@ -161,6 +175,17 @@ function Login() {
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
       }
       await handleGoMenu(menus, perms);
+    } catch (error) {
+      console.error('登录失败:', error);
+      // 登录失败时自动刷新验证码
+      handleGetCaptcha();
+      // 清空所有表单数据
+      form.setFieldsValue({
+        account: '',
+        password: '',
+        captcha_code: '',
+      });
+      messageApi.error('登录失败，请重新输入');
     } finally {
       setLoading(false);
     }
@@ -192,9 +217,51 @@ function Login() {
     }
   };
 
-  /** 点击忘记密码 */
-  const onForgetPassword = () => {
-    navigate(`/forget${search}`);
+  /** 获取验证码 */
+  const handleGetCaptcha = async () => {
+    try {
+      const response = await getCode();
+
+      // 检查不同的响应格式
+      let captcha_image, captcha_id;
+
+      if (response.data) {
+        // 情况1: response.data.data 结构
+        if (response.data.data) {
+          captcha_image = response.data.data.captcha_image;
+          captcha_id = response.data.data.captcha_id;
+        }
+        // 情况2: 直接在 response.data 中
+        else if (response.data.captcha_image) {
+          captcha_image = response.data.captcha_image;
+          captcha_id = response.data.captcha_id;
+        }
+        // 情况3: response 直接包含数据
+        else if (response.captcha_image) {
+          captcha_image = response.captcha_image;
+          captcha_id = response.captcha_id;
+        }
+      }
+
+      if (captcha_image) {
+        // 检查是否已经包含data:image前缀
+        const imageUrl = captcha_image.startsWith('data:image')
+          ? captcha_image
+          : `data:image/png;base64,${captcha_image}`;
+
+        console.log('处理后的验证码URL:', imageUrl);
+        setCaptchaUrl(imageUrl);
+        if (captcha_id) {
+          setCaptchaId(captcha_id);
+        }
+      } else {
+        console.log('未找到验证码图片数据');
+        messageApi.error('未找到验证码图片数据');
+      }
+    } catch (error) {
+      console.error('获取验证码失败:', error);
+      messageApi.error('获取验证码失败');
+    }
   };
 
   return (
@@ -239,8 +306,9 @@ function Login() {
             onFinish={handleFinish}
             onFinishFailed={handleFinishFailed}
             initialValues={{
-              account: '8169005712',
-              password: 'zxc123',
+              account: '',
+              password: '',
+              captcha_code: '',
             }}
           >
             <div className="text-#AAA6A6 text-14px mb-8px">{t('login.username')}</div>
@@ -254,7 +322,7 @@ function Login() {
             >
               <Input
                 allow-clear="true"
-                placeholder={t('public.pleaseEnter', { name: t('login.account') })}
+                placeholder={t('public.pleaseEnter', { name: t('login.username') })}
                 autoComplete="username"
               />
             </Form.Item>
@@ -276,6 +344,39 @@ function Login() {
               />
             </Form.Item>
 
+            <div className="text-#AAA6A6 text-14px mb-8px">验证码</div>
+
+            <Form.Item
+              name="captcha_code"
+              className="!mb-15px"
+              rules={[{ required: true, message: '请输入验证码' }]}
+            >
+              <div className="flex items-center gap-2">
+                <Input placeholder="请输入验证码" autoComplete="off" className="flex-1" />
+                <div
+                  className="w-20 h-8 border border-gray-300 rounded flex items-center justify-center cursor-pointer"
+                  onClick={handleGetCaptcha}
+                >
+                  {captchaUrl ? (
+                    <img
+                      src={captchaUrl}
+                      alt="验证码"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error('验证码图片加载失败:', e);
+                        console.log('当前图片URL:', captchaUrl);
+                      }}
+                      onLoad={() => {
+                        console.log('验证码图片加载成功');
+                      }}
+                    />
+                  ) : (
+                    <span className="text-xs text-gray-400">点击获取</span>
+                  )}
+                </div>
+              </div>
+            </Form.Item>
+
             <Button
               type="primary"
               htmlType="submit"
@@ -290,10 +391,6 @@ function Login() {
             <Checkbox name="remember" checked={isRemember} onChange={onRemember}>
               {t('login.rememberMe')}
             </Checkbox>
-
-            <div className="text-blue-500 cursor-pointer" onClick={onForgetPassword}>
-              {t('login.forgetPassword')}
-            </div>
           </div>
         </div>
       </div>

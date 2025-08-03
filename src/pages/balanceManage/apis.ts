@@ -1,7 +1,7 @@
 import request from '@/utils/request';
 
 const apis = {
-  getBalanceInfo: '/balance/info',
+  getBalanceInfo: '/balanceService/list',
 };
 
 /**

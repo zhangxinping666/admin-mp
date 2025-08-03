@@ -179,7 +179,7 @@ export const itemTableColumns: TableColumn[] = [
     width: 150,
   },
   {
-    title: '字典项编码',
+    title: '字典类型编码',
     dataIndex: 'dict_type_code',
     key: 'dict_type_code',
     width: 150,
@@ -272,7 +272,7 @@ export const formList = (): BaseFormList[] => [
       placeholder: '请选择状态',
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },
@@ -284,7 +284,7 @@ export const itemEditFormList = (): BaseFormList[] => [
     label: 'ID',
     name: 'id',
     rules: FORM_REQUIRED,
-    component: 'Input',
+    component: 'InputNumber',
     componentProps: {
       placeholder: '请输入ID',
       maxLength: 50,
@@ -305,19 +305,19 @@ export const itemEditFormList = (): BaseFormList[] => [
     label: '字典项值',
     name: 'value',
     rules: FORM_REQUIRED,
-    component: 'Input',
+    component: 'InputNumber',
     componentProps: {
       placeholder: '请输入字典项值',
       maxLength: 50,
     },
   },
   {
-    label: '字典项编码',
+    label: '字典类型编码',
     name: 'dict_type_code',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
-      placeholder: '请输入字典项编码',
+      placeholder: '请输入字典类型编码',
       maxLength: 50,
     },
   },
@@ -341,7 +341,7 @@ export const itemEditFormList = (): BaseFormList[] => [
       placeholder: '请选择状态',
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },
@@ -382,19 +382,19 @@ export const itemAddFormList = (): BaseFormList[] => [
     label: '字典项值',
     name: 'value',
     rules: FORM_REQUIRED,
-    component: 'Input',
+    component: 'InputNumber',
     componentProps: {
       placeholder: '请输入字典项值',
       maxLength: 50,
     },
   },
   {
-    label: '字典项编码',
+    label: '字典类型编码',
     name: 'dict_type_code',
     rules: FORM_REQUIRED,
     component: 'Input',
     componentProps: {
-      placeholder: '请输入字典项编码',
+      placeholder: '请输入字典类型编码',
       maxLength: 50,
     },
   },
@@ -418,7 +418,7 @@ export const itemAddFormList = (): BaseFormList[] => [
       placeholder: '请选择状态',
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

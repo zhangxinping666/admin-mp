@@ -41,3 +41,13 @@ export function getUserInfoServe() {
 export function getPermissions(data: object) {
   return request.get<PermissionsResponse>('/backstage/menu', { params: data });
 }
+
+//刷新token
+export function refreshToken(refresh_token: string) {
+  return request.post('/token/refresh', { refresh_token });
+}
+
+//获取验证码
+export function getCode() {
+  return request.get('/backstage/captcha');
+}

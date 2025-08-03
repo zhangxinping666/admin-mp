@@ -3,7 +3,6 @@ import { searchList, tableColumns, formList, type School } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getSchoolList, addSchool, updateSchool, deleteSchool } from '@/servers/school';
-import type { UploadFile } from 'antd';
 
 // 初始化新增数据
 const initCreate: Partial<School> = {
@@ -24,34 +23,13 @@ const schoolApis = {
 };
 
 const SchoolsPage = () => {
-  // 将字符串URL转换为UploadFile格式
-  const convertImageUrlToFileList = (imageUrl: string): UploadFile[] => {
-    if (!imageUrl) return [];
-    return [
-      {
-        uid: '-1',
-        name: 'image.jpg',
-        status: 'done',
-        url: imageUrl,
-      },
-    ];
-  };
-
-  // 将UploadFile数组转换为字符串URL
-  const convertFileListToImageUrl = (fileList: UploadFile[]): string => {
-    if (!fileList || fileList.length === 0) return '';
-    const file = fileList[0];
-    return file.url || file.response?.url || '';
-  };
-
   // 编辑时的数据转换
   const handleEditOpen = (record: School) => {
-    // 转换图片字段格式
-    const convertedRecord = {
+    // 将 logo_image_url 字段映射到 school_logo 字段，因为表单期望的是 school_logo 字段
+    return {
       ...record,
-      logo_image_url: convertImageUrlToFileList(record.logo_image_url),
+      school_logo: record.logo_image_url,
     };
-    return convertedRecord;
   };
 
   // 操作列渲染
@@ -72,24 +50,14 @@ const SchoolsPage = () => {
       initCreate={initCreate}
       onEditOpen={handleEditOpen}
       apis={{
+        createApi: schoolApis.create,
         fetchApi: schoolApis.fetch,
-        createApi: (data: any) => {
-          // 转换图片字段格式
-          const convertedData = {
-            ...data,
-            logo_image_url: convertFileListToImageUrl(data.logo_image_url),
-          };
-          return schoolApis.create(convertedData);
+        updateApi: (id: number, data: any) => {
+          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
+          // 然后再调用您的 userApis.update 函数
+          return schoolApis.update({ ...data, id });
         },
-        updateApi: (data: any) => {
-          // 转换图片字段格式
-          const convertedData = {
-            ...data,
-            logo_image_url: convertFileListToImageUrl(data.logo_image_url),
-          };
-          return schoolApis.update(convertedData);
-        },
-        deleteApi: (id: number) => schoolApis.delete([id]),
+        deleteApi: (id: number[]) => schoolApis.delete(id),
       }}
       optionRender={optionRender}
     />

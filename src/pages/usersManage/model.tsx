@@ -1,6 +1,7 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 
 // 楼栋接口定义
 export interface User {
@@ -16,8 +17,7 @@ export interface User {
   status: number;
 }
 export interface updateUserForm {
-  id: number;
-  avatar: string;
+  image: string;
   image_id?: number;
   nickname: string;
   phone: string;
@@ -71,7 +71,8 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
+        { label: '全部', value: 3 },
       ],
     },
   },
@@ -84,7 +85,41 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'avatar',
     key: 'avatar',
     width: 100,
-    render: (avatar: string) => <img src={avatar} alt="用户头像" />,
+    render: (avatar: string) => {
+      const getFullImageUrl = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          return url;
+        }
+        const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+        return `http://192.168.10.7:8082${cleanUrl}`;
+      };
+
+      const displayUrl = getFullImageUrl(avatar);
+      return displayUrl ? (
+        <img
+          src={displayUrl}
+          alt="用户头像"
+          style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
+        />
+      ) : (
+        <div
+          style={{
+            width: '60px',
+            height: '60px',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '12px',
+            color: '#999',
+          }}
+        >
+          暂无头像
+        </div>
+      );
+    },
   },
   {
     title: '用户昵称',
@@ -168,28 +203,38 @@ export const formList = (): BaseFormList[] => [
     name: 'password',
     component: 'Input',
     placeholder: '请输入用户密码',
-    rules: FORM_REQUIRED,
     componentProps: {
       precision: 6,
       style: { width: '100%' },
     },
   },
   {
-    label: '用户图片',
-    name: 'image_id',
-    component: 'Select',
-    placeholder: '请输入用户学校',
+    label: '用户头像',
+    name: 'image',
+    component: 'customize',
     rules: FORM_REQUIRED,
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
+    },
   },
   {
     label: '状态',
     name: 'status',
     component: 'Select',
     placeholder: '请选择状态',
+    rules: FORM_REQUIRED,
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

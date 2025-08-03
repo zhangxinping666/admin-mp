@@ -2,6 +2,8 @@
 export interface LoginData {
   account: string;
   password: string;
+  captcha_code: string;
+  captcha_id?: string;
 }
 
 // 登录接口返回数据
@@ -27,6 +29,7 @@ export interface UserInfo {
   name: string;
   phone: string;
   school_id: number;
+  school_name: string;
   city_id: number;
   role_id: number;
   role_name: string;

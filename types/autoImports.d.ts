@@ -55,6 +55,7 @@ declare global {
   const Navigate: typeof import('react-router-dom')['Navigate']
   const Outlet: typeof import('react-router-dom')['Outlet']
   const PASSWORD_RULE: typeof import('../src/utils/config')['PASSWORD_RULE']
+  const PHONE_RULE: typeof import('../src/utils/config')['PHONE_RULE']
   const PartnerSelect: typeof import('../src/components/Business/Selects/PartnerSelect')['default']
   const PasswordStrength: typeof import('../src/components/PasswordStrength/index')['default']
   const ResizableTitle: typeof import('../src/components/Table/components/ResizableTitle')['default']
@@ -67,6 +68,7 @@ declare global {
   const TIME_FORMAT: typeof import('../src/utils/config')['TIME_FORMAT']
   const TITLE_SUFFIX: typeof import('../src/utils/config')['TITLE_SUFFIX']
   const TableFilter: typeof import('../src/components/Table/components/TableFilter')['default']
+  const TableNavigation: typeof import('../src/components/Navigation/index')['TableNavigation']
   const Theme: typeof import('../src/components/Theme/index')['default']
   const UpdateBtn: typeof import('../src/components/Buttons/index')['UpdateBtn']
   const VERSION: typeof import('../src/utils/config')['VERSION']
@@ -150,11 +152,14 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { FC, BusinessComponents, RangeValue, Langs, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData } from './autoImports.d'
+  export type { FC, BusinessComponents, RangeValue, Langs, TableNavigationProps, ApiPageSelectProps, InitTableState, TableAction, ImageUploadProps, ImagePreviewProps, UploadImg, AdvancedImageUploadProps, ImageCropperProps, CropImageUploadProps, EditorProps, ThemeType, TabsData, SearchModalProps, FormData, FormList, SearchList, Men, T, TradeBlotterParams, export, TradeBlotterListResponse, TradeBlotterCommonParams, TradeBlotterListParams, FlowListData, OperationLogReq } from './autoImports.d'
   import('./autoImports.d')
   // @ts-ignore
   export type { BaseFormData, ComponentType, ApiResult, ApiFn, ApiSelectProps, ApiTreeSelectProps, ComponentProps, RenderComponentProps, FormRule, BaseFormList, BaseSearchList } from './form'
   import('./form')
+  // @ts-ignore
+  export type { OperationLogQueryParams, OperationLogListParams, OperationLogRecord, OperationLogListResponse } from './operation-log'
+  import('./operation-log')
   // @ts-ignore
   export type { ArrayData, EmptyData, PageServerResult, PaginationData, SideMenu, MenuResult, PagePermission, ColumnsEnum, TableColumn, BaseTableProps, TableOptions } from './public'
   import('./public')

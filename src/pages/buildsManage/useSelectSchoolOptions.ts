@@ -1,21 +1,24 @@
 import { querySchool } from './apis';
 
-const SelectSchoolOptions = () => {
-  const [allSchool, setAllSchool] = useState([]);
+const useSelectSchoolOptions = () => {
+  const [schoolOptions, setSchoolOptions] = useState([]);
   useEffect(() => {
     querySchool().then((res) => {
       const list = res.data.list;
-      const newList = list.map((item: any) => {
-        return {
-          label: item.name,
-          value: item.id,
-        };
-      });
-      setAllSchool(newList);
+      setSchoolOptions(
+        list.map((item: any) => {
+          return {
+            label: item.name,
+            value: item.id,
+          };
+        }),
+      );
+      console.log('school', res);
+      console.log('newList', schoolOptions);
     });
   }, []);
 
-  return allSchool;
+  return [schoolOptions, setSchoolOptions];
 };
 
-export default SelectSchoolOptions;
+export default useSelectSchoolOptions;

@@ -42,6 +42,7 @@ const MerchantSortPage = () => {
 
   return (
     <CRUDPageTemplate
+      isDelete={true}
       isAddOpen={true}
       title="商家分类"
       searchConfig={searchList()}

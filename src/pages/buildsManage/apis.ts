@@ -1,7 +1,4 @@
-import { getBuildsList } from '@/servers/buildsManage';
 import request from '@/utils/request';
-import { NumericDictionary } from 'lodash';
-import { Key } from 'react';
 
 const apis = {
   getBuildsList: '/school/getBuilding',
@@ -85,7 +82,7 @@ export function updateFloor(data: {
   school_building_id?: number;
   status?: number;
 }) {
-  return request.put(apis.updateFloor, { data: data });
+  return request.put(apis.updateFloor, data);
 }
 
 /**
@@ -132,7 +129,7 @@ export function updateSchool(data: {
   school_logo?: string;
   status?: number;
 }) {
-  return request.put(apis.updateSchool, { data: data });
+  return request.put(apis.updateSchool, data);
 }
 
 /**

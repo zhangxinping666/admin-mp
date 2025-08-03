@@ -2,25 +2,32 @@ import { CRUDPageTemplate, TableActions } from '@/shared';
 import { searchList, tableColumns, formList, type Merchant } from './model';
 import * as apis from './apis';
 import { Key } from 'react';
+import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
+import useGroupedCityOptions from '@/shared/hooks/useGroupedCityOptions';
 
 // 初始化新增数据
 const initCreate: Partial<Merchant> = {
   merchant_name: '',
   merchant_img: [],
   school_id: 0,
-  city_id: 0,
   city_name: '',
   status: 1,
   type: '校内',
   address: '',
   longitude: 0,
   latitude: 0,
-  is_dorm_store: 0,
+  is_dormitory_store: 0,
   category_id: 0,
   store_recommend: 0,
 };
 
 const MerchantsPage = () => {
+  const userStorage = useUserStore();
+  const schoolId = userStorage?.userInfo?.school_id;
+  // 替换原来的状态定义和useEffect
+  const { groupedCityOptions, isLoadingOptions } = useGroupedCityOptions();
+  const [categoryOptions] = useCategoryOptions(schoolId);
+
   const optionRender = (
     record: Merchant,
     actions: {
@@ -68,9 +75,14 @@ const MerchantsPage = () => {
   return (
     <CRUDPageTemplate
       title="商家管理"
-      searchConfig={searchList()}
+      isDelete={true}
+      searchConfig={searchList(groupedCityOptions, isLoadingOptions)}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
-      formConfig={formList()}
+      formConfig={formList({
+        groupedCityOptions,
+        isLoadingOptions,
+        categoryOptions,
+      })}
       initCreate={initCreate}
       isAddOpen={false}
       apis={{

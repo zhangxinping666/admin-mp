@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 
 // 商家分类数据接口
 export interface MerchantSort {
@@ -44,7 +45,7 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },
@@ -64,9 +65,35 @@ export const tableColumns: TableColumn[] = [
     title: '分类图标',
     dataIndex: 'icon',
     key: 'icon',
-    width: 120,
-    align: 'center',
-    fixed: 'left',
+    width: 100,
+    render: (icon: any) => {
+      const getFullImageUrl = (url: any) => {
+        if (!url) return '';
+        // 确保url是字符串类型
+        const urlStr = String(url);
+        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+          return urlStr;
+        }
+        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+      };
+
+      const displayUrl = getFullImageUrl(icon);
+
+      return displayUrl ? (
+        <img
+          src={displayUrl}
+          alt="分类图标"
+          style={{
+            width: '50px',
+            height: '50px',
+            objectFit: 'cover',
+            borderRadius: '4px',
+          }}
+        />
+      ) : (
+        <span style={{ color: '#999' }}>无图片</span>
+      );
+    },
   },
   {
     title: '学校',
@@ -141,9 +168,19 @@ export const formList = (): BaseFormList[] => [
   {
     label: '分类图标',
     name: 'icon',
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入图标URL',
+    component: 'customize',
+    rules: FORM_REQUIRED,
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          maxCount={1}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
     },
   },
   {
@@ -155,7 +192,7 @@ export const formList = (): BaseFormList[] => [
       placeholder: '请选择状态',
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },
@@ -189,9 +226,19 @@ export const addFormList = (): BaseFormList[] => [
   {
     label: '分类图标',
     name: 'icon',
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入图标URL',
+    component: 'customize',
+    rules: FORM_REQUIRED,
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          maxCount={1}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
     },
   },
   {
@@ -203,7 +250,7 @@ export const addFormList = (): BaseFormList[] => [
       placeholder: '请选择状态',
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

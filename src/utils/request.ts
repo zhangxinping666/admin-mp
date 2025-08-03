@@ -1,33 +1,14 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../stores/token';
 
-// --- 状态变量 ---
-// 标记是否正在刷新 token，防止重复刷新
 let isRefreshing: boolean = false;
-// 存储因 token 过期而失败的请求队列
-// 定义队列中每个元素的类型
 interface FailedRequest {
-  resolve: (value?: string | PromiseLike<string>) => void;
+  resolve: (token: string) => void;
   reject: (reason?: unknown) => void;
 }
 let failedQueue: FailedRequest[] = [];
 
-/**
- * @description 处理队列中的请求
- * @param {Error | null} error - 刷新 token 过程中的错误
- * @param {string | null} token - 新的 access_token
- */
-
-const processQueue = (error: Error | null, token: string | null = null): void => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token as string); // 确保在没有错误时 token 不为 null
-    }
-  });
-  failedQueue = [];
-};
+// processQueue函数已移除，现在直接在响应拦截器中处理队列
 
 // --- 创建 Axios 实例 ---
 const request: AxiosInstance = axios.create({
@@ -41,12 +22,22 @@ const request: AxiosInstance = axios.create({
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const accessToken = getAccessToken();
+    console.log('Request interceptor:', {
+      url: config.url,
+      method: config.method,
+      hasToken: !!accessToken,
+      tokenPreview: accessToken ? accessToken.substring(0, 20) + '...' : 'none',
+    });
+
     if (accessToken) {
+      console.log('Adding Authorization header with token:', accessToken.substring(0, 20) + '...');
       // 在请求头中添加 Authorization 字段
       if (!config.headers) {
         config.headers = new axios.AxiosHeaders();
       }
       config.headers['Authorization'] = `Bearer ${accessToken}`;
+    } else {
+      console.log('No access token found, request without Authorization header');
     }
     return config;
   },
@@ -57,94 +48,273 @@ request.interceptors.request.use(
 
 // --- 响应拦截器 ---
 request.interceptors.response.use(
-  // 响应成功 (HTTP 状态码为 2xx)
-  (response: AxiosResponse<any>) => {
-    // 通常后端会把数据包裹在 data 中，这里直接返回 data，简化业务代码
-    return response.data;
-  }, // 响应失败 (HTTP 状态码非 2xx)
+  async (response: AxiosResponse<any>) => {
+    console.log('✅ Response interceptor - Success:', {
+      url: response.config?.url,
+      status: response.status,
+      hasData: !!response.data,
+      dataKeys: response.data ? Object.keys(response.data) : [],
+      responseData: response.data,
+    });
 
+    // 检查业务错误码 4010 (token过期)
+    if (response.data && response.data.code === 4010) {
+      console.log('🔥 Token expired detected in success response (code 4010), handling directly');
+      console.log('🔥 Response data that triggered 4010:', response.data);
+
+      const originalRequest = response.config;
+
+      // 如果是刷新token接口本身返回4010，直接跳转登录页
+      if (originalRequest.url?.includes('/token/refresh')) {
+        console.log('Refresh token API returned 4010, redirecting to login');
+        clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(new Error('Refresh token expired'));
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          console.error('No refresh token available.');
+          clearTokens();
+          window.location.href = '/login';
+          return Promise.reject(new Error('No refresh token'));
+        }
+
+        // 创建独立的axios实例来刷新token
+        const refreshInstance = axios.create({
+          baseURL:
+            import.meta.env.VITE_APP_ENV === 'localhost'
+              ? '/api'
+              : import.meta.env.VITE_API_BASE_URL,
+          timeout: 10000,
+        });
+
+        return refreshInstance
+          .post('/token/refresh', {
+            refresh_token: refreshToken,
+          })
+          .then((refreshResponse) => {
+            const data = refreshResponse.data;
+
+            if (!data || data.code !== 2000) {
+              throw new Error('Refresh token expired');
+            }
+
+            const newAccessToken = data.data?.access_token || data.access_token;
+            const newRefreshToken = data.data?.refresh_token || data.refresh_token;
+
+            if (!newAccessToken || !newRefreshToken) {
+              throw new Error('Invalid token response');
+            }
+
+            console.log('🔥 Token refresh successful');
+            setTokens(newAccessToken, newRefreshToken);
+
+            // 重新发送原始请求
+            if (!originalRequest.headers) {
+              originalRequest.headers = new axios.AxiosHeaders();
+            }
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+
+            // 处理队列中的请求
+            failedQueue.forEach(({ resolve }) => {
+              resolve(newAccessToken);
+            });
+            failedQueue = [];
+
+            return request(originalRequest);
+          })
+          .catch((error) => {
+            console.error('🔥 Token refresh failed:', error);
+            clearTokens();
+
+            // 处理队列中的失败请求
+            failedQueue.forEach(({ reject }) => {
+              reject(error);
+            });
+            failedQueue = [];
+
+            window.location.href = '/login';
+            return Promise.reject(error);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
+      } else {
+        // 如果正在刷新token，将请求加入队列
+        console.log('🔥 Token refresh in progress, queuing request');
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token: string) => {
+              if (!originalRequest.headers) {
+                originalRequest.headers = new axios.AxiosHeaders();
+              }
+              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              resolve(request(originalRequest));
+            },
+            reject,
+          });
+        });
+      }
+    }
+
+    return response.data;
+  },
   async (error: AxiosError) => {
+    console.log('🚨 RESPONSE INTERCEPTOR TRIGGERED! Error caught:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      method: error.config?.method,
+      message: error.message,
+      data: error.response?.data,
+      isAxiosError: error.isAxiosError,
+      errorName: error.name,
+    });
+
     const originalRequest = error.config as
       | (InternalAxiosRequestConfig & { _retry?: boolean })
       | undefined;
 
-    // 如果没有config，直接返回错误
     if (!originalRequest) {
       console.error('Request Error: No config available');
       return Promise.reject(error);
-    } // 检查是否是 401 Unauthorized 错误，并且不是刷新 token 的请求本身
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // 如果正在刷新 token，则将当前失败的请求加入队列
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
+    }
+    const responseData = error.response?.data || error.response;
+    console.log('🔍 Error response data:', responseData);
+    console.log('🔍 Checking for code 4010. responseData.code:', responseData?.code);
+    if (responseData && responseData.code === 4010) {
+      console.log('🔥 Token expired detected (code 4010), starting refresh process...');
+      console.log('🔥 Original request URL:', originalRequest.url);
+      // 如果是刷新token接口本身返回4010，直接跳转登录页，避免递归
+      if (originalRequest.url?.includes('/token/refresh')) {
+        console.log('Refresh token API returned 4010, redirecting to login');
+        clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          console.error('No refresh token available.');
+          clearTokens();
+          window.location.href = '/login';
+          return Promise.reject(new Error('No refresh token'));
+        }
+
+        try {
+          console.log(
+            'Starting token refresh with refresh token:',
+            refreshToken.substring(0, 20) + '...',
+          );
+
+          const refreshInstance = axios.create({
+            baseURL:
+              import.meta.env.VITE_APP_ENV === 'localhost'
+                ? '/api'
+                : import.meta.env.VITE_API_BASE_URL,
+            timeout: 10000,
+          });
+
+          const response = await refreshInstance.post('/token/refresh', {
+            refresh_token: refreshToken,
+          });
+
+          console.log('Refresh token response:', response.data);
+
+          // 如果refreshToken也失效了，就重新登录
+          if (!response.data || response.data.code !== 2000) {
+            console.log('Refresh token expired, redirecting to login');
+            clearTokens();
+            window.location.href = '/login';
+            return Promise.reject(new Error('Refresh token expired'));
+          }
+
+          // 获取新的token
+          let newAccessToken: string;
+          let newRefreshToken: string;
+
+          if (response.data.data) {
+            newAccessToken = response.data.data.access_token;
+            newRefreshToken = response.data.data.refresh_token;
+          } else {
+            newAccessToken = response.data.access_token;
+            newRefreshToken = response.data.refresh_token;
+          }
+
+          if (!newAccessToken || !newRefreshToken) {
+            throw new Error('Invalid token response: missing access_token or refresh_token');
+          }
+
+          console.log('Token refresh successful, new tokens obtained');
+          console.log('New access token:', newAccessToken.substring(0, 20) + '...');
+          console.log('New refresh token:', newRefreshToken.substring(0, 20) + '...');
+
+          // 保存新的token
+          setTokens(newAccessToken, newRefreshToken);
+
+          // 重新发送原始请求
+          if (!originalRequest.headers) {
+            originalRequest.headers = new axios.AxiosHeaders();
+          }
+          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+
+          const firstReqRes = await request(originalRequest);
+
+          // 执行请求队列中的请求
+          failedQueue.forEach(({ resolve }) => {
+            resolve(newAccessToken);
+          });
+          failedQueue = [];
+
+          return firstReqRes;
+        } catch (refreshError: unknown) {
+          console.error('Failed to refresh token:', refreshError);
+          clearTokens();
+
+          // 处理队列中的失败请求
+          failedQueue.forEach(({ reject }) => {
+            reject(refreshError);
+          });
+          failedQueue = [];
+
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        // 并发情况下如果正在请求新token，把请求先放到一个请求队列中
+        console.log('Token refresh in progress, queuing request');
+        return new Promise<any>((resolve, reject) => {
           failedQueue.push({
-            resolve: (value?: string | PromiseLike<string>) => resolve(value as string),
+            resolve: (token: string) => {
+              if (!originalRequest.headers) {
+                originalRequest.headers = new axios.AxiosHeaders();
+              }
+              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              resolve(request(originalRequest));
+            },
             reject,
           });
-        })
-          .then((token) => {
-            if (!originalRequest.headers) {
-              originalRequest.headers = new axios.AxiosHeaders();
-            }
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
-            return request(originalRequest); // 使用新 token 重新发送请求
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-      originalRequest._retry = true; // 标记此请求已尝试过重试
-      isRefreshing = true;
-
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) {
-        // 如果没有 refresh_token，直接跳转到登录页
-        console.error('No refresh token available.');
-        clearTokens(); // window.location.href = '/login'; // 或使用 router.push('/login')
-        return Promise.reject(new Error('No refresh token, redirect to login.'));
-      }
-
-      try {
-        // --- 调用刷新 Token 的 API ---
-        // 注意：这里需要使用一个不带拦截器的 axios 实例来发请求，避免循环调
-        const response = await axios.post<{
-          data: {
-            access_token: string;
-            refresh_token: string;
-          };
-        }>('/backstage/login', {
-          refresh_token: refreshToken,
         });
-
-        const { access_token: newAccessToken, refresh_token: newRefreshToken } = response.data.data; // 1. 更新本地存储的 token
-
-        setTokens(newAccessToken, newRefreshToken); // 2. 处理并重发等待队列中的请求
-
-        processQueue(null, newAccessToken); // 3. 重发本次失败的请求
-
-        if (!originalRequest.headers) {
-          originalRequest.headers = new axios.AxiosHeaders();
-        }
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-        return request(originalRequest);
-      } catch (refreshError: unknown) {
-        // 刷新 token 失败，清除所有 token 并重定向到登录页
-        console.error('Failed to refresh token:', refreshError);
-        clearTokens();
-        processQueue(refreshError as Error, null); // window.location.href = '/login'; // 或使用 router.push('/login')
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
-    } // 对于其他错误，直接抛出
+    }
 
-    // 处理错误信息，确保类型安全
+    // 其他错误直接返回
+    console.log('Non-token error, passing through:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      code: responseData?.code,
+    });
+
     const errorMessage =
-      error.response?.data &&
-      typeof error.response.data === 'object' &&
-      'message' in error.response.data
-        ? (error.response.data as { message: string }).message
-        : error.message;
+      responseData && responseData.message ? responseData.message : error.message;
     console.error('Request Error:', errorMessage);
     return Promise.reject(error);
   },

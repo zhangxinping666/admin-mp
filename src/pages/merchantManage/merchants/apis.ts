@@ -189,3 +189,13 @@ export function deleteMerchantsList(params: DeleteMerchantReq) {
 export function modifyMerchantsList(data: ModifyMerchantReq) {
   return request.put<ModifyMerchantResponse>(apis.put, data);
 }
+
+//获取省份列表
+export function getProvinceList() {
+  return request.get('/citySchool/getAllProvinces');
+}
+
+//获取城市列表
+export function getCityName(province: string) {
+  return request.get('/citySchool/getCitiesByProvince', { params: { province } });
+}

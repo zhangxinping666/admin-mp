@@ -8,6 +8,7 @@ import BaseModal from '@/components/Modal/BaseModal';
 import BaseForm from '@/components/Form/BaseForm';
 import BasePagination from '@/components/Pagination/BasePagination';
 import { BaseBtn } from '@/components/Buttons';
+import TableNavigation from '@/components/Navigation/TableNavigation';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { useCRUD } from '../hooks/useCRUD';
@@ -15,12 +16,13 @@ import { RightOutlined } from '@ant-design/icons';
 
 interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
-  isAddOpen: boolean;
+  isAddOpen?: boolean;
+  isDelete: boolean;
   isApplication?: boolean;
   addFormConfig?: BaseFormList[];
   pagination?: boolean;
   hideCreate?: boolean;
-  onEditOpen?: (record: T) => void;
+  onEditOpen?: (record: T) => T | void;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
   formConfig: BaseFormList[];
@@ -41,9 +43,18 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   ) => React.ReactNode;
   onCreateClick?: () => void; // 新增按钮点击时的自定义处理函数
   onFormValuesChange?: (changedValues: any, allValues: any) => void; // 表单值变化回调
+  // 导航相关配置
+  showNavigation?: boolean; // 是否显示导航
+  customNavActions?: React.ReactNode; // 自定义导航操作按钮
+  breadcrumbItems?: Array<{
+    title: string;
+    path?: string;
+    icon?: React.ReactNode;
+  }>; // 自定义面包屑
 }
 export const CRUDPageTemplate = <T extends { id: number }>({
   isAddOpen = true,
+  isDelete,
   addFormConfig,
   title,
   searchConfig,
@@ -59,8 +70,13 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   onCreateClick,
   onFormValuesChange,
   hideCreate,
+  // 导航相关配置
+  showNavigation = true,
+  customNavActions,
+  breadcrumbItems,
 }: CRUDPageTemplateProps<T>) => {
   const crudOptions = {
+    isApplication,
     initCreate,
     pagination,
     fetchApi: apis?.fetchApi,
@@ -179,12 +195,21 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           : null,
     },
   ];
-
+  console.log('isDelete', isDelete);
   return (
     <>
       {contextHolder}
       <BaseContent isPermission={true}>
         <Space direction="vertical" size={'large'} className="w-full overflow-x-auto">
+          {/* 导航区域 */}
+          {showNavigation && (
+            <TableNavigation
+              title={title}
+              customActions={customNavActions}
+              breadcrumbItems={breadcrumbItems}
+            />
+          )}
+
           {/* 搜索区域 */}
           <BaseCard>
             <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
@@ -193,24 +218,32 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           {/* 表格区域 */}
           <BaseCard>
             <Space size={20}>
-              <Popconfirm
-                title={`确定要删除选中的${selectedRowKeys.length}条数据吗？`}
-                onConfirm={handleBatchDelete}
-                okText="确定"
-                cancelText="取消"
-                disabled={selectedRowKeys.length === 0}
-              >
-                <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
-                  批量删除 ({selectedRowKeys.length})
-                </BaseBtn>
-              </Popconfirm>
+              {/* 只有允许删除的时候开放按钮 */}
+              {isDelete && (
+                <Popconfirm
+                  title={`确定要删除选中的${selectedRowKeys.length}条数据吗？`}
+                  onConfirm={handleBatchDelete}
+                  okText="确定"
+                  cancelText="取消"
+                  disabled={selectedRowKeys.length === 0 || !isDelete}
+                >
+                  <BaseBtn
+                    type="primary"
+                    danger
+                    disabled={selectedRowKeys.length === 0 || !isDelete}
+                  >
+                    批量删除 ({selectedRowKeys.length})
+                  </BaseBtn>
+                </Popconfirm>
+              )}
+
               {/* 只有需要审批的时候才开放按钮 */}
               {isApplication && (
                 <>
                   <Popconfirm
                     title={`确定要同意选中的${selectedRowKeys.length}条数据吗？`}
                     onConfirm={() => {
-                      handleBatchUpdate(1);
+                      handleBatchUpdate(2);
                     }}
                     okText="确定"
                     cancelText="取消"
@@ -223,7 +256,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                   <Popconfirm
                     title={`确定要拒绝选中的${selectedRowKeys.length}条数据吗？`}
                     onConfirm={() => {
-                      handleBatchUpdate(2);
+                      handleBatchUpdate(3);
                     }}
                     okText="确定"
                     cancelText="取消"

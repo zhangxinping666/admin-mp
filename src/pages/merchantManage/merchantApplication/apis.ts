@@ -1,11 +1,11 @@
 import request from '@/utils/request';
-import { Update } from 'vite/types/hmrPayload';
 
 const apis = {
   list: '/approval/getApproval',
   delete: '/approval/batchDelete',
   update: '/approval/batchUpdate',
   create: '/approval/addApproval',
+  getCategory: '/category/getCategory',
 };
 
 // 获取列表请求查询参数接口
@@ -223,10 +223,10 @@ export function deleteApplication(params: DeleteRequest) {
 }
 
 // 更新审批
-export function updateApplication(params: UpdateRequest) {
-  return request.put<UpdateResponse>(apis.update, { data: params });
+export function updateApplication(data: UpdateRequest) {
+  return request.put<UpdateResponse>(apis.update, data);
 }
 // 创建审批
-export function createApplication(params: CreateRequest) {
-  return request.post<CreateResponse>(apis.create, { data: params });
+export function createApplication(data: CreateRequest) {
+  return request.post<CreateResponse>(apis.create, data);
 }

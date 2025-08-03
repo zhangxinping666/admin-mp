@@ -1,22 +1,9 @@
 import { CRUDPageTemplate, TableActions } from '@/shared';
-import { searchList, tableColumns, formList, type MerchantApplication } from './model';
+import { searchList, tableColumns, formList, addFormList, type MerchantApplication } from './model';
 import { Key } from 'react';
 import * as apis from './apis';
-
-// 初始化新增数据
-const initCreate: Partial<MerchantApplication> = {
-  id: 0,
-  name: '',
-  phone: '',
-  merchant_type: '',
-  amount: 0,
-  fee_description: '',
-  type: '',
-  pay_channel: '',
-  order_number: '',
-  apply_status: 0,
-  pay_status: 0,
-};
+import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
+import useUsersOptions from '@/shared/hooks/useUsersOptions';
 
 // 获取数据
 async function getApplicationList(params?: any) {
@@ -42,6 +29,36 @@ async function getApplicationList(params?: any) {
 }
 
 const MerchantApplicationPage = () => {
+  // 获取用户信息
+  const userStorage = useUserStore();
+  const schoolId = userStorage?.userInfo?.school_id;
+  const userId = userStorage?.userInfo?.id;
+  const schoolName = userStorage?.userInfo?.school_name;
+  const [categoryOptions] = useCategoryOptions(schoolId);
+  const [usersOptions] = useUsersOptions(schoolName);
+  console.log('categoryOptions', categoryOptions);
+  console.log('schoolId', schoolId);
+  console.log('usrStore', userStorage);
+
+  // 初始化新增数据
+  const initCreate: Partial<MerchantApplication> = {
+    name: '',
+    phone: '',
+    merchant_type: '校内',
+    amount: 0,
+    fee_description: '',
+    type: '',
+    pay_channel: '支付宝',
+    order_number: '',
+    apply_status: 1,
+    pay_status: 0,
+    pay_type: '真实支付',
+    story_apply_status: 1,
+    status: 1,
+    is_dorm_store: 1,
+  };
+  // 封装新增表单配置
+
   const optionRender = (
     record: MerchantApplication,
     actions: {
@@ -49,10 +66,14 @@ const MerchantApplicationPage = () => {
       handleDelete: (id: Key[]) => void;
     },
   ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
-
   return (
     <CRUDPageTemplate
-      isAddOpen={false}
+      isAddOpen={true}
+      isDelete={true}
+      addFormConfig={addFormList({
+        categoryOptions,
+        usersOptions,
+      })}
       isApplication={true}
       title="商家申请"
       searchConfig={searchList()}
@@ -61,15 +82,20 @@ const MerchantApplicationPage = () => {
       initCreate={initCreate}
       onEditOpen={(record) => {
         return {
-          id: record.merchant_id,
+          id: record.id,
           apply_status: record.apply_status,
         };
       }}
       apis={{
         fetchApi: getApplicationList,
-        createApi: apis.createApplication,
+        createApi: async (data) => {
+          data.is_dorm_store = data.is_dorm_store === 0 ? false : true;
+          const res = await apis.createApplication(data);
+          return res;
+        },
         updateApi: (params: any) => {
-          const idList = Array.isArray(params.id) ? params.id : [params.id];
+          const idList = Array.isArray(params.ids) ? params.ids : [params.ids];
+          console.log('params', params);
           return apis.updateApplication({ ids: idList, apply_status: params.apply_status });
         },
         deleteApi: (params: any) => {

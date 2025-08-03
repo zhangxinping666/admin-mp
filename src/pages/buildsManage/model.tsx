@@ -97,16 +97,15 @@ export const tableColumns: TableColumn[] = [
     fixed: 'right',
   },
 ];
-
 // 表单配置
 export const formList = (): BaseFormList[] => [
   {
-    label:'学校ID',
-    name:'school_id',
-    component:'Select',
-    placeholder:'请选择学校',
+    label: '学校ID',
+    name: 'school_id',
+    component: 'Select',
+    rules: FORM_REQUIRED,
     componentProps: {
-      options: SelectSchoolOptions(),
+      placeholder: '请选择学校',
     },
   },
   {

@@ -4,78 +4,99 @@ import { TableActions } from '@/shared/components/TableActions';
 import { Key } from 'react';
 import * as apis from './apis';
 import { Form, Input, InputNumber, message, Modal, Select, Skeleton, Space } from 'antd';
-import { ImageUploader } from '@/shared/components/ImageUploader';
+import useSelectSchoolOptions from './useSelectSchoolOptions';
 
 // 初始化新增数据
-const initCreate: Partial<Building> = {
-  school_id: 0,
-  name: '',
-  address: '',
-  longitude: 0,
-  latitude: 0,
-  status: 1,
-};
-
-// 模拟数据
-// const mockData: Building[] = [
-//   {
-//     id: 1,
-//     name: '1号宿舍楼',
-//     floorCount: 12,
-//     longitude: 116.326204,
-//     latitude: 40.003304,
-//     createdAt: '2024-01-15 09:30:00',
-//   },
-//   {
-//     id: 2,
-//     name: '2号教学楼',
-//     floorCount: 5,
-//     longitude: 116.310003,
-//     latitude: 39.992806,
-//     createdAt: '2024-01-20 14:20:00',
-//   },
-//   {
-//     id: 3,
-//     name: '行政办公楼',
-//     floorCount: 8,
-//     longitude: 116.338567,
-//     latitude: 40.006789,
-//     createdAt: '2024-02-05 10:15:00',
-//   },
-// ];
 
 const BuildingsPage = () => {
-  // 在BuildingsPage组件中添加状态和方法
-  const [schoolModalVisible, setSchoolModalVisible] = useState(false);
-  const [floorModalVisible, setFloorModalVisible] = useState(false);
-  const [currentSchool, setCurrentSchool] = useState<School | null>(null);
-  const [currentFloor, setCurrentFloor] = useState<Floor | null>(null);
-  const [currentBuilding, setCurrentBuilding] = useState<Building | null>(null);
-  // 添加状态控制
-  const [editSchoolMode, setEditSchoolMode] = useState(false);
-  const [editFloorMode, setEditFloorMode] = useState(false);
-  const [form] = Form.useForm();
+  const userStore = useUserStore();
+  const userInfo = userStore.userInfo;
+  const initCreate: Partial<Building> = {
+    school_id: userInfo?.school_id,
+    name: '',
+    address: '',
+    longitude: 0,
+    latitude: 0,
+    status: 1,
+  };
+  // 集中管理当前数据状态
+  const [currentData, setCurrentData] = useState<{
+    school: School | null;
+    floor: Floor | null;
+    building: Building | null;
+    schoolModalVisible: boolean;
+    floorModalVisible: boolean;
+    editSchoolMode: boolean;
+    editFloorMode: boolean;
+  }>({
+    school: null,
+    floor: null,
+    building: null,
+    schoolModalVisible: false,
+    floorModalVisible: false,
+    editSchoolMode: false,
+    editFloorMode: false,
+  });
 
-  const handleShowSchool = (record: Building) => {
-    setCurrentBuilding(record);
-    getSchoolInfo(record.school_id);
-    setSchoolModalVisible(true);
+  const [form] = Form.useForm();
+  const [schoolOptions] = useSelectSchoolOptions();
+
+  // 查看学校信息
+  const handleShowSchool = async (record: Building) => {
+    setCurrentData((prev) => ({ ...prev, building: record }));
+
+    try {
+      await getSchoolInfo(record.school_id);
+    } catch (error) {
+      console.error('Failed to get school info:', error);
+    }
   };
 
-  const handleShowFloor = (record: Building) => {
-    setCurrentBuilding(record);
-    getFloorInfo(record.id);
-    setFloorModalVisible(true);
+  // 查看楼层信息
+  const handleShowFloor = async (record: Building) => {
+    console.log('当前选择的楼栋:', record);
+    setCurrentData((prev) => ({ ...prev, building: record }));
+    try {
+      await getFloorInfo(record.id);
+      console.log('当前楼层数据:', currentData.floor);
+    } catch (error) {
+      console.error('Failed to get floor info:', error);
+    }
   };
 
   // 获取学校信息
+  // 优化数据获取函数
   const getSchoolInfo = async (id: number) => {
     try {
       const res = await apis.querySchool();
       const school = res.data.list.find((item: School) => item.id === id);
-      setCurrentSchool(school);
+
+      if (!school) {
+        message.error('暂无学校信息，请联系管理员添加');
+        setCurrentData({
+          ...currentData,
+          school: null,
+          editSchoolMode: false,
+          schoolModalVisible: false,
+        });
+      } else {
+        setCurrentData({
+          ...currentData,
+          school,
+          schoolModalVisible: true,
+          editSchoolMode: false,
+        });
+        // 重置表单并设置初始值
+        form.resetFields();
+        form.setFieldsValue(school);
+      }
     } catch (error) {
       message.error('获取学校信息失败');
+      setCurrentData((prev) => ({
+        ...prev,
+        school: null,
+        schoolModalVisible: false,
+      }));
     }
   };
 
@@ -83,10 +104,41 @@ const BuildingsPage = () => {
   const getFloorInfo = async (id: number) => {
     try {
       const res = await apis.queryFloorItem();
+      console.log('楼层数据列表:', res.data.list);
       const floor = res.data.list.find((item: Floor) => item.school_building_id === id);
-      setCurrentFloor(floor);
+      console.log(`查找ID为${id}的楼栋对应的楼层:`, floor);
+
+      if (!floor) {
+        message.error('暂无楼层信息，请联系管理员添加');
+        setCurrentData((prev) => ({
+          ...prev,
+          floor: null,
+          editFloorMode: false,
+          floorModalVisible: false,
+        }));
+      } else {
+        setCurrentData((prev) => ({
+          ...prev,
+          floor,
+          floorModalVisible: true,
+          editFloorMode: false,
+        }));
+        // 确保表单正确绑定数据
+        form.resetFields();
+        // 使用setTimeout确保状态更新后再设置表单值
+        setTimeout(() => {
+          form.setFieldsValue(floor);
+          console.log('表单已设置的值:', form.getFieldsValue());
+        }, 0);
+      }
     } catch (error) {
       message.error('获取楼层信息失败');
+      console.error('获取楼层信息错误:', error);
+      setCurrentData((prev) => ({
+        ...prev,
+        floor: null,
+        floorModalVisible: false,
+      }));
     }
   };
 
@@ -94,16 +146,26 @@ const BuildingsPage = () => {
   const handleUpdateSchool = async (values: School) => {
     try {
       await apis.updateSchool({
-        id: currentSchool?.id || 1,
+        id: currentData.school?.id || 1,
         name: values.name,
         address: values.address,
         school_logo: values.logo_image_url,
         status: values.status,
       });
       message.success('学校信息更新成功');
-      setSchoolModalVisible(false);
-      getSchoolInfo(currentSchool?.id || 1);
-    } catch (error) {
+      setCurrentData((prev) => ({
+        ...prev,
+        schoolModalVisible: false,
+        editSchoolMode: false,
+      }));
+      // 重新获取学校信息以更新数据
+      if (currentData.school?.id) {
+        await getSchoolInfo(currentData.school.id);
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw error;
+      }
       message.error('学校信息更新失败');
     }
   };
@@ -112,15 +174,25 @@ const BuildingsPage = () => {
   const handleUpdateFloor = async (values: Floor) => {
     try {
       await apis.updateFloor({
-        id: currentFloor?.id || 1,
-        school_building_id: currentBuilding?.id || 1,
+        id: currentData.floor?.id || 1,
+        school_building_id: currentData.building?.id || 1,
         status: values.status,
         layer: values.layer,
       });
       message.success('楼层信息更新成功');
-      setFloorModalVisible(false);
-      getFloorInfo(currentFloor?.id || 1);
-    } catch (error) {
+      setCurrentData((prev) => ({
+        ...prev,
+        floorModalVisible: false,
+        editFloorMode: false,
+      }));
+      // 重新获取楼层信息以更新数据
+      if (currentData.floor?.id) {
+        await getFloorInfo(currentData.floor.id);
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw error;
+      }
       message.error('楼层信息更新失败');
     }
   };
@@ -147,6 +219,20 @@ const BuildingsPage = () => {
       </Space>
     </Space>
   );
+
+  // 封装表单配置项
+  const newFormList = formList().map((item: any) => {
+    if (item.name === 'school_id') {
+      return {
+        ...item,
+        componentProps: {
+          options: schoolOptions,
+          placeholder: '请选择学校',
+        },
+      };
+    }
+    return item;
+  });
 
   // 异步请求楼栋列表
   // async function getBuildsFn(param?: object) {
@@ -189,10 +275,11 @@ const BuildingsPage = () => {
     <>
       <CRUDPageTemplate
         isAddOpen={true}
+        isDelete={true}
         title="楼栋楼层管理"
         searchConfig={searchList()}
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
-        formConfig={formList()}
+        formConfig={newFormList}
         initCreate={initCreate}
         optionRender={(record, actions) =>
           optionRender(record, {
@@ -211,128 +298,70 @@ const BuildingsPage = () => {
       {/* 添加模态框 */}
       <Modal
         title="学校信息"
-        open={schoolModalVisible}
-        onCancel={() => setSchoolModalVisible(false)}
+        open={currentData.schoolModalVisible}
+        onCancel={() => {
+          setCurrentData((prev) => ({
+            ...prev,
+            school: null,
+            schoolModalVisible: false,
+            editSchoolMode: false,
+          }));
+          form.resetFields();
+        }}
         footer={null}
         width={800}
       >
-        {currentSchool ? (
-          <Form form={form} initialValues={currentSchool} layout="vertical">
+        {currentData.school ? (
+          <Form form={form} initialValues={currentData.school} layout="vertical">
+            {/* 学校信息表单内容 */}
             <Form.Item label="学校名称" name="name">
-              {editSchoolMode ? (
-                <Input />
+              {currentData.editSchoolMode ? (
+                <Select options={schoolOptions as any}></Select>
               ) : (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    color: '#333',
-                    fontSize: '14px',
-                  }}
-                >
-                  {currentSchool?.name || '暂无数据'}
+                <span className="inline-block px-3 py-1 bg-gray-100 rounded text-sm text-gray-800">
+                  {currentData.school?.name || '暂无数据'}
                 </span>
               )}
             </Form.Item>
-            <Form.Item label="学校地址" name="address">
-              {editSchoolMode ? (
-                <Input />
-              ) : (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    color: '#333',
-                    fontSize: '14px',
-                  }}
-                >
-                  {currentSchool?.address || '暂无数据'}
-                </span>
-              )}
-            </Form.Item>
-            {!editSchoolMode ? (
-              <Form.Item label="城市" name="city_name">
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    color: '#333',
-                    fontSize: '14px',
-                  }}
-                >
-                  {currentSchool?.city_name || '暂无数据'}
-                </span>
-              </Form.Item>
-            ) : (
-              ''
-            )}
-            {!editSchoolMode ? (
-              <Form.Item label="省份" name="province">
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    color: '#333',
-                    fontSize: '14px',
-                  }}
-                >
-                  {currentSchool?.province || '暂无数据'}
-                </span>
-              </Form.Item>
-            ) : (
-              ''
-            )}
-            <Form.Item label="学校logo">
-              {editSchoolMode ? (
-                <ImageUploader
-                  value={form.getFieldValue('school_logo')}
-                  onChange={(url) => form.setFieldsValue({ school_logo: url })}
-                />
-              ) : (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    color: '#333',
-                    fontSize: '14px',
-                  }}
-                >
-                  暂无数据
-                </span>
-              )}
-            </Form.Item>
+            {/* 其他表单项类似修改
             <Space>
-              {editSchoolMode ? (
+              {currentData.editSchoolMode ? (
                 <>
                   <Space size={20}>
                     <BaseBtn
                       type="primary"
-                      onClick={(e) => {
+                      onClick={() => {
                         handleUpdateSchool(form.getFieldsValue());
-                        setEditSchoolMode(false);
                       }}
                     >
                       保存
                     </BaseBtn>
-                    <BaseBtn onClick={() => setEditSchoolMode(false)}>取消</BaseBtn>
+                    <BaseBtn
+                      onClick={() => {
+                        setCurrentData((prev) => ({
+                          ...prev,
+                          editSchoolMode: false,
+                        }));
+                      }}
+                    >
+                      取消
+                    </BaseBtn>
                   </Space>
                 </>
               ) : (
-                <BaseBtn type="primary" onClick={() => setEditSchoolMode(true)}>
+                <BaseBtn
+                  type="primary"
+                  onClick={() => {
+                    setCurrentData((prev) => ({
+                      ...prev,
+                      editSchoolMode: true,
+                    }));
+                  }}
+                >
                   编辑
                 </BaseBtn>
               )}
-            </Space>
+            </Space> */}
           </Form>
         ) : (
           <div style={{ padding: 24 }}>
@@ -340,34 +369,38 @@ const BuildingsPage = () => {
           </div>
         )}
       </Modal>
+
+      {/* 楼层信息模态框类似修改 */}
       <Modal
         title="楼层信息"
-        open={floorModalVisible}
-        onCancel={() => setFloorModalVisible(false)}
+        open={currentData.floorModalVisible}
+        onCancel={() => {
+          setCurrentData((prev) => ({
+            ...prev,
+            floor: null,
+            floorModalVisible: false,
+            editFloorMode: false,
+          }));
+          form.resetFields();
+        }}
         footer={null}
         width={800}
       >
-        {currentFloor ? (
-          <Form form={form} onFinish={handleUpdateFloor} initialValues={currentFloor}>
-            {!editFloorMode && (
-              <Form.Item label="所属学校" name="school">
-                <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
-                  {currentSchool?.name || '暂无数据'}
-                </span>
-              </Form.Item>
-            )}
-
-            <Form.Item label="所属楼栋" name="building">
-              {editFloorMode ? (
-                <Input />
-              ) : (
-                <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
-                  {currentBuilding?.name || '暂无数据'}
-                </span>
-              )}
+        {currentData.floor ? (
+          <Form
+            form={form}
+            onFinish={handleUpdateFloor}
+            initialValues={currentData.floor}
+            // 添加监听以确保表单始终与状态同步
+            watch={Object.keys(currentData.floor || {})}
+          >
+            <Form.Item label="所属楼栋" name="building_name">
+              <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
+                {currentData.building?.name || '暂无数据'}
+              </span>
             </Form.Item>
             <Form.Item label="楼层状态" name="status">
-              {editFloorMode ? (
+              {currentData.editFloorMode ? (
                 <Select>
                   <Select.Option value={1}>启用</Select.Option>
                   <Select.Option value={0}>禁用</Select.Option>
@@ -381,44 +414,25 @@ const BuildingsPage = () => {
                     'rounded-full',
                     'text-xs',
                     'font-medium',
-                    currentFloor.status === 1
+                    currentData.floor.status === 1
                       ? 'bg-green-50 text-green-600 border border-green-200'
                       : 'bg-red-50 text-red-600 border border-red-200',
                   ].join(' ')}
                 >
-                  {currentFloor.status === 1 ? '启用' : '禁用'}
+                  {currentData.floor.status === 1 ? '启用' : '禁用'}
                 </span>
               )}
             </Form.Item>
             <Form.Item label="楼层数量" name="layer">
-              {editFloorMode ? (
+              {currentData.editFloorMode ? (
                 <InputNumber min={1} />
               ) : (
                 <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
-                  {currentFloor.layer || '暂无数据'}
+                  {currentData.floor.layer || '暂无数据'}
                 </span>
               )}
             </Form.Item>
-            <Form.Item>
-              {editFloorMode ? (
-                <>
-                  <Space size={20}>
-                    <BaseBtn
-                      type="primary"
-                      onClick={async () => {
-                        await handleUpdateFloor(form.getFieldsValue());
-                        setEditFloorMode(false);
-                      }}
-                    >
-                      保存
-                    </BaseBtn>
-                    <BaseBtn onClick={() => setEditFloorMode(false)}>取消</BaseBtn>
-                  </Space>
-                </>
-              ) : (
-                <BaseBtn onClick={() => setEditFloorMode(true)}>编辑</BaseBtn>
-              )}
-            </Form.Item>
+            {/* 其他表单项 */}
           </Form>
         ) : (
           <div style={{ padding: 24 }}>

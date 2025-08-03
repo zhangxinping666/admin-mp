@@ -58,12 +58,15 @@ function Guards() {
 
         const permissionsResponse = await getPermissions({ role: userInfo.name });
         const { menus, perms } = permissionsResponse.data;
-        setPermissions(perms);
+        
+        // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
+        const routePermissions = extractRoutePathsFromMenus(menus);
+        setPermissions(routePermissions);
 
         const menuTree = buildMenuTree(menus);
         console.log('Guards中转换后的菜单树:', menuTree);
         setMenuList(menus);
-        setMenuPermissions(extractRoutePathsFromMenus(menus));
+        setMenuPermissions(routePermissions);
         setIsDataLoaded(true); // 标记数据加载完成
         return true;
       } catch (error) {
@@ -80,16 +83,28 @@ function Guards() {
 
   const loadPermissionsData = async () => {
     try {
-      const permissionsResponse = await getPermissions({ role: 'admin' });
+      // 获取当前用户信息
+      const currentUserInfo = userInfo;
+      if (!currentUserInfo || !currentUserInfo.name) {
+        console.error('用户信息不存在，跳转到登录页');
+        navigate(`/login`, { replace: true });
+        return;
+      }
+      
+      const permissionsResponse = await getPermissions({ role: currentUserInfo.name });
       const { menus, perms } = permissionsResponse.data;
-      setPermissions(perms);
+      
+      // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
+      const routePermissions = extractRoutePathsFromMenus(menus);
+      setPermissions(routePermissions);
 
       const menuTree = buildMenuTree(menus);
       console.log('Guards中转换后的菜单树:', menuTree);
       setMenuList(menus);
-      setMenuPermissions(extractRoutePathsFromMenus(menus));
+      setMenuPermissions(routePermissions);
       setIsDataLoaded(true); // 标记数据加载完成
     } catch (error) {
+      navigate(`/login`, { replace: true });
       console.error('Guards获取权限数据失败:', error);
     }
   };

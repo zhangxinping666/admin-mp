@@ -1,6 +1,7 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 
 // 楼栋接口定义
 export interface School {
@@ -72,7 +73,8 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
+        { label: '全部', value: 0 },
       ],
     },
   },
@@ -105,6 +107,34 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'logo_image_url',
     key: 'logo_image_url',
     width: 100,
+    render: (logo_image_url: any) => {
+      const getFullImageUrl = (url: any) => {
+        if (!url) return '';
+        // 确保url是字符串类型
+        const urlStr = String(url);
+        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+          return urlStr;
+        }
+        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+      };
+
+      const displayUrl = getFullImageUrl(logo_image_url);
+
+      return displayUrl ? (
+        <img
+          src={displayUrl}
+          alt="学校logo"
+          style={{
+            width: '50px',
+            height: '50px',
+            objectFit: 'cover',
+            borderRadius: '4px',
+          }}
+        />
+      ) : (
+        <span style={{ color: '#999' }}>无logo</span>
+      );
+    },
   },
   {
     title: '状态',
@@ -153,12 +183,19 @@ export const formList = (): BaseFormList[] => [
   },
   {
     label: '学校logo',
-    name: 'logo_image_url',
-    component: 'Input',
-    placeholder: '请输入学校logo',
+    name: 'school_logo',
+    component: 'customize',
     rules: FORM_REQUIRED,
-    componentProps: {
-      style: { width: '100%' },
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
     },
   },
   {
@@ -169,7 +206,7 @@ export const formList = (): BaseFormList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

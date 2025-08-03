@@ -1,3 +1,5 @@
+import { RuleObject } from 'antd/es/form';
+import { StoreValue } from 'antd/es/form/interface';
 import type { TFunction } from 'i18next';
 
 /**
@@ -18,10 +20,32 @@ export const INIT_PAGINATION = {
 
 // 日期格式化
 export const DATE_FORMAT = 'YYYY-MM-DD';
-export const TIME_FORMAT = 'YYYY-MM-DD hh:mm:ss';
+export const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 // 公共组件默认值
 export const FORM_REQUIRED = [{ required: true }]; // 表单必填校验
+
+/**
+ *
+ * @param required 是否必填
+ * @param message 校验失败提示
+ *
+ * @returns
+ */
+export const PHONE_RULE = (required: boolean = false, message?: string) => {
+  return [
+    {
+      validator: (rule: RuleObject, value: StoreValue, callback: (error?: string) => void) => {
+        if (value && !/^1[3456789]\d{9}$/.test(value as string)) {
+          callback(message || '请输入正确的手机号');
+        } else {
+          callback();
+        }
+      },
+      required: required,
+    },
+  ];
+};
 
 // 新增/编辑标题
 export const ADD_TITLE = (t: TFunction, title?: string) =>

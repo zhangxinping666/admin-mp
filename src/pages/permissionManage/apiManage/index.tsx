@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { searchList, tableColumns, formList, type API } from './model';
+import {
+  searchList,
+  tableColumns,
+  formList,
+  type API,
+  getAPIGroupTree,
+  type APIGroupTreeNode,
+  getAPIMethodOptions,
+  type APIMethodOption,
+} from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getApiList, getApiDetail, addApi, updateApi, deleteApi } from '@/servers/perms/api';
@@ -11,10 +20,39 @@ const initCreate: Partial<API> = {
   detail: '',
   group: '',
   method: '',
-  status: 0, // 默认状态
+  status: 1, // 默认状态
 };
 
 const ApiPage = () => {
+  const [apiGroupData, setApiGroupData] = useState<APIGroupTreeNode[]>([]);
+  const [apiMethodOptions, setApiMethodOptions] = useState<APIMethodOption[]>([]);
+
+  // 获取API分组数据
+  const fetchApiGroups = async () => {
+    try {
+      const groupData = await getAPIGroupTree();
+      setApiGroupData(groupData);
+    } catch (error) {
+      console.error('获取API分组失败:', error);
+    }
+  };
+
+  // 获取API方法数据
+  const fetchApiMethods = async () => {
+    try {
+      const methodData = await getAPIMethodOptions();
+      setApiMethodOptions(methodData);
+    } catch (error) {
+      console.error('获取API方法失败:', error);
+    }
+  };
+
+  // 组件挂载时获取数据
+  useEffect(() => {
+    fetchApiGroups();
+    fetchApiMethods();
+  }, []);
+
   // API接口配置
   const apis = {
     fetchApi: getApiList,
@@ -37,17 +75,46 @@ const ApiPage = () => {
       title="API管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
-      formConfig={formList()}
+      formConfig={formList(apiGroupData, apiMethodOptions)}
       initCreate={initCreate}
       apis={{
         fetchApi: apis.fetchApi,
-        createApi: apis.createApi,
-        updateApi: (id: number, data: any) => {
-          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
-          // 然后再调用您的 cityApis.update 函数
-          return apis.updateApi({ ...data, id });
+        createApi: (data: any) => {
+          // 将group和method转换为对应的ID
+          const groupItem = apiGroupData.find(
+            (item) => item.title === data.group || item.value === data.group,
+          );
+          const methodItem = apiMethodOptions.find(
+            (item) => item.label === data.method || item.value === data.method,
+          );
+
+          const transformedData = {
+            ...data,
+            group_id: groupItem ? groupItem.value : data.group,
+            method_id: methodItem ? methodItem.value : data.method,
+          };
+
+          return apis.createApi(transformedData);
         },
-        deleteApi: (id: number) => apis.deleteApi([id]),
+        updateApi: (id: number, data: any) => {
+          // 将group和method转换为对应的ID
+          const groupItem = apiGroupData.find(
+            (item) => item.title === data.group || item.value === data.group,
+          );
+          const methodItem = apiMethodOptions.find(
+            (item) => item.label === data.method || item.value === data.method,
+          );
+
+          const transformedData = {
+            ...data,
+            id,
+            group_id: groupItem ? groupItem.value : data.group,
+            method_id: methodItem ? methodItem.value : data.method,
+          };
+
+          return apis.updateApi(transformedData);
+        },
+        deleteApi: (id: number[]) => apis.deleteApi(id),
       }}
       optionRender={optionRender}
     />

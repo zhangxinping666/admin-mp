@@ -1,14 +1,15 @@
 import {
   MenuListResult,
   PaginationParams,
+  MenuSearchParams,
   MenuAddForm,
   MenuUpdateForm,
   MenuDetailResult,
 } from '../../pages/permissionManage/menuManage/model';
 import request from '@/utils/request';
-// 获取
-export function getMenuList() {
-  return request.post<MenuListResult>('/menu/get');
+// 获取菜单列表（支持筛选参数）
+export function getMenuList(data: MenuSearchParams) {
+  return request.post<MenuListResult>('/menu/get', data);
 }
 //详情
 export function getMenuDetail(id: number) {

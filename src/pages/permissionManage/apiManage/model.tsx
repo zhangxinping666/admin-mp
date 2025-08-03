@@ -1,6 +1,7 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { getDictionaryList } from '@/servers/dictionaryManage/index';
 
 // 楼栋接口定义
 export interface API {
@@ -76,7 +77,8 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
+        { label: '全部', value: 0 },
       ],
     },
   },
@@ -127,7 +129,6 @@ export const tableColumns: TableColumn[] = [
   },
 ];
 
-
 // API类别树形数据结构
 export interface APIGroupTreeNode {
   id: number;
@@ -136,38 +137,50 @@ export interface APIGroupTreeNode {
   children?: APIGroupTreeNode[];
 }
 
+// API方法选项数据结构
+export interface APIMethodOption {
+  label: string;
+  value: number;
+}
+
 // 获取API类别树形数据
-export const getAPIGroupTree = (): APIGroupTreeNode[] => {
-  return [
-    {
-      id: 1,
-      title: '用户管理',
-      value: '用户管理',
-    },
-    {
-      id: 2,
-      title: '角色管理',
-      value: '角色管理',
-    },
-    {
-      id: 3,
-      title: '菜单管理',
-      value: '菜单管理',
-    },
-    {
-      id: 4,
-      title: '学校管理',
-      value: '学校管理',
-    },
-    {
-      id: 5,
-      title: '系统管理',
-      value: '系统管理',
-    },
-  ];
+export const getAPIGroupTree = async (): Promise<APIGroupTreeNode[]> => {
+  try {
+    const response = await getDictionaryList({ dict_type_code: 'ApiGroup' });
+    if (response.code === 2000) {
+      return response.data.list.map((item: any) => ({
+        title: item.label,
+        value: item.id,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('获取API分组失败:', error);
+    return [];
+  }
+};
+
+// 获取API方法选项数据
+export const getAPIMethodOptions = async (): Promise<APIMethodOption[]> => {
+  try {
+    const response = await getDictionaryList({ dict_type_code: 'ApiMethod' });
+    if (response.code === 2000) {
+      return response.data.list.map((item: any) => ({
+        label: item.label,
+        value: item.id,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('获取API方法失败:', error);
+    return [];
+  }
 };
 // 表单配置
-export const formList = (): BaseFormList[] => [
+export const formList = (
+  apiGroupData: APIGroupTreeNode[] = [],
+  apiMethodOptions: APIMethodOption[] = [],
+): BaseFormList[] => [
   {
     label: 'API路径',
     name: 'path',
@@ -189,7 +202,7 @@ export const formList = (): BaseFormList[] => [
     placeholder: '请选择API类别',
     rules: FORM_REQUIRED,
     componentProps: {
-      treeData: getAPIGroupTree(),
+      treeData: apiGroupData,
       showSearch: true,
       treeNodeFilterProp: 'title',
       allowClear: true,
@@ -206,9 +219,12 @@ export const formList = (): BaseFormList[] => [
   {
     label: 'API方法',
     name: 'method',
-    component: 'Input',
-    placeholder: '请输入API方法',
+    component: 'Select',
+    placeholder: '请选择API方法',
     rules: FORM_REQUIRED,
+    componentProps: {
+      options: apiMethodOptions,
+    },
   },
   {
     label: '状态',
@@ -218,7 +234,7 @@ export const formList = (): BaseFormList[] => [
     componentProps: {
       options: [
         { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
+        { label: '禁用', value: 2 },
       ],
     },
   },

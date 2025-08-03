@@ -1,15 +1,21 @@
 import { CRUDPageTemplate } from '@/shared';
 import { searchList, tableColumns, formList, type Balance } from './model';
-import { Key } from 'react';
 import * as apis from './apis';
 
 // 初始化新增数据
 const initCreate: Partial<Balance> = {
   user_id: 1,
-  total_amount: 0,
-  available_amount: 0,
-  frozen_amount: 0,
+  category: '',
+  amount: 0,
+  transaction_no: '',
+  order_no: '',
+  transaction_type: '',
+  transaction_type_name: '',
+  voucher: 0,
   status: 1,
+  opening_balance: 0,
+  closing_balance: 0,
+  created_at: '',
 };
 
 // 模拟数据
@@ -101,6 +107,7 @@ const initCreate: Partial<Balance> = {
 // ];
 // 获取数据
 const getBalanceInfo = async (params?: any) => {
+  console.log('我写的');
   const res = await apis.getBalanceInfo(params);
   return res;
 };
@@ -118,6 +125,7 @@ const BalanceRecordsPage = () => {
   return (
     <CRUDPageTemplate
       isAddOpen={false}
+      isDelete={false}
       title="余额明细管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
