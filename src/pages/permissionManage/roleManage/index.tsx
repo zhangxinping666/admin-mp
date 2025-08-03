@@ -104,6 +104,7 @@ const RolesPage = () => {
         formConfig={formList()}
         initCreate={initCreate}
         disableCreate={!hasPermission('mp:role:add')}
+        disableBatchDelete={!hasPermission('mp:role:delete')}
         apis={{
           fetchApi: apis.fetchApi,
           createApi: apis.createApi,

@@ -73,6 +73,7 @@ const SchoolsPage = () => {
       onEditOpen={handleEditOpen}
       isAddOpen={true}
       disableCreate={!hasPermission('mp:school:add')}
+      disableBatchDelete={!hasPermission('mp:school:delete')}
       apis={{
         createApi: schoolApis.create,
         fetchApi: schoolApis.fetch,

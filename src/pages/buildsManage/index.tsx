@@ -3,6 +3,8 @@ import { searchList, tableColumns, formList, type Building, School, Floor } from
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { Key } from 'react';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 import * as apis from './apis';
 import {
   Descriptions,
@@ -30,6 +32,13 @@ const initCreate: Partial<Building> = {
 };
 
 const BuildingsPage = () => {
+  const { permissions } = useUserStore();
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
+
   // 在BuildingsPage组件中添加状态和方法
   const [schoolModalVisible, setSchoolModalVisible] = useState(false);
   const [floorModalVisible, setFloorModalVisible] = useState(false);
@@ -219,6 +228,8 @@ const BuildingsPage = () => {
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}
         initCreate={initCreate}
+        disableCreate={!hasPermission('mp:building:add')}
+        disableBatchDelete={!hasPermission('mp:building:delete')}
         optionRender={(record, actions) =>
           optionRender(record, {
             ...actions,

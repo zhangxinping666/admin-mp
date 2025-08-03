@@ -65,6 +65,7 @@ const CertPage = () => {
         deleteApi: (id: number[]) => certApis.delete(id),
       }}
       disableCreate={!hasPermission('mp:cert:add')}
+      disableBatchDelete={!hasPermission('mp:cert:delete')}
     />
   );
 };

@@ -71,6 +71,7 @@ const ColleaguesPage = () => {
       onEditOpen={handleEditOpen}
       isAddOpen={true}
       disableCreate={true}
+      disableBatchDelete={!hasPermission('mp:user:delete')}
       apis={{
         fetchApi: userApis.fetch,
         updateApi: (id: number, data: any) => {

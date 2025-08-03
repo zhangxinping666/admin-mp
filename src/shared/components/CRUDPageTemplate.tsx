@@ -19,6 +19,7 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   isAddOpen: boolean;
   pagination?: boolean;
   disableCreate?: boolean;
+  disableBatchDelete?: boolean;
   onEditOpen?: (record: T) => T | void;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
@@ -64,6 +65,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   onCreateClick,
   onFormValuesChange,
   disableCreate = false,
+  disableBatchDelete = false,
   // 导航相关配置
   showNavigation = true,
   customNavActions,
@@ -185,17 +187,19 @@ export const CRUDPageTemplate = <T extends { id: number }>({
 
           {/* 表格区域 */}
           <BaseCard>
-            <Popconfirm
-              title="确定要删除选中的项吗？"
-              onConfirm={handleBatchDelete}
-              okText="确定"
-              cancelText="取消"
-              disabled={selectedRowKeys.length === 0}
-            >
-              <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
-                批量删除 ({selectedRowKeys.length})
-              </BaseBtn>
-            </Popconfirm>
+            <Tooltip title={disableBatchDelete ? '无权限操作' : ''}>
+              <Popconfirm
+                title="确定要删除选中的项吗？"
+                onConfirm={handleBatchDelete}
+                okText="确定"
+                cancelText="取消"
+                disabled={selectedRowKeys.length === 0 || disableBatchDelete}
+              >
+                <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0 || disableBatchDelete}>
+                  批量删除 ({selectedRowKeys.length})
+                </BaseBtn>
+              </Popconfirm>
+            </Tooltip>
             <BaseTable
               isLoading={isLoading}
               columns={finalColumns as TableColumnsType}

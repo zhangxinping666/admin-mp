@@ -91,13 +91,14 @@ const ApiPage = () => {
 
   return (
     <CRUDPageTemplate
-      title="API管理"
-      searchConfig={searchList()}
-      columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
-      formConfig={formList(apiGroupData, apiMethodOptions)}
-      initCreate={initCreate}
-      disableCreate={!hasPermission('mp:api:add')}
-      apis={{
+        title="API管理"
+        searchConfig={searchList()}
+        columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
+        formConfig={formList()}
+        initCreate={initCreate}
+        disableCreate={!hasPermission('mp:api:add')}
+        disableBatchDelete={!hasPermission('mp:api:delete')}
+        apis={{
         fetchApi: apis.fetchApi,
         createApi: (data: any) => {
           // 将group和method转换为对应的ID

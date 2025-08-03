@@ -163,6 +163,7 @@ function ColleaguesPage() {
       })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:colonel:add')}
+      disableBatchDelete={!hasPermission('mp:colonel:delete')}
       apis={{
         fetchApi: colonelApis.fetch,
         createApi: colonelApis.create,

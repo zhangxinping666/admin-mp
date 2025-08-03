@@ -103,6 +103,7 @@ const CitiesPage = () => {
       })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:city:add')}
+      disableBatchDelete={!hasPermission('mp:city:delete')}
       apis={{
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,

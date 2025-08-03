@@ -152,6 +152,7 @@ const MenuPage = () => {
       formConfig={formList({ menuOptions, isMenuOptionsLoading })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:menu:add')}
+      disableBatchDelete={!hasPermission('mp:menu:delete')}
       onFormValuesChange={handleFormValuesChange}
       onEditOpen={(record) => {
         const parentId = record.pid || 0;
