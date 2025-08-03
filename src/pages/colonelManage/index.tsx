@@ -3,6 +3,8 @@ import { searchList, tableColumns, formList, type Colonel } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getProvinceList, getCityName } from '@/servers/city';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 import {
   getColonelList,
   addColonel,
@@ -40,6 +42,11 @@ function ColleaguesPage() {
   // 【新增】学校选择框的状态
   const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
   const [isSchoolLoading, setIsSchoolLoading] = useState(false);
+  // 检查权限的辅助函数
+  const { permissions } = useUserStore();
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
   useEffect(() => {
     const fetchAndGroupData = async () => {
       setIsLoadingOptions(true);
@@ -128,7 +135,20 @@ function ColleaguesPage() {
       handleEdit: (record: Colonel) => void;
       handleDelete: (id: number) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:colonel:update');
+    const canDelete = hasPermission('mp:colonel:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   return (
     <CRUDPageTemplate
@@ -142,6 +162,8 @@ function ColleaguesPage() {
         isSchoolLoading,
       })}
       initCreate={initCreate}
+      disableCreate={!hasPermission('mp:colonel:add')}
+      disableBatchDelete={!hasPermission('mp:colonel:delete')}
       apis={{
         fetchApi: colonelApis.fetch,
         createApi: colonelApis.create,

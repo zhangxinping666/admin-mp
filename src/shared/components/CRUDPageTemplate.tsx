@@ -1,5 +1,5 @@
 import { useEffect, useState, Key } from 'react';
-import { Button, message, Popconfirm, Space, TableColumnsType } from 'antd';
+import { Button, message, Popconfirm, Space, TableColumnsType, Tooltip } from 'antd';
 import BaseContent from '@/components/Content/BaseContent';
 import BaseCard from '@/components/Card/BaseCard';
 import BaseSearch from '@/components/Search/BaseSearch';
@@ -22,6 +22,9 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   addFormConfig?: BaseFormList[];
   pagination?: boolean;
   hideCreate?: boolean;
+  disableCreate?: boolean;
+  disableBatchDelete?: boolean;
+  disableBatchUpdate?: boolean;
   onEditOpen?: (record: T) => T | void;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
@@ -70,6 +73,9 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   onCreateClick,
   onFormValuesChange,
   hideCreate,
+  disableCreate = false,
+  disableBatchDelete = false,
+  disableBatchUpdate = false,
   // 导航相关配置
   showNavigation = true,
   customNavActions,
@@ -177,12 +183,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           ? optionRender(record, {
               handleEdit: (rec: T) => {
                 // 如果有onEditOpen回调，先调用它进行数据转换
-                const processedRecord = onEditOpen ? onEditOpen(rec) : rec;
-                console.log('processedRecord', processedRecord);
-                if (!processedRecord) {
-                  message.error('编辑数据不存在');
-                  return;
-                }
+                const processedRecord = onEditOpen ? onEditOpen(rec) || rec : rec;
                 handleEdit(`编辑${title}`, processedRecord);
               },
               handleDelete: (id: Key[]) => {
@@ -217,59 +218,53 @@ export const CRUDPageTemplate = <T extends { id: number }>({
 
           {/* 表格区域 */}
           <BaseCard>
-            <Space size={20}>
-              {/* 只有允许删除的时候开放按钮 */}
-              {isDelete && (
+            <Tooltip title={disableBatchDelete || disableBatchUpdate ? '无权限操作' : ''}>
+              <Space size={20}>
                 <Popconfirm
-                  title={`确定要删除选中的${selectedRowKeys.length}条数据吗？`}
+                  title="确定要删除选中的项吗？"
                   onConfirm={handleBatchDelete}
                   okText="确定"
                   cancelText="取消"
-                  disabled={selectedRowKeys.length === 0 || !isDelete}
+                  disabled={selectedRowKeys.length === 0 || disableBatchDelete}
                 >
                   <BaseBtn
                     type="primary"
                     danger
-                    disabled={selectedRowKeys.length === 0 || !isDelete}
+                    disabled={selectedRowKeys.length === 0 || disableBatchDelete}
                   >
                     批量删除 ({selectedRowKeys.length})
                   </BaseBtn>
                 </Popconfirm>
-              )}
-
-              {/* 只有需要审批的时候才开放按钮 */}
-              {isApplication && (
-                <>
-                  <Popconfirm
-                    title={`确定要同意选中的${selectedRowKeys.length}条数据吗？`}
-                    onConfirm={() => {
-                      handleBatchUpdate(2);
-                    }}
-                    okText="确定"
-                    cancelText="取消"
-                    disabled={selectedRowKeys.length === 0}
+                <Popconfirm
+                  title="确定要通过选中的项吗？"
+                  onConfirm={() => handleBatchUpdate(2)}
+                  okText="确定"
+                  cancelText="取消"
+                  disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
+                >
+                  <BaseBtn
+                    type="primary"
+                    disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
                   >
-                    <BaseBtn type="primary" disabled={selectedRowKeys.length === 0}>
-                      批量同意({selectedRowKeys.length})
-                    </BaseBtn>
-                  </Popconfirm>
-                  <Popconfirm
-                    title={`确定要拒绝选中的${selectedRowKeys.length}条数据吗？`}
-                    onConfirm={() => {
-                      handleBatchUpdate(3);
-                    }}
-                    okText="确定"
-                    cancelText="取消"
-                    disabled={selectedRowKeys.length === 0}
+                    批量通过 ({selectedRowKeys.length})
+                  </BaseBtn>
+                </Popconfirm>
+                <Popconfirm
+                  title="确定要拒绝选中的项吗？"
+                  onConfirm={() => handleBatchUpdate(3)}
+                  okText="确定"
+                  cancelText="取消"
+                  disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
+                >
+                  <BaseBtn
+                    type="primary"
+                    disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
                   >
-                    <BaseBtn type="primary" disabled={selectedRowKeys.length === 0}>
-                      批量拒绝({selectedRowKeys.length})
-                    </BaseBtn>
-                  </Popconfirm>
-                </>
-              )}
-            </Space>
-
+                    批量拒绝 ({selectedRowKeys.length})
+                  </BaseBtn>
+                </Popconfirm>
+              </Space>
+            </Tooltip>
             <BaseTable
               isLoading={isLoading}
               columns={finalColumns as TableColumnsType}
@@ -291,19 +286,23 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               }}
               rightContent={
                 isAddOpen ? (
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      // 如果有自定义的新增点击处理函数，先调用它
-                      if (onCreateClick) {
-                        onCreateClick();
-                      }
-                      // 然后调用默认的新增处理
-                      handleCreate(`新增${title}`);
-                    }}
-                  >
-                    新增{title}
-                  </Button>
+                  <Tooltip title={disableCreate ? '无权限操作' : ''}>
+                    <Button
+                      type="primary"
+                      disabled={disableCreate}
+                      onClick={() => {
+                        if (disableCreate) return;
+                        // 如果有自定义的新增点击处理函数，先调用它
+                        if (onCreateClick) {
+                          onCreateClick();
+                        }
+                        // 然后调用默认的新增处理
+                        handleCreate(`新增${title}`);
+                      }}
+                    >
+                      新增{title}
+                    </Button>
+                  </Tooltip>
                 ) : null
               }
               expandable={{

@@ -11,6 +11,8 @@ import {
   getMenuSelectList,
 } from '@/servers/perms/menu'; // 导入您的真实API
 import { refreshSidebarMenu } from '@/utils/menuRefresh';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 function buildTree(flatList: Menu[]): Menu[] {
   if (!Array.isArray(flatList) || flatList.length === 0) {
@@ -72,16 +74,20 @@ const MenuPage = () => {
   const [menuOptions, setMenuOptions] = useState<{ label: string; value: number }[]>([]);
   const [isMenuOptionsLoading, setMenuOptionsLoading] = useState(false);
 
+  // 权限检查
+  const { permissions } = useUserStore();
+  const hasPermission = (permission: string) => checkPermission(permission, permissions);
+
   // 根据菜单类型获取父级菜单选项
   const fetchMenuOptionsByType = async (menuType: number) => {
     setMenuOptionsLoading(true);
     try {
-      let typeParams: number[] = [];
+      let typeParams: string[] = [];
 
       if (menuType === 2) {
-        typeParams = [1];
+        typeParams = ['1'];
       } else if (menuType === 3) {
-        typeParams = [2];
+        typeParams = ['2'];
       }
 
       // 调用API获取指定类型的菜单列表
@@ -118,8 +124,17 @@ const MenuPage = () => {
       handleDelete: (id: number) => void;
     },
   ) => {
+    const canEdit = hasPermission('mp:menu:update');
+    const canDelete = hasPermission('mp:menu:delete');
+
     return (
-      <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
     );
   };
   const handleFormValuesChange = (changedValues: any, allValues: any) => {
@@ -136,6 +151,8 @@ const MenuPage = () => {
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({ menuOptions, isMenuOptionsLoading })}
       initCreate={initCreate}
+      disableCreate={!hasPermission('mp:menu:add')}
+      disableBatchDelete={!hasPermission('mp:menu:delete')}
       onFormValuesChange={handleFormValuesChange}
       onEditOpen={(record) => {
         const parentId = record.pid || 0;

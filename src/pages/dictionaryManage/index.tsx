@@ -201,10 +201,20 @@ const DictionaryManagePage = () => {
       const itemRes = await apis.queryDictionaryItem({
         dict_type_code: selectedDictionary.code,
       });
-      setSelectedDictionary((prev) => (prev ? { ...prev, items: itemRes.data.list } : prev));
+      setSelectedDictionary((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: itemRes.data?.list || [],
+            }
+          : prev,
+      );
       // 重置选中状态
       setSelectedRowKeys([]);
-      setSelectedDictionary(null);
+      // 删除这一行：
+      // setSelectedDictionary(null);
+      // 改为刷新字典列表
+      fetchTableData();
     } catch (error) {
       message.error('删除失败');
     }

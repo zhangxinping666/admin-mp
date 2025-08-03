@@ -3,6 +3,8 @@ import { searchList, tableColumns, formList, type School } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getSchoolList, addSchool, updateSchool, deleteSchool } from '@/servers/school';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 // 初始化新增数据
 const initCreate: Partial<School> = {
@@ -23,6 +25,13 @@ const schoolApis = {
 };
 
 const SchoolsPage = () => {
+  const { permissions } = useUserStore();
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
+
   // 编辑时的数据转换
   const handleEditOpen = (record: School) => {
     // 将 logo_image_url 字段映射到 school_logo 字段，因为表单期望的是 school_logo 字段
@@ -39,7 +48,20 @@ const SchoolsPage = () => {
       handleEdit: (record: School) => void;
       handleDelete: (id: number) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:school:update');
+    const canDelete = hasPermission('mp:school:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   return (
     <CRUDPageTemplate
@@ -49,6 +71,9 @@ const SchoolsPage = () => {
       formConfig={formList()}
       initCreate={initCreate}
       onEditOpen={handleEditOpen}
+      isAddOpen={true}
+      disableCreate={!hasPermission('mp:school:add')}
+      disableBatchDelete={!hasPermission('mp:school:delete')}
       apis={{
         createApi: schoolApis.create,
         fetchApi: schoolApis.fetch,

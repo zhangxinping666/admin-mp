@@ -2,11 +2,8 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal } from 'antd';
+import { Modal } from 'antd';
 import { useState } from 'react';
-import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
-import { RuleObject } from 'antd/es/form';
-import { StoreValue } from 'antd/es/form/interface';
 
 // 添加图片预览组件
 
@@ -317,16 +314,16 @@ export const formList = ({
       maxLength: 50,
     },
   },
-  {
-    label: '商家名称',
-    name: 'merchant_name',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入商家名称',
-      maxLength: 50,
-    },
-  },
+  // {
+  //   label: '商家名称',
+  //   name: 'merchant_name',
+  //   rules: FORM_REQUIRED,
+  //   component: 'Input',
+  //   componentProps: {
+  //     placeholder: '请输入商家名称',
+  //     maxLength: 50,
+  //   },
+  // },
   // {
   //   label: '商家图片',
   //   name: 'merchant_img',

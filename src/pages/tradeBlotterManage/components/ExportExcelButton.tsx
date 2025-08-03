@@ -14,9 +14,10 @@ import type { ExportTaskStatus } from '#/trade-blotter';
 interface ExportExcelButtonProps {
   searchData: Record<string, any>;
   isLoading: boolean;
+  hasExportPermission?: boolean;
 }
 
-const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({ searchData, isLoading }) => {
+const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({ searchData, isLoading, hasExportPermission = true }) => {
   const { t } = useTranslation();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -274,7 +275,12 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({ searchData, isLoa
     <>
       {contextHolder}
       <div className="flex items-center">
-        <BaseBtn isLoading={isLoading} onClick={handleExportExcel} icon={<FileExcelOutlined />}>
+        <BaseBtn 
+          isLoading={isLoading} 
+          onClick={handleExportExcel} 
+          icon={<FileExcelOutlined />}
+          disabled={!hasExportPermission}
+        >
           {t('tradeBlotter.exportExcel')}
         </BaseBtn>
         <Tooltip title={t('tradeBlotter.exportExcelTip')}>

@@ -148,7 +148,7 @@ function convertMenuToTreeNode(menuList: MenuData[]): MenuTreeNode[] {
 export const getMenuPermissionTree = async (): Promise<MenuTreeNode[]> => {
   try {
     // 调用真实API获取菜单权限数据
-    const response = await getMenuSelectList({ type: [1, 2, 3] });
+    const response = await getMenuSelectList({ type: [] });
     if (response.code === 2000 && response.data) {
       // 将API返回的数据转换为MenuData格式
       const menuData: MenuData[] = response.data.map((item: any) => ({
@@ -285,6 +285,13 @@ export const formList = (): BaseFormList[] => [
   {
     label: '名称',
     name: 'name',
+    component: 'Input',
+    placeholder: '请输入',
+    rules: FORM_REQUIRED,
+  },
+  {
+    label: '角色标识',
+    name: 'code',
     component: 'Input',
     placeholder: '请输入',
     rules: FORM_REQUIRED,

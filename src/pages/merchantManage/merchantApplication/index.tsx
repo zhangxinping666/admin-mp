@@ -68,6 +68,7 @@ const MerchantApplicationPage = () => {
   ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
   return (
     <CRUDPageTemplate
+      disableBatchUpdate={false}
       isAddOpen={true}
       isDelete={true}
       addFormConfig={addFormList({

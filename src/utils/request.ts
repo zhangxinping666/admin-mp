@@ -1,24 +1,14 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../stores/token';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
+import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../stores/token'; // Assuming these are your token utility functions
 
-let isRefreshing: boolean = false;
-interface FailedRequest {
-  resolve: (token: string) => void;
-  reject: (reason?: unknown) => void;
-}
-let failedQueue: FailedRequest[] = [];
+let refreshTokenPromise: Promise<string | null> | null = null;
 
-// processQueue函数已移除，现在直接在响应拦截器中处理队列
-
-// --- 创建 Axios 实例 ---
 const request: AxiosInstance = axios.create({
-  // 在 .env 文件中配置 中的请求配置
   baseURL:
     import.meta.env.VITE_APP_ENV === 'localhost' ? '/api' : import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000, // 请求超时时间
+  timeout: 10000,
 });
 
-// --- 请求拦截器 ---
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const accessToken = getAccessToken();
@@ -30,10 +20,8 @@ request.interceptors.request.use(
     });
 
     if (accessToken) {
-      console.log('Adding Authorization header with token:', accessToken.substring(0, 20) + '...');
-      // 在请求头中添加 Authorization 字段
       if (!config.headers) {
-        config.headers = new axios.AxiosHeaders();
+        config.headers = {};
       }
       config.headers['Authorization'] = `Bearer ${accessToken}`;
     } else {
@@ -46,278 +34,120 @@ request.interceptors.request.use(
   },
 );
 
-// --- 响应拦截器 ---
 request.interceptors.response.use(
-  async (response: AxiosResponse<any>) => {
-    console.log('✅ Response interceptor - Success:', {
-      url: response.config?.url,
-      status: response.status,
-      hasData: !!response.data,
-      dataKeys: response.data ? Object.keys(response.data) : [],
-      responseData: response.data,
-    });
-
-    // 检查业务错误码 4010 (token过期)
-    if (response.data && response.data.code === 4010) {
-      console.log('🔥 Token expired detected in success response (code 4010), handling directly');
-      console.log('🔥 Response data that triggered 4010:', response.data);
-
-      const originalRequest = response.config;
-
-      // 如果是刷新token接口本身返回4010，直接跳转登录页
-      if (originalRequest.url?.includes('/token/refresh')) {
-        console.log('Refresh token API returned 4010, redirecting to login');
-        clearTokens();
-        window.location.href = '/login';
-        return Promise.reject(new Error('Refresh token expired'));
-      }
-
-      if (!isRefreshing) {
-        isRefreshing = true;
-
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-          console.error('No refresh token available.');
-          clearTokens();
-          window.location.href = '/login';
-          return Promise.reject(new Error('No refresh token'));
-        }
-
-        // 创建独立的axios实例来刷新token
-        const refreshInstance = axios.create({
-          baseURL:
-            import.meta.env.VITE_APP_ENV === 'localhost'
-              ? '/api'
-              : import.meta.env.VITE_API_BASE_URL,
-          timeout: 10000,
-        });
-
-        return refreshInstance
-          .post('/token/refresh', {
-            refresh_token: refreshToken,
-          })
-          .then((refreshResponse) => {
-            const data = refreshResponse.data;
-
-            if (!data || data.code !== 2000) {
-              throw new Error('Refresh token expired');
-            }
-
-            const newAccessToken = data.data?.access_token || data.access_token;
-            const newRefreshToken = data.data?.refresh_token || data.refresh_token;
-
-            if (!newAccessToken || !newRefreshToken) {
-              throw new Error('Invalid token response');
-            }
-
-            console.log('🔥 Token refresh successful');
-            setTokens(newAccessToken, newRefreshToken);
-
-            // 重新发送原始请求
-            if (!originalRequest.headers) {
-              originalRequest.headers = new axios.AxiosHeaders();
-            }
-            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-
-            // 处理队列中的请求
-            failedQueue.forEach(({ resolve }) => {
-              resolve(newAccessToken);
-            });
-            failedQueue = [];
-
-            return request(originalRequest);
-          })
-          .catch((error) => {
-            console.error('🔥 Token refresh failed:', error);
-            clearTokens();
-
-            // 处理队列中的失败请求
-            failedQueue.forEach(({ reject }) => {
-              reject(error);
-            });
-            failedQueue = [];
-
-            window.location.href = '/login';
-            return Promise.reject(error);
-          })
-          .finally(() => {
-            isRefreshing = false;
-          });
-      } else {
-        // 如果正在刷新token，将请求加入队列
-        console.log('🔥 Token refresh in progress, queuing request');
-        return new Promise((resolve, reject) => {
-          failedQueue.push({
-            resolve: (token: string) => {
-              if (!originalRequest.headers) {
-                originalRequest.headers = new axios.AxiosHeaders();
-              }
-              originalRequest.headers['Authorization'] = `Bearer ${token}`;
-              resolve(request(originalRequest));
-            },
-            reject,
-          });
-        });
-      }
+  (response: AxiosResponse) => {
+    const { data } = response;
+    if (data && data.code === 4010) {
+      console.log('Token expired code (4010) detected in a successful response. Rejecting...');
+      return Promise.reject(createError(response.config, data.code, 'Token expired'));
     }
-
-    return response.data;
+    return data;
   },
   async (error: AxiosError) => {
-    console.log('🚨 RESPONSE INTERCEPTOR TRIGGERED! Error caught:', {
-      status: error.response?.status,
-      url: error.config?.url,
-      method: error.config?.method,
-      message: error.message,
-      data: error.response?.data,
-      isAxiosError: error.isAxiosError,
-      errorName: error.name,
-    });
-
-    const originalRequest = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
-
-    if (!originalRequest) {
-      console.error('Request Error: No config available');
+    if (!error.isAxiosError || !error.response) {
+      console.error('An unexpected error occurred:', error);
       return Promise.reject(error);
     }
-    const responseData = error.response?.data || error.response;
-    console.log('🔍 Error response data:', responseData);
-    console.log('🔍 Checking for code 4010. responseData.code:', responseData?.code);
-    if (responseData && responseData.code === 4010) {
-      console.log('🔥 Token expired detected (code 4010), starting refresh process...');
-      console.log('🔥 Original request URL:', originalRequest.url);
-      // 如果是刷新token接口本身返回4010，直接跳转登录页，避免递归
+
+    const originalRequest = error.config as InternalAxiosRequestConfig;
+    const { status, data } = error.response;
+    const errorCode = (data as any)?.code;
+
+    if (status === 401 || errorCode === 4010) {
+      console.log(`Authentication error detected (Status: ${status}, Code: ${errorCode}).`);
+
       if (originalRequest.url?.includes('/token/refresh')) {
-        console.log('Refresh token API returned 4010, redirecting to login');
+        console.error('Refresh token is invalid or expired. Redirecting to login.');
         clearTokens();
         window.location.href = '/login';
         return Promise.reject(error);
       }
 
-      if (!isRefreshing) {
-        isRefreshing = true;
+      if (!refreshTokenPromise) {
+        console.log('Starting new token refresh process.');
+        refreshTokenPromise = new Promise(async (resolve, reject) => {
+          try {
+            const refreshToken = getRefreshToken();
+            if (!refreshToken) {
+              throw new Error('No refresh token available.');
+            }
 
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-          console.error('No refresh token available.');
-          clearTokens();
-          window.location.href = '/login';
-          return Promise.reject(new Error('No refresh token'));
-        }
+            const refreshInstance = axios.create({
+              baseURL:
+                import.meta.env.VITE_APP_ENV === 'localhost'
+                  ? '/api'
+                  : import.meta.env.VITE_API_BASE_URL,
+              timeout: 10000,
+            });
 
-        try {
-          console.log(
-            'Starting token refresh with refresh token:',
-            refreshToken.substring(0, 20) + '...',
-          );
+            const response = await refreshInstance.post('/token/refresh', {
+              refresh_token: refreshToken,
+            });
 
-          const refreshInstance = axios.create({
-            baseURL:
-              import.meta.env.VITE_APP_ENV === 'localhost'
-                ? '/api'
-                : import.meta.env.VITE_API_BASE_URL,
-            timeout: 10000,
-          });
+            const responseData = response.data;
+            if (responseData.code !== 2000 || !responseData.data) {
+              throw new Error('Failed to refresh token, server returned an error.');
+            }
 
-          const response = await refreshInstance.post('/token/refresh', {
-            refresh_token: refreshToken,
-          });
+            const { access_token: newAccessToken, refresh_token: newRefreshToken } =
+              responseData.data;
 
-          console.log('Refresh token response:', response.data);
+            if (!newAccessToken || !newRefreshToken) {
+              throw new Error('Invalid token structure in refresh response.');
+            }
 
-          // 如果refreshToken也失效了，就重新登录
-          if (!response.data || response.data.code !== 2000) {
-            console.log('Refresh token expired, redirecting to login');
+            console.log('Token refresh successful.');
+            setTokens(newAccessToken, newRefreshToken);
+            resolve(newAccessToken);
+          } catch (refreshError) {
+            console.error('Critical error during token refresh:', refreshError);
             clearTokens();
             window.location.href = '/login';
-            return Promise.reject(new Error('Refresh token expired'));
-          }
-
-          // 获取新的token
-          let newAccessToken: string;
-          let newRefreshToken: string;
-
-          if (response.data.data) {
-            newAccessToken = response.data.data.access_token;
-            newRefreshToken = response.data.data.refresh_token;
-          } else {
-            newAccessToken = response.data.access_token;
-            newRefreshToken = response.data.refresh_token;
-          }
-
-          if (!newAccessToken || !newRefreshToken) {
-            throw new Error('Invalid token response: missing access_token or refresh_token');
-          }
-
-          console.log('Token refresh successful, new tokens obtained');
-          console.log('New access token:', newAccessToken.substring(0, 20) + '...');
-          console.log('New refresh token:', newRefreshToken.substring(0, 20) + '...');
-
-          // 保存新的token
-          setTokens(newAccessToken, newRefreshToken);
-
-          // 重新发送原始请求
-          if (!originalRequest.headers) {
-            originalRequest.headers = new axios.AxiosHeaders();
-          }
-          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-
-          const firstReqRes = await request(originalRequest);
-
-          // 执行请求队列中的请求
-          failedQueue.forEach(({ resolve }) => {
-            resolve(newAccessToken);
-          });
-          failedQueue = [];
-
-          return firstReqRes;
-        } catch (refreshError: unknown) {
-          console.error('Failed to refresh token:', refreshError);
-          clearTokens();
-
-          // 处理队列中的失败请求
-          failedQueue.forEach(({ reject }) => {
             reject(refreshError);
-          });
-          failedQueue = [];
-
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
-        }
-      } else {
-        // 并发情况下如果正在请求新token，把请求先放到一个请求队列中
-        console.log('Token refresh in progress, queuing request');
-        return new Promise<any>((resolve, reject) => {
-          failedQueue.push({
-            resolve: (token: string) => {
-              if (!originalRequest.headers) {
-                originalRequest.headers = new axios.AxiosHeaders();
-              }
-              originalRequest.headers['Authorization'] = `Bearer ${token}`;
-              resolve(request(originalRequest));
-            },
-            reject,
-          });
+          } finally {
+            refreshTokenPromise = null;
+          }
         });
+      } else {
+        console.log('A token refresh is already in progress. Waiting for it to complete.');
+      }
+
+      try {
+        const newAccessToken = await refreshTokenPromise;
+
+        if (newAccessToken && originalRequest.headers) {
+          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+          console.log(`Retrying original request to: ${originalRequest.url}`);
+          return request(originalRequest);
+        } else {
+          return Promise.reject(new Error('Failed to obtain new token for retry.'));
+        }
+      } catch (retryError) {
+        console.error('The token refresh process failed. The original request cannot be retried.');
+        return Promise.reject(retryError);
       }
     }
 
-    // 其他错误直接返回
-    console.log('Non-token error, passing through:', {
-      status: error.response?.status,
-      url: error.config?.url,
-      code: responseData?.code,
-    });
-
-    const errorMessage =
-      responseData && responseData.message ? responseData.message : error.message;
-    console.error('Request Error:', errorMessage);
     return Promise.reject(error);
   },
 );
+
+function createError(
+  config: InternalAxiosRequestConfig,
+  code: number | undefined,
+  message: string,
+): AxiosError {
+  const error = new Error(message) as AxiosError;
+  error.config = config;
+  error.isAxiosError = true;
+  error.response = {
+    data: { code, message },
+    status: code === 4010 ? 401 : 500,
+    statusText: message,
+    headers: {},
+    config: config,
+  };
+  return error;
+}
 
 export default request;

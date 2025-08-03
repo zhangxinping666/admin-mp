@@ -428,7 +428,7 @@ export const addFormList = (params: {
     },
   },
   {
-    name: 'story_apply_status',
+    name: 'store_apply_status',
     label: '审批状态',
     component: 'Select',
     rules: FORM_REQUIRED,

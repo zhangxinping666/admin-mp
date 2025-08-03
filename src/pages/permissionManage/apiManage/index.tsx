@@ -12,6 +12,8 @@ import {
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getApiList, getApiDetail, addApi, updateApi, deleteApi } from '@/servers/perms/api';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 // 初始化新增数据
 const initCreate: Partial<API> = {
@@ -26,6 +28,10 @@ const initCreate: Partial<API> = {
 const ApiPage = () => {
   const [apiGroupData, setApiGroupData] = useState<APIGroupTreeNode[]>([]);
   const [apiMethodOptions, setApiMethodOptions] = useState<APIMethodOption[]>([]);
+
+  // 权限检查
+  const { permissions } = useUserStore();
+  const hasPermission = (permission: string) => checkPermission(permission, permissions);
 
   // 获取API分组数据
   const fetchApiGroups = async () => {
@@ -68,15 +74,30 @@ const ApiPage = () => {
       handleEdit: (record: API) => void;
       handleDelete: (id: number) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:api:update');
+    const canDelete = hasPermission('mp:api:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   return (
     <CRUDPageTemplate
       title="API管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
-      formConfig={formList(apiGroupData, apiMethodOptions)}
+      formConfig={formList()}
       initCreate={initCreate}
+      disableCreate={!hasPermission('mp:api:add')}
+      disableBatchDelete={!hasPermission('mp:api:delete')}
       apis={{
         fetchApi: apis.fetchApi,
         createApi: (data: any) => {

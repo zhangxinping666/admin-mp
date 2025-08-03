@@ -28,7 +28,7 @@ export const EnhancedImageUploader = ({
   const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
 
   // 规范化value为数组格式以便内部处理
-  const normalizedValue = isArray(value) ? value : (value ? [value] : []);
+  const normalizedValue = isArray(value) ? value : value ? [value] : [];
 
   // 包装URL - 如果是相对路径则添加baseUrl
   const getFullImageUrl = (url: any) => {
@@ -150,7 +150,7 @@ export const EnhancedImageUploader = ({
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
       {/* 上传按钮 */}
-      {(!disabled && (maxCount === 1 || normalizedValue.length < maxCount)) && (
+      {!disabled && (maxCount === 1 || normalizedValue.length < maxCount) && (
         <Upload
           name="image"
           listType="picture-card"
@@ -227,11 +227,25 @@ export const EnhancedImageUploader = ({
         width="80%"
         style={{ top: 20 }}
       >
-        <div style={{ position: 'relative', height: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          style={{
+            position: 'relative',
+            height: '70vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           {normalizedValue.length > 1 && (
             <button
               onClick={handlePrev}
-              style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 10 }}
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+              }}
               className="preview-btn"
             >
               上一张
@@ -245,7 +259,13 @@ export const EnhancedImageUploader = ({
           {normalizedValue.length > 1 && (
             <button
               onClick={handleNext}
-              style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 10 }}
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+              }}
               className="preview-btn"
             >
               下一张

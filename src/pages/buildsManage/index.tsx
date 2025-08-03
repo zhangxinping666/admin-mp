@@ -2,6 +2,8 @@ import { searchList, tableColumns, formList, type Building, School, Floor } from
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { Key } from 'react';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 import * as apis from './apis';
 import { Form, Input, InputNumber, message, Modal, Select, Skeleton, Space } from 'antd';
 import useSelectSchoolOptions from './useSelectSchoolOptions';
@@ -281,6 +283,8 @@ const BuildingsPage = () => {
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
         formConfig={newFormList}
         initCreate={initCreate}
+        disableCreate={!hasPermission('mp:building:add')}
+        disableBatchDelete={!hasPermission('mp:building:delete')}
         optionRender={(record, actions) =>
           optionRender(record, {
             ...actions,

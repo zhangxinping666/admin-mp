@@ -12,11 +12,19 @@ import BaseSearch from '@/components/Search/BaseSearch';
 import BaseTable from '@/components/Table/BaseTable';
 import CursorPagination from '@/components/Pagination/CursorPagination';
 import { ExportExcelButton } from './components';
+import { useUserStore } from '@/stores';
+import { checkPermission } from '@/utils/permissions';
 
 function Page() {
   const { t } = useTranslation();
   const columns = tableColumns(t);
   const locationOptions = useLocationOptions(); // 在组件顶层调用hook
+  const { permissions } = useUserStore();
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
   const [isFetch, setFetch] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [searchData, setSearchData] = useState<BaseFormData>({});
@@ -233,7 +241,11 @@ function Page() {
 
   // 导出 Excel 按钮渲染
   const leftContentRender = (
-    <ExportExcelButton searchData={searchData} isLoading={isLoading} />
+    <ExportExcelButton 
+      searchData={searchData} 
+      isLoading={isLoading} 
+      hasExportPermission={hasPermission('mp:tradeblotter:export')}
+    />
   );
 
   // 判断是否可以加载下一页或上一页

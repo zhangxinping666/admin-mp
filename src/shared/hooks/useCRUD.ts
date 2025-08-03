@@ -182,7 +182,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
         if (pagination) {
           // 根据选项决定是否添加分页参数
           params.page = page;
-          params.pageSize = pageSize;
+          params.page_size = pageSize;
         }
         console.log('searchData', params);
         const { data } = await fetchApi(params);
