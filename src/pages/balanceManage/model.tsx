@@ -92,10 +92,17 @@ export interface BalanceResult {
 
 export const searchList = (): BaseSearchList[] => [
   {
-    label: '用户ID',
-    name: 'user_id',
-    component: 'InputNumber',
-    placeholder: '请输入用户ID',
+    label: '余额变动类别',
+    name: 'category',
+    component: 'Select',
+    placeholder: '请选择余额变动类别',
+    componentProps: {
+      options: [
+        { label: '全部', value: '' },
+        { label: '收入', value: 'income' },
+        { label: '支出', value: 'expense' },
+      ],
+    },
   },
   {
     label: '余额变动类别',

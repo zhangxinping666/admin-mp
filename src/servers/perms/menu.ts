@@ -10,7 +10,7 @@ import request from '@/utils/request';
 
 // 获取菜单列表（支持筛选参数）
 export function getMenuList(data: MenuSearchParams) {
-  return request.get<MenuListResult>('/menu/get', data);
+  return request.get<MenuListResult>('/menu/get', { params: data });
 }
 
 //详情

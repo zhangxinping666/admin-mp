@@ -93,7 +93,6 @@ function LayoutMenu() {
       const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
       setOpenKeys(mergedOpenKeys);
     }
-    console.log(pathname);
   }, [pathname, menuList, openKeys]);
 
   /**

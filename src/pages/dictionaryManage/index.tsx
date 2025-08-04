@@ -387,9 +387,9 @@ const DictionaryManagePage = () => {
       <Card
         title="字典列表"
         extra={
-          <Button 
-            type="primary" 
-            onClick={openCreateModal} 
+          <Button
+            type="primary"
+            onClick={openCreateModal}
             icon={<PlusOutlined />}
             disabled={!hasPermission('mp:dict:addType')}
           >
