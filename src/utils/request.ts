@@ -41,6 +41,12 @@ request.interceptors.response.use(
       console.log('Token expired code (4010) detected in a successful response. Rejecting...');
       return Promise.reject(createError(response.config, data.code, 'Token expired'));
     }
+    // 检查业务状态码，如果不是成功状态码（通常是2000），则抛出异常
+    if (data && data.code && data.code !== 2000) {
+      console.log(`Business error detected (Code: ${data.code}). Rejecting...`);
+      const errorMessage = data.error || data.message || `请求失败，错误码：${data.code}`;
+      return Promise.reject(createError(response.config, data.code, errorMessage));
+    }
     return data;
   },
   async (error: AxiosError) => {

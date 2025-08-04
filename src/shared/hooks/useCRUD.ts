@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, Key } from 'react';
+import { useState, useRef, useCallback, Key, useEffect } from 'react';
 import { message, type FormInstance } from 'antd';
 import type { BaseFormData } from '#/form';
 import { INIT_PAGINATION } from '@/utils/config';
@@ -98,9 +98,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       if (deleteApi) {
         // 1. 调用后端的删除接口
         console.log('deleteApi', id);
-        deleteApi(id);
+        await deleteApi(id);
         // 2. 提示用户操作成功
-        messageApi.success('handleDelete删除成功');
+        messageApi.success('删除成功');
         // 3. 【核心改动 1】检查并处理分页，提升用户体验
         if (tableData.length === 1 && page > 1) {
           setPage(page - 1);
@@ -123,9 +123,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     console.log(`[CRUD] ${operationType}操作开始`, {
       data: values,
       id: isEditing ? createId : undefined,
-      timestamp: new Date().toISOString(),
     });
-    console.log('createId', createId);
     try {
       if (isEditing) {
         // --- 编辑逻辑 ---
@@ -133,10 +131,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
           throw new Error('Update API not configured.');
         }
-        console.log('editCreateId', createId);
-        const idList = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
-        const result = await updateApi({ id: idList, ...values });
-        console.log(`[CRUD] 编辑API调用成功`, { result });
+        // 确保id格式正确：如果是application模式且不是数组则转为数组，否则直接使用createId
+        const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
+        const result = await updateApi({ id: idToPass, ...values });
         messageApi.success('编辑成功');
 
         // 【核心】触发列表重新获取
@@ -160,47 +157,52 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
         }
       }
       setCreateOpen(false); // 操作成功，关闭弹窗
-    } catch (error) {
+    } catch (error: any) {
       console.error(`[CRUD] ${operationType}操作失败`, {
         error,
         submittedData: values,
         timestamp: new Date().toISOString(),
       });
-      messageApi.error(`${operationType}失败`);
+      // 显示具体的错误信息，如果有的话
+      const errorMessage = error?.message || error?.error || `${operationType}失败`;
+      messageApi.error(errorMessage);
     } finally {
       setCreateLoading(false);
     }
   };
   // 获取数据
-  const fetchTableData = async (mockData?: T[]) => {
-    setLoading(true);
-    try {
-      console.log('触发fetchTableData');
-      console.log('fetchApi:', fetchApi);
-      if (fetchApi) {
-        const params: any = { ...searchData };
-        if (pagination) {
-          // 根据选项决定是否添加分页参数
-          params.page = page;
-          params.page_size = pageSize;
+  const fetchTableData = useCallback(
+    async (mockData?: T[]) => {
+      setLoading(true);
+      try {
+        console.log('触发fetchTableData');
+        console.log('fetchApi:', fetchApi);
+        if (fetchApi) {
+          const params: any = { ...searchData };
+          if (pagination) {
+            // 根据选项决定是否添加分页参数
+            params.page = page;
+            params.page_size = pageSize;
+          }
+          console.log('searchData', params);
+          const { data } = await fetchApi(params);
+          console.log('fetch了', data);
+          setTableData(data.list || data.data || data || []);
+          setTotal(data.total || 0);
+        } else if (mockData) {
+          // 使用模拟数据
+          setTableData(mockData);
+          setTotal(mockData.length);
         }
-        console.log('searchData', params);
-        const { data } = await fetchApi(params);
-        console.log('fetch了', data);
-        setTableData(data.list || data.data || data || []);
-        setTotal(data.total || 0);
-      } else if (mockData) {
-        // 使用模拟数据
-        setTableData(mockData);
-        setTotal(mockData.length);
+      } catch (error) {
+        messageApi.error('获取数据失败');
+      } finally {
+        setLoading(false);
+        setFetch(false);
       }
-    } catch (error) {
-      messageApi.error('获取数据失败');
-    } finally {
-      setLoading(false);
-      setFetch(false);
-    }
-  };
+    },
+    [fetchApi, searchData, pagination, page, pageSize, messageApi],
+  );
 
   return {
     // 状态

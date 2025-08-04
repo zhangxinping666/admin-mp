@@ -17,6 +17,7 @@ export interface User {
   status: number;
 }
 export interface updateUserForm {
+  id: number;
   image: string;
   image_id?: number;
   nickname: string;

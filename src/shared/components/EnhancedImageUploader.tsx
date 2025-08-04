@@ -1,7 +1,7 @@
 import { Upload, message, Image, Modal } from 'antd';
 import { UploadProps, UploadFile } from 'antd/es/upload';
-import { PlusOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { PlusOutlined, EyeOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { useState, useRef } from 'react';
 import { getImage } from '@/servers/img';
 import { isArray } from 'lodash';
 
@@ -147,38 +147,89 @@ export const EnhancedImageUploader = ({
     setCurrentPreviewIndex(prevIndex);
   };
 
+  // 创建隐藏的文件输入引用
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 处理文件选择
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // 验证文件
+      if (beforeUpload(file as any)) {
+        customUpload({ file } as any);
+      }
+    }
+    // 清空input值，允许重复选择同一文件
+    event.target.value = '';
+  };
+
+  // 触发文件选择
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-      {/* 上传按钮 */}
-      {!disabled && (maxCount === 1 || normalizedValue.length < maxCount) && (
-        <Upload
-          name="image"
-          listType="picture-card"
-          showUploadList={false}
-          customRequest={customUpload}
-          beforeUpload={beforeUpload}
-          disabled={disabled || loading}
-          style={{ width: '104px', height: '104px' }}
+      {/* 隐藏的文件输入 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+        disabled={disabled || loading}
+      />
+
+      {/* 如果没有图片，显示上传按钮 */}
+      {normalizedValue.length === 0 && (
+        <div
+          style={{
+            width: '104px',
+            height: '104px',
+            border: '1px dashed #d9d9d9',
+            borderRadius: '6px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            backgroundColor: disabled ? '#f5f5f5' : '#fafafa',
+            transition: 'all 0.3s',
+          }}
+          onClick={!disabled ? triggerFileSelect : undefined}
+          onMouseEnter={(e) => {
+            if (!disabled) {
+              e.currentTarget.style.borderColor = '#1890ff';
+              e.currentTarget.style.backgroundColor = '#f0f8ff';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!disabled) {
+              e.currentTarget.style.borderColor = '#d9d9d9';
+              e.currentTarget.style.backgroundColor = '#fafafa';
+            }
+          }}
         >
-          <div
+          <PlusOutlined
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
+              fontSize: '16px',
+              marginBottom: '8px',
+              color: disabled ? '#bfbfbf' : '#8c8c8c',
             }}
-          >
-            <PlusOutlined style={{ fontSize: '16px', marginBottom: '8px' }} />
-            <div style={{ fontSize: '12px' }}>{maxCount > 1 ? '添加图片' : '上传图片'}</div>
-          </div>
-        </Upload>
+          />
+          <div style={{ fontSize: '12px', color: disabled ? '#bfbfbf' : '#8c8c8c' }}>上传图片</div>
+        </div>
       )}
 
       {/* 已上传的图片 */}
       {normalizedValue.map((url, index) => {
         const displayUrl = getFullImageUrl(url);
         return (
-          <div key={index} style={{ position: 'relative', width: '104px', height: '104px' }}>
+          <div
+            key={index}
+            className="image-container"
+            style={{ position: 'relative', width: '104px', height: '104px' }}
+          >
             <img
               src={displayUrl}
               alt={`图片 ${index + 1}`}
@@ -187,37 +238,119 @@ export const EnhancedImageUploader = ({
                 height: '100%',
                 objectFit: 'cover',
                 borderRadius: '6px',
+                cursor: 'default',
               }}
-              onClick={() => handlePreview(url, index)}
             />
             {!disabled && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: 0,
-                  transition: 'opacity 0.3s',
-                  borderRadius: '6px',
-                }}
-                className="upload-mask"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(index);
-                }}
-              >
-                <DeleteOutlined style={{ color: 'white', fontSize: '18px' }} />
-              </div>
+              <>
+                {/* 上传标识覆盖层 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0,
+                    transition: 'opacity 0.3s',
+                    cursor: 'pointer',
+                  }}
+                  className="upload-overlay"
+                  onClick={() => {
+                    if (maxCount === 1) {
+                      triggerFileSelect();
+                    } else {
+                      handlePreview(url, index);
+                    }
+                  }}
+                >
+                  {maxCount === 1 ? (
+                    <>
+                      <UploadOutlined
+                        style={{ color: 'white', fontSize: '20px', marginBottom: '4px' }}
+                      />
+                      <div style={{ color: 'white', fontSize: '10px' }}>上传图片</div>
+                    </>
+                  ) : (
+                    <>
+                      <EyeOutlined
+                        style={{ color: 'white', fontSize: '20px', marginBottom: '4px' }}
+                      />
+                      <div style={{ color: 'white', fontSize: '10px' }}>预览</div>
+                    </>
+                  )}
+                </div>
+                {/* 删除按钮 */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: '4px',
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    opacity: 0,
+                    transition: 'opacity 0.3s',
+                    zIndex: 10,
+                  }}
+                  className="delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(index);
+                  }}
+                >
+                  <DeleteOutlined style={{ color: 'white', fontSize: '12px' }} />
+                </div>
+              </>
             )}
           </div>
         );
       })}
+
+      {/* 多图模式下的添加按钮 */}
+      {maxCount > 1 &&
+        normalizedValue.length > 0 &&
+        normalizedValue.length < maxCount &&
+        !disabled && (
+          <div
+            style={{
+              width: '104px',
+              height: '104px',
+              border: '1px dashed #d9d9d9',
+              borderRadius: '6px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              backgroundColor: '#fafafa',
+              transition: 'all 0.3s',
+            }}
+            onClick={triggerFileSelect}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#1890ff';
+              e.currentTarget.style.backgroundColor = '#f0f8ff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#d9d9d9';
+              e.currentTarget.style.backgroundColor = '#fafafa';
+            }}
+          >
+            <PlusOutlined style={{ fontSize: '16px', marginBottom: '8px', color: '#8c8c8c' }} />
+            <div style={{ fontSize: '12px', color: '#8c8c8c' }}>添加图片</div>
+          </div>
+        )}
 
       {/* 自定义预览模态框 */}
       <Modal
@@ -278,9 +411,18 @@ export const EnhancedImageUploader = ({
       </Modal>
 
       <style>{`
-        .upload-mask:hover {
+        .delete-btn:hover {
           opacity: 1 !important;
         }
+        
+        .image-container:hover .upload-overlay {
+            opacity: 1 !important;
+          }
+          
+          .image-container:hover .delete-btn {
+            opacity: 1 !important;
+          }
+        
         .preview-btn {
           background-color: rgba(0, 0, 0, 0.5);
           color: white;

@@ -63,7 +63,7 @@ const menuApis = {
 };
 
 const initCreate = {
-  type: 2,
+  type: 1,
   status: 1,
   sort: 1,
   pid: 0,
@@ -114,8 +114,21 @@ const MenuPage = () => {
 
   // 初始化时获取目录列表（默认为目录类型）
   useEffect(() => {
-    fetchMenuOptionsByType(2);
+    fetchMenuOptionsByType(1);
   }, []);
+
+  // 确保menuOptions始终包含根目录选项
+  useEffect(() => {
+    if (menuOptions.length === 0 || !menuOptions.find((option) => option.value === 0)) {
+      setMenuOptions((prev) => {
+        const hasRootOption = prev.find((option) => option.value === 0);
+        if (!hasRootOption) {
+          return [{ label: '根目录', value: 0 }, ...prev];
+        }
+        return prev;
+      });
+    }
+  }, [menuOptions]);
 
   const optionRender = (
     record: Menu,
@@ -188,9 +201,13 @@ const MenuPage = () => {
           };
         },
         createApi: menuApis.create,
-        updateApi: (id: number, data: any) => {
-          return menuApis.update({ ...data, id });
+        // ... existing code ...
+        updateApi: (data: any) => {
+          console.log('菜单管理 updateApi 接收到的数据:', data);
+          // useCRUD传递的格式是 { id, ...values }
+          return menuApis.update(data);
         },
+        // ... existing code ...
         deleteApi: (id: number[]) => menuApis.delete(id),
       }}
       optionRender={optionRender}

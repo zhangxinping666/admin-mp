@@ -5,7 +5,7 @@ import { TableActions } from '@/shared/components/TableActions';
 import { getSchoolList, addSchool, updateSchool, deleteSchool } from '@/servers/school';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
-
+import { getProvinceList, getCityName } from '@/servers/city';
 // 初始化新增数据
 const initCreate: Partial<School> = {
   id: 0,
@@ -15,7 +15,7 @@ const initCreate: Partial<School> = {
   logo_image_url: '',
   city_name: '',
   province: '',
-  status: 0, // 默认状态
+  status: 1, // 默认状态
 };
 const schoolApis = {
   fetch: getSchoolList,
@@ -23,18 +23,52 @@ const schoolApis = {
   update: updateSchool,
   delete: deleteSchool,
 };
-
+interface GroupedOption {
+  label: string; // 省份名
+  options: { label: string; value: number }[]; // 该省份下的城市列表
+}
 const SchoolsPage = () => {
   const { permissions } = useUserStore();
-
+  const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
   };
 
+  // 加载省市数据
+  useEffect(() => {
+    const fetchAndGroupData = async () => {
+      setIsLoadingOptions(true);
+      try {
+        const provinceResponse = await getProvinceList();
+        const provinces = provinceResponse.data || [];
+        // 【修正】使用 province.province 来获取省份名称
+        const cityPromises = provinces.map((province: any) => getCityName(province.province));
+        const cityResponses = await Promise.all(cityPromises);
+        const finalOptions = provinces.map((province: any, index: number) => {
+          const cities = cityResponses[index].data || [];
+          return {
+            // 【修正】使用 province.province 来设置分组标题
+            label: province.province,
+            options: cities.map((city: any) => ({
+              label: city.city_name,
+              value: city.id,
+            })),
+          };
+        });
+        setGroupedCityOptions(finalOptions);
+      } catch (error) {
+        console.error('加载省市选项失败:', error);
+      } finally {
+        setIsLoadingOptions(false);
+      }
+    };
+    fetchAndGroupData();
+  }, []);
+
   // 编辑时的数据转换
   const handleEditOpen = (record: School) => {
-    // 将 logo_image_url 字段映射到 school_logo 字段，因为表单期望的是 school_logo 字段
     return {
       ...record,
       school_logo: record.logo_image_url,
@@ -68,7 +102,10 @@ const SchoolsPage = () => {
       title="学校管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
-      formConfig={formList()}
+      formConfig={formList({
+        groupedCityOptions,
+        isLoadingOptions,
+      })}
       initCreate={initCreate}
       onEditOpen={handleEditOpen}
       isAddOpen={true}
@@ -77,10 +114,9 @@ const SchoolsPage = () => {
       apis={{
         createApi: schoolApis.create,
         fetchApi: schoolApis.fetch,
-        updateApi: (id: number, data: any) => {
-          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
-          // 然后再调用您的 userApis.update 函数
-          return schoolApis.update({ ...data, id });
+        updateApi: (data: any) => {
+          console.log('学校管理 updateApi 接收到的数据:', data);
+          return schoolApis.update(data);
         },
         deleteApi: (id: number[]) => schoolApis.delete(id),
       }}

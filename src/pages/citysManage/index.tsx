@@ -41,6 +41,7 @@ const CitiesPage = () => {
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
   };
+  // 加载省市数据
   useEffect(() => {
     const fetchAndGroupData = async () => {
       setIsLoadingOptions(true);
@@ -107,8 +108,10 @@ const CitiesPage = () => {
       apis={{
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,
-        updateApi: (id: number, data: any) => {
-          return cityApis.update({ ...data, id });
+        updateApi: (data: any) => {
+          console.log('城市管理 updateApi 接收到的数据:', data);
+          // useCRUD传递的格式是 { id, ...values }
+          return cityApis.update(data);
         },
         deleteApi: (id: Array<number>) => cityApis.delete(id),
       }}

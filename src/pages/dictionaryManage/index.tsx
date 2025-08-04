@@ -30,6 +30,8 @@ import { BaseBtn } from '@/components/Buttons'; // 导入BaseBtn组件
 import * as apis from './apis';
 import { ItemType, MenuItemType } from 'antd/es/menu/interface';
 import { TableActions } from '@/shared/components';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 // 初始化新增字典数据
 const initCreate: Partial<Dictionary> = {
   name: '',
@@ -50,6 +52,7 @@ const initItemCreate: Partial<DictionaryItem> = {
 
 const DictionaryManagePage = () => {
   const { t } = useTranslation();
+  const { permissions } = useUserStore();
   const [selectedDictionary, setSelectedDictionary] = useState<Dictionary | null>(null);
   const [itemForm] = Form.useForm();
   const [currentItem, setCurrentItem] = useState<DictionaryItem | null>(null);
@@ -66,6 +69,11 @@ const DictionaryManagePage = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   // 添加加载状态避免重复点击
   const [isLoading, setIsLoading] = useState(false);
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
 
   // 增加字典项列操作
   const itemsClo = [
@@ -87,6 +95,8 @@ const DictionaryManagePage = () => {
           }}
           onDelete={handleDeleteItem}
           deleteText="删除"
+          disableEdit={!hasPermission('mp:dict:updateItem')}
+          disableDelete={!hasPermission('mp:dict:deleteItem')}
         />
       ),
     },
@@ -349,6 +359,7 @@ const DictionaryManagePage = () => {
                 setEditModalVisible(true);
                 setIsEditDictionary(true);
               }}
+              disabled={!hasPermission('mp:dict:updateType')}
             >
               编辑
             </BaseBtn>
@@ -363,6 +374,7 @@ const DictionaryManagePage = () => {
                 }
                 handleDelete([item.id]);
               }}
+              disabled={!hasPermission('mp:dict:deleteType')}
             >
               删除
             </BaseBtn>
@@ -375,7 +387,12 @@ const DictionaryManagePage = () => {
       <Card
         title="字典列表"
         extra={
-          <Button type="primary" onClick={openCreateModal} icon={<PlusOutlined />}>
+          <Button 
+            type="primary" 
+            onClick={openCreateModal} 
+            icon={<PlusOutlined />}
+            disabled={!hasPermission('mp:dict:addType')}
+          >
             新增字典
           </Button>
         }
@@ -486,6 +503,7 @@ const DictionaryManagePage = () => {
               setItemModalVisible(true);
             }}
             className="ml-2"
+            disabled={!hasPermission('mp:dict:addItem')}
           >
             新增字典项
           </Button>

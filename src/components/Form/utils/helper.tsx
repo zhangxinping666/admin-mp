@@ -28,7 +28,6 @@ export function handleValuePropName(component: ComponentType): string {
  * @param maxSize - 最大文件大小(MB)
  */
 
-
 /**
  * 初始化组件自定义属性
  * @param component - 组件名
@@ -137,7 +136,7 @@ const handleUploadData: FormItemProps['getValueFromEvent'] = (e) => {
     return e;
   }
   // 确保返回的fileList包含完整的文件信息，特别是url
-  return e?.fileList.map((file:any) => ({
+  return e?.fileList.map((file: any) => ({
     ...file,
     // 如果有response，提取url
     url: file.response?.data?.url || file.url,
@@ -175,13 +174,16 @@ export const filterEmptyStr = (values: Record<string, unknown>) => {
   const params: Record<string, unknown> = {};
 
   Object.keys(values).forEach((key) => {
+    let value = values[key];
+
     // 去除前后空格
-    if (typeof values[key] === 'string') {
-      values[key] = values[key]?.trim();
+    if (typeof value === 'string') {
+      value = value.trim();
     }
 
-    if (values[key] !== '') {
-      params[key] = values[key];
+    // 只过滤掉空字符串，保留其他所有值（包括0、false、null等）
+    if (value !== '' && value !== undefined) {
+      params[key] = value;
     }
   });
 

@@ -59,8 +59,12 @@ const CertPage = () => {
       isAddOpen={false}
       apis={{
         fetchApi: certApis.fetch,
-        updateApi: (id: number, data: any) => {
-          return certApis.update({ ...data, id });
+        updateApi: (data: any) => {
+          console.log('updateApi received data:', data);
+          // 从useCRUD传来的数据格式是 { id: number, ...formValues }
+          // 需要提取id和status字段
+          const { id, status } = data;
+          return certApis.update({ id, status });
         },
         deleteApi: (id: number[]) => certApis.delete(id),
       }}

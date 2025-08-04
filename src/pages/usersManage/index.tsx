@@ -69,15 +69,15 @@ const ColleaguesPage = () => {
       formConfig={formList()}
       initCreate={initCreate}
       onEditOpen={handleEditOpen}
-      isAddOpen={true}
+      isAddOpen={false}
       disableCreate={true}
       disableBatchDelete={!hasPermission('mp:user:delete')}
       apis={{
         fetchApi: userApis.fetch,
-        updateApi: (id: number, data: any) => {
-          // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
-          // 然后再调用您的 userApis.update 函数
-          return userApis.update({ ...data, id });
+        updateApi: (data: any) => {
+          console.log('用户管理 updateApi 接收到的数据:', data);
+          // useCRUD传递的格式是 { id, ...values }
+          return userApis.update(data);
         },
         deleteApi: (id: number[]) => userApis.delete(id),
       }}

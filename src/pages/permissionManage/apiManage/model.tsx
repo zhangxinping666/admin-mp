@@ -133,7 +133,7 @@ export const tableColumns: TableColumn[] = [
 export interface APIGroupTreeNode {
   id: number;
   title: string;
-  value: string;
+  value: number;
   children?: APIGroupTreeNode[];
 }
 

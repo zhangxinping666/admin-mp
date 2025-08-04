@@ -97,9 +97,9 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '城市ID',
-    dataIndex: 'city_id',
-    key: 'city_id',
+    title: '城市',
+    dataIndex: 'city_name',
+    key: 'city_name',
     width: 100,
   },
   {
@@ -155,7 +155,14 @@ export const tableColumns: TableColumn[] = [
 ];
 
 // 表单配置
-export const formList = (): BaseFormList[] => [
+export const formList = ({
+  groupedCityOptions,
+  isLoadingOptions,
+}: {
+  // 建议使用更具体的类型，但 any[] 也能工作
+  groupedCityOptions: any[];
+  isLoadingOptions: boolean;
+}): BaseFormList[] => [
   {
     label: '学校名称',
     name: 'name',
@@ -171,14 +178,16 @@ export const formList = (): BaseFormList[] => [
     rules: FORM_REQUIRED,
   },
   {
-    label: '城市ID',
-    name: 'city_id',
-    component: 'InputNumber',
-    placeholder: '请输入城市ID',
-    rules: FORM_REQUIRED,
+    name: 'city_id', // 这个字段的键名，最终提交给后端
+    label: '城市',
+    component: 'Select',
+    required: true,
+    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
     componentProps: {
-      min: 1,
-      style: { width: '100%' },
+      loading: isLoadingOptions,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+      options: groupedCityOptions,
     },
   },
   {

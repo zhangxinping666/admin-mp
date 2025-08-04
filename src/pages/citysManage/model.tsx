@@ -157,7 +157,7 @@ export const formList = ({
 
   {
     name: 'city_id', // 这个字段的键名，最终提交给后端
-    label: '选择城市',
+    label: '城市',
     component: 'Select',
     required: true,
     placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',

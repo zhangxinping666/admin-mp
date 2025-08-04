@@ -4,6 +4,8 @@ import * as apis from './apis';
 import { Key } from 'react';
 import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
 import useGroupedCityOptions from '@/shared/hooks/useGroupedCityOptions';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 // 初始化新增数据
 const initCreate: Partial<Merchant> = {
@@ -24,17 +26,37 @@ const initCreate: Partial<Merchant> = {
 const MerchantsPage = () => {
   const userStorage = useUserStore();
   const schoolId = userStorage?.userInfo?.school_id;
+  const { permissions } = useUserStore();
   // 替换原来的状态定义和useEffect
   const { groupedCityOptions, isLoadingOptions } = useGroupedCityOptions();
   const [categoryOptions] = useCategoryOptions(schoolId);
 
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
+
+  // 操作列渲染
   const optionRender = (
     record: Merchant,
     actions: {
       handleEdit: (record: Merchant) => void;
       handleDelete: (id: Key[]) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:merchantDetail:update');
+    const canDelete = hasPermission('mp:merchantSort:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   // 定义API调用函数
   const fetchApi = async (params?: any) => {
@@ -87,6 +109,8 @@ const MerchantsPage = () => {
       })}
       initCreate={initCreate}
       isAddOpen={false}
+      disableCreate={!hasPermission('mp:merchantSort:add')}
+      disableBatchDelete={!hasPermission('mp:merchantSort:delete')}
       apis={{
         fetchApi,
         updateApi,

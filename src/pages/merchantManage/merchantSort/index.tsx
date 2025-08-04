@@ -8,6 +8,8 @@ import {
   getMerchantSortList,
 } from './api';
 import type { MerchantSortListRequest, MerchantSortListResponse } from './api';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 // 初始化新增数据
 const initCreate: Partial<MerchantSort> = {
@@ -32,13 +34,34 @@ const fetchList = async (params?: MerchantSortListRequest) => {
 };
 
 const MerchantSortPage = () => {
+  const { permissions } = useUserStore();
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
+
+  // 操作列渲染
   const optionRender = (
     record: MerchantSort,
     actions: {
       handleEdit: (record: MerchantSort) => void;
       handleDelete: (ids: Key[]) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:merchantSort:update');
+    const canDelete = hasPermission('mp:merchantSort:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
 
   return (
     <CRUDPageTemplate
@@ -50,6 +73,8 @@ const MerchantSortPage = () => {
       formConfig={formList()}
       addFormConfig={addFormList()}
       initCreate={initCreate}
+      disableCreate={!hasPermission('mp:merchantSort:add')}
+      disableBatchDelete={!hasPermission('mp:merchantSort:delete')}
       optionRender={optionRender}
       apis={{
         createApi: createMerchantSort,

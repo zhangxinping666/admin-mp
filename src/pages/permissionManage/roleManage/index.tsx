@@ -108,11 +108,11 @@ const RolesPage = () => {
         apis={{
           fetchApi: apis.fetchApi,
           createApi: apis.createApi,
-          updateApi: (id: number, data: any) => {
-            // 正确的做法：将 id 和表单数据 data 合并成一个完整的对象
-            // 然后再调用您的 cityApis.update 函数
-            return apis.updateApi({ ...data, id });
+          updateApi: (data: any) => {
+            console.log('角色管理 updateApi 接收到的数据:', data);
+            return apis.updateApi(data);
           },
+
           deleteApi: (id: number[]) => apis.deleteApi(id),
         }}
         optionRender={optionRender}

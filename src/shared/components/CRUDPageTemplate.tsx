@@ -125,7 +125,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       fetchTableData();
     }
     console.log(tableData);
-  }, [isFetch, page, pageSize, fetchTableData]);
+  }, [isFetch, fetchTableData]); // fetchTableData现在已经用useCallback优化，可以安全作为依赖
 
   // 处理选中行变化
   const handleSelectionChange = (selectedRowKeys: Key[]) => {
@@ -143,7 +143,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       // await apis?.delete?.(selectedRowKeys);
       handleDelete(selectedRowKeys);
       setSelectedRowKeys([]);
-      fetchTableData();
+      // 移除重复的fetchTableData调用，handleDelete内部已经通过setFetch(true)触发刷新
     } catch (error) {
       message.error('删除失败');
     }
@@ -163,7 +163,8 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       });
       message.success('批量更新成功');
       setSelectedRowKeys([]);
-      fetchTableData();
+      // 移除重复的fetchTableData调用，应该通过setFetch(true)触发刷新
+      setFetch(true);
     } catch (error) {
       message.error('批量更新失败');
     }

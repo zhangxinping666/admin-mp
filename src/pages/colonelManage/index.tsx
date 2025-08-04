@@ -167,8 +167,10 @@ function ColleaguesPage() {
       apis={{
         fetchApi: colonelApis.fetch,
         createApi: colonelApis.create,
-        updateApi: (id: number, params: any) => {
-          return colonelApis.update({ id, ...params });
+        updateApi: (data: any) => {
+          console.log('团长管理 updateApi 接收到的数据:', data);
+          // useCRUD传递的格式是 { id, ...values }
+          return colonelApis.update(data);
         },
         deleteApi: (id: Array<number>) => colonelApis.delete(id),
       }}

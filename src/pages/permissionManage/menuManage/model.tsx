@@ -237,6 +237,8 @@ export const formList = ({
       showSearch: true, // 仍然可以支持搜索
       optionFilterProp: 'label',
       style: { width: '100%' },
+      // 自定义显示格式，当值为0时显示"根目录"
+      optionLabelProp: 'label',
     },
     showWhen: {
       name: 'type',

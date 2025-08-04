@@ -4,6 +4,8 @@ import { Key } from 'react';
 import * as apis from './apis';
 import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
 import useUsersOptions from '@/shared/hooks/useUsersOptions';
+import { useUserStore } from '@/stores/user';
+import { checkPermission } from '@/utils/permissions';
 
 // 获取数据
 async function getApplicationList(params?: any) {
@@ -34,11 +36,17 @@ const MerchantApplicationPage = () => {
   const schoolId = userStorage?.userInfo?.school_id;
   const userId = userStorage?.userInfo?.id;
   const schoolName = userStorage?.userInfo?.school_name;
+  const { permissions } = useUserStore();
   const [categoryOptions] = useCategoryOptions(schoolId);
   const [usersOptions] = useUsersOptions(schoolName);
   console.log('categoryOptions', categoryOptions);
   console.log('schoolId', schoolId);
   console.log('usrStore', userStorage);
+
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
+  };
 
   // 初始化新增数据
   const initCreate: Partial<MerchantApplication> = {
@@ -59,13 +67,27 @@ const MerchantApplicationPage = () => {
   };
   // 封装新增表单配置
 
+  // 操作列渲染
   const optionRender = (
     record: MerchantApplication,
     actions: {
       handleEdit: (record: MerchantApplication) => void;
       handleDelete: (id: Key[]) => void;
     },
-  ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  ) => {
+    const canEdit = hasPermission('mp:merchantApl:update');
+    const canDelete = hasPermission('mp:merchantApl:delete');
+
+    return (
+      <TableActions
+        record={record}
+        onEdit={actions.handleEdit}
+        onDelete={actions.handleDelete}
+        disableEdit={!canEdit}
+        disableDelete={!canDelete}
+      />
+    );
+  };
   return (
     <CRUDPageTemplate
       disableBatchUpdate={false}
@@ -81,6 +103,8 @@ const MerchantApplicationPage = () => {
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}
+      disableCreate={!hasPermission('mp:merchantApl:add')}
+      disableBatchDelete={!hasPermission('mp:merchantApl:delete')}
       onEditOpen={(record) => {
         return {
           id: record.id,

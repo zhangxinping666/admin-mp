@@ -17,7 +17,11 @@ interface ExportExcelButtonProps {
   hasExportPermission?: boolean;
 }
 
-const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({ searchData, isLoading, hasExportPermission = true }) => {
+const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
+  searchData,
+  isLoading,
+  hasExportPermission = true,
+}) => {
   const { t } = useTranslation();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -275,9 +279,9 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({ searchData, isLoa
     <>
       {contextHolder}
       <div className="flex items-center">
-        <BaseBtn 
-          isLoading={isLoading} 
-          onClick={handleExportExcel} 
+        <BaseBtn
+          isLoading={isLoading}
+          onClick={handleExportExcel}
           icon={<FileExcelOutlined />}
           disabled={!hasExportPermission}
         >

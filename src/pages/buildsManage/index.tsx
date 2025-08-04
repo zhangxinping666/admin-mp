@@ -1,11 +1,12 @@
 import { searchList, tableColumns, formList, type Building, School, Floor } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
-import { Key } from 'react';
+import { Key, useState } from 'react';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import * as apis from './apis';
 import { Form, Input, InputNumber, message, Modal, Select, Skeleton, Space } from 'antd';
+import { BaseBtn } from '@/components/Buttons';
 import useSelectSchoolOptions from './useSelectSchoolOptions';
 
 // 初始化新增数据
@@ -100,6 +101,11 @@ const BuildingsPage = () => {
         schoolModalVisible: false,
       }));
     }
+  };
+  const { permissions } = useUserStore();
+  // 检查权限的辅助函数
+  const hasPermission = (permission: string) => {
+    return checkPermission(permission, permissions);
   };
 
   // 获取楼层信息
@@ -208,19 +214,36 @@ const BuildingsPage = () => {
       handleShowSchool: (record: Building) => void;
       handleShowFloor: (record: Building) => void;
     },
-  ) => (
-    <Space size="middle" direction="vertical">
-      <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />
-      <Space direction="horizontal" size={20}>
-        <BaseBtn size="small" type="primary" onClick={() => actions.handleShowSchool(record)}>
-          学校信息
-        </BaseBtn>
-        <BaseBtn size="small" type="primary" onClick={() => actions.handleShowFloor(record)}>
-          楼层信息
-        </BaseBtn>
+  ) => {
+    const canEdit = hasPermission('mp:build:update');
+    const canDelete = hasPermission('mp:build:delete');
+    const canViewFloor =
+      hasPermission('mp:floor:add') ||
+      hasPermission('mp:floor:update') ||
+      hasPermission('mp:floor:delete');
+
+    return (
+      <Space size="middle" direction="vertical">
+        <TableActions
+          record={record}
+          onEdit={actions.handleEdit}
+          onDelete={actions.handleDelete}
+          disableEdit={!canEdit}
+          disableDelete={!canDelete}
+        />
+        <Space direction="horizontal" size={20}>
+          <BaseBtn size="small" type="primary" onClick={() => actions.handleShowSchool(record)}>
+            学校信息
+          </BaseBtn>
+          {canViewFloor && (
+            <BaseBtn size="small" type="primary" onClick={() => actions.handleShowFloor(record)}>
+              楼层信息
+            </BaseBtn>
+          )}
+        </Space>
       </Space>
-    </Space>
-  );
+    );
+  };
 
   // 封装表单配置项
   const newFormList = formList().map((item: any) => {
@@ -283,8 +306,8 @@ const BuildingsPage = () => {
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
         formConfig={newFormList}
         initCreate={initCreate}
-        disableCreate={!hasPermission('mp:building:add')}
-        disableBatchDelete={!hasPermission('mp:building:delete')}
+        disableCreate={!hasPermission('mp:build:add')}
+        disableBatchDelete={!hasPermission('mp:build:delete')}
         optionRender={(record, actions) =>
           optionRender(record, {
             ...actions,
@@ -327,45 +350,6 @@ const BuildingsPage = () => {
                 </span>
               )}
             </Form.Item>
-            {/* 其他表单项类似修改
-            <Space>
-              {currentData.editSchoolMode ? (
-                <>
-                  <Space size={20}>
-                    <BaseBtn
-                      type="primary"
-                      onClick={() => {
-                        handleUpdateSchool(form.getFieldsValue());
-                      }}
-                    >
-                      保存
-                    </BaseBtn>
-                    <BaseBtn
-                      onClick={() => {
-                        setCurrentData((prev) => ({
-                          ...prev,
-                          editSchoolMode: false,
-                        }));
-                      }}
-                    >
-                      取消
-                    </BaseBtn>
-                  </Space>
-                </>
-              ) : (
-                <BaseBtn
-                  type="primary"
-                  onClick={() => {
-                    setCurrentData((prev) => ({
-                      ...prev,
-                      editSchoolMode: true,
-                    }));
-                  }}
-                >
-                  编辑
-                </BaseBtn>
-              )}
-            </Space> */}
           </Form>
         ) : (
           <div style={{ padding: 24 }}>
@@ -436,13 +420,161 @@ const BuildingsPage = () => {
                 </span>
               )}
             </Form.Item>
-            {/* 其他表单项 */}
+
+            {/* 操作按钮 */}
+            <Form.Item>
+              <Space>
+                {currentData.editFloorMode ? (
+                  <>
+                    <Space size={20}>
+                      <BaseBtn
+                        type="primary"
+                        onClick={() => {
+                          handleUpdateFloor(form.getFieldsValue());
+                        }}
+                        disabled={!hasPermission('mp:floor:update')}
+                      >
+                        保存
+                      </BaseBtn>
+                      <BaseBtn
+                        onClick={() => {
+                          setCurrentData((prev) => ({
+                            ...prev,
+                            editFloorMode: false,
+                          }));
+                          form.setFieldsValue(currentData.floor);
+                        }}
+                      >
+                        取消
+                      </BaseBtn>
+                    </Space>
+                  </>
+                ) : (
+                  <>
+                    {hasPermission('mp:floor:update') && (
+                      <BaseBtn
+                        type="primary"
+                        onClick={() => {
+                          setCurrentData((prev) => ({
+                            ...prev,
+                            editFloorMode: true,
+                          }));
+                        }}
+                      >
+                        编辑
+                      </BaseBtn>
+                    )}
+                    {hasPermission('mp:floor:delete') && (
+                      <BaseBtn
+                        danger
+                        onClick={() => {
+                          Modal.confirm({
+                            title: '确认删除',
+                            content: '确定要删除这个楼层吗？',
+                            onOk: async () => {
+                              try {
+                                await apis.deleteFloor([currentData.floor?.id]);
+                                message.success('删除成功');
+                                setCurrentData((prev) => ({
+                                  ...prev,
+                                  floor: null,
+                                  floorModalVisible: false,
+                                }));
+                              } catch (error) {
+                                message.error('删除失败');
+                              }
+                            },
+                          });
+                        }}
+                      >
+                        删除
+                      </BaseBtn>
+                    )}
+                  </>
+                )}
+              </Space>
+            </Form.Item>
+          </Form>
+        ) : // 新增楼层表单
+        hasPermission('mp:floor:add') ? (
+          <Form
+            form={form}
+            onFinish={async (values) => {
+              try {
+                await apis.addFloorItem({
+                  school_building_id: currentData.building?.id || 1,
+                  status: values.status,
+                  layer: values.layer,
+                });
+                message.success('楼层信息添加成功');
+                setCurrentData((prev) => ({
+                  ...prev,
+                  floorModalVisible: false,
+                }));
+                // 重新获取楼层信息
+                if (currentData.building?.id) {
+                  await getFloorInfo(currentData.building.id);
+                }
+              } catch (error: any) {
+                message.error('楼层信息添加失败');
+              }
+            }}
+            initialValues={{
+              status: 1,
+              layer: 1,
+            }}
+            layout="vertical"
+          >
+            <Form.Item label="所属楼栋">
+              <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
+                {currentData.building?.name || '暂无数据'}
+              </span>
+            </Form.Item>
+            <Form.Item
+              label="楼层状态"
+              name="status"
+              rules={[{ required: true, message: '请选择楼层状态' }]}
+            >
+              <Select>
+                <Select.Option value={1}>启用</Select.Option>
+                <Select.Option value={0}>禁用</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              label="楼层数量"
+              name="layer"
+              rules={[{ required: true, message: '请输入楼层数量' }]}
+            >
+              <InputNumber min={1} placeholder="请输入楼层数量" />
+            </Form.Item>
+
+            <Form.Item>
+              <Space>
+                <BaseBtn type="primary" htmlType="submit">
+                  添加楼层
+                </BaseBtn>
+                <BaseBtn
+                  onClick={() => {
+                    setCurrentData((prev) => ({
+                      ...prev,
+                      floorModalVisible: false,
+                    }));
+                    form.resetFields();
+                  }}
+                >
+                  取消
+                </BaseBtn>
+              </Space>
+            </Form.Item>
           </Form>
         ) : (
-          <div style={{ padding: 24 }}>
-            <Skeleton active paragraph={{ rows: 5 }} title={{ width: '50%' }} />
+          <div style={{ padding: 24, textAlign: 'center' }}>
+            <p>暂无楼层信息，且您没有添加楼层的权限</p>
           </div>
         )}
+        <div style={{ padding: 24 }}>
+          <Skeleton active paragraph={{ rows: 5 }} title={{ width: '50%' }} />
+        </div>
       </Modal>
     </>
   );
