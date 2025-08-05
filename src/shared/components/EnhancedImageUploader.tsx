@@ -1,5 +1,4 @@
 import { Upload, message, Image, Modal } from 'antd';
-import { UploadProps, UploadFile } from 'antd/es/upload';
 import { PlusOutlined, EyeOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import { useState, useRef } from 'react';
 import { getImage } from '@/servers/img';

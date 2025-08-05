@@ -268,7 +268,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             </Tooltip>
             <BaseTable
               isLoading={isLoading}
-              columns={finalColumns as TableColumnsType}
+              columns={(optionRender ? finalColumns : columns) as TableColumnsType}
               getPage={() => {
                 fetchTableData();
               }}
