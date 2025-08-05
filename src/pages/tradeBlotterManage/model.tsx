@@ -146,7 +146,7 @@ export const searchList = (
       placeholder: [t('tradeBlotter.startTime'), t('tradeBlotter.endTime')],
       allowClear: true,
       showTime: true,
-      format: TIME_FORMAT
+      format: TIME_FORMAT,
     },
     wrapperWidth: 220, // 已有固定宽度
   },
@@ -174,7 +174,6 @@ export const searchList = (
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
       const provinceValue = form.getFieldValue('province');
-      console.log(provinceValue);
       return {
         placeholder: t('tradeBlotter.selectCity'),
         allowClear: true,

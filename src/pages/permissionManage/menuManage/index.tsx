@@ -181,17 +181,28 @@ const MenuPage = () => {
       }}
       apis={{
         fetchApi: async (params: any) => {
+          console.log('菜单管理 fetchApi 接收到的搜索参数:', params);
           // 处理搜索参数，过滤掉空值和无效值
           const searchParams: any = {};
+
           // 菜单名称筛选
-          if (params.name && params.name.trim()) {
+          if (params.name && typeof params.name === 'string' && params.name.trim()) {
             searchParams.name = params.name.trim();
+            console.log('添加菜单名称搜索:', searchParams.name);
           }
-          // 状态筛选
-          if (params.status !== undefined && params.status !== null) {
-            searchParams.status = params.status;
+
+          // 状态筛选 - 只有当状态值为1或2时才添加到搜索参数
+          if (params.status !== undefined && params.status !== null && params.status !== '') {
+            const statusValue = Number(params.status);
+            if (statusValue === 1 || statusValue === 2) {
+              searchParams.status = statusValue;
+              console.log('添加状态搜索:', searchParams.status);
+            }
           }
+
+          console.log('最终发送的搜索参数:', searchParams);
           const response = await menuApis.fetch(searchParams);
+          console.log('API响应数据:', response);
           const flatList = response?.data || [];
           // 调用树形转换函数
           const treeData = buildTree(flatList);
@@ -212,7 +223,7 @@ const MenuPage = () => {
       }}
       optionRender={optionRender}
       onFormValuesChange={handleFormValuesChange}
-      pagination={false}
+      pagination={true}
     />
   );
 };

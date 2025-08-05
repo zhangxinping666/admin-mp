@@ -152,7 +152,10 @@ export const formList = ({
     name: 'phone',
     component: 'Input',
     placeholder: '请输入运营商电话',
-    rules: FORM_REQUIRED,
+    rules: [
+      { required: true, message: '请输入用户电话' },
+      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
+    ],
   },
 
   {

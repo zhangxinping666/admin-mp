@@ -104,7 +104,16 @@ function Page() {
       setFetch(false);
       setLoading(false);
     }
-  }, [pageSize, searchData, direction, nextCursor, nextCreatedAt, prevCursor, prevCreatedAt, messageApi]);
+  }, [
+    pageSize,
+    searchData,
+    direction,
+    nextCursor,
+    nextCreatedAt,
+    prevCursor,
+    prevCreatedAt,
+    messageApi,
+  ]);
 
   useEffect(() => {
     if (isFetch) getPage();
@@ -241,9 +250,9 @@ function Page() {
 
   // 导出 Excel 按钮渲染
   const leftContentRender = (
-    <ExportExcelButton 
-      searchData={searchData} 
-      isLoading={isLoading} 
+    <ExportExcelButton
+      searchData={searchData}
+      isLoading={isLoading}
       hasExportPermission={hasPermission('mp:tradeblotter:export')}
     />
   );

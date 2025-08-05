@@ -78,7 +78,6 @@ function Login() {
   const handleGoMenu = async (menus: SideMenu[], userPermissions: string[]) => {
     // 检查是否有重定向URL
     if (search?.includes('?redirect=')) {
-      console.log('re');
       const redirectUrl = getRedirectUrl();
       if (redirectUrl) {
         // 验证重定向URL是否有权限访问
@@ -120,14 +119,10 @@ function Login() {
       // 获取权限信息 - data 字段直接是 PermissionsData 对象
       const permissionsResponse = await getPermissions({ role: user.name });
       const { menus, perms } = permissionsResponse.data;
-      setMenuList(menus);
-      console.log(menus);
       // 转换后端菜单数据格式
 
       // 从菜单中提取route_path作为权限（因为权限系统基于路径匹配）
       const routePermissions = extractRoutePathsFromMenus(menus);
-      console.log('从菜单中提取的权限路径:', routePermissions);
-      console.log('后端返回的perms权限:', perms);
 
       // 合并路径权限和功能权限
       const finalPermissions = [...routePermissions, ...perms];
@@ -162,17 +157,14 @@ function Login() {
 
       // 获取用户信息 - data 字段直接是 UserInfo 对象
       const user = await getUserInfo();
-      console.log('用户信息数据:', user);
       // 获取权限信息 - data 字段直接是 PermissionsData 对象
       const { menus, perms } = await getUserPermissions(user);
-      console.log(menus);
       setMenuPermissions(extractRoutePathsFromMenus(menus));
       // 处理记住我逻辑 - 在登录成功后保存账号密码
       const passwordObj = { value: values.password, expire: 0 };
       handleRemember(values.account, encryption(passwordObj));
 
       if (!perms || !refresh_token) {
-        console.log('权限检查失败 - perms:', perms, 'refresh_token:', refresh_token);
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
       }
       await handleGoMenu(menus, perms);
@@ -250,13 +242,11 @@ function Login() {
           ? captcha_image
           : `data:image/png;base64,${captcha_image}`;
 
-        console.log('处理后的验证码URL:', imageUrl);
         setCaptchaUrl(imageUrl);
         if (captcha_id) {
           setCaptchaId(captcha_id);
         }
       } else {
-        console.log('未找到验证码图片数据');
         messageApi.error('未找到验证码图片数据');
       }
     } catch (error) {
@@ -365,11 +355,8 @@ function Login() {
                       className="w-full h-full object-contain"
                       onError={(e) => {
                         console.error('验证码图片加载失败:', e);
-                        console.log('当前图片URL:', captchaUrl);
                       }}
-                      onLoad={() => {
-                        console.log('验证码图片加载成功');
-                      }}
+                      onLoad={() => {}}
                     />
                   ) : (
                     <span className="text-xs text-gray-400">点击获取</span>
