@@ -73,7 +73,7 @@ export const searchList = (): BaseSearchList[] => [
       options: [
         { label: '启用', value: 1 },
         { label: '禁用', value: 2 },
-        { label: '全部', value: 3 },
+        { label: '全部', value: 0 },
       ],
     },
   },

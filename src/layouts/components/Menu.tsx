@@ -31,11 +31,8 @@ function LayoutMenu() {
   useEffect(() => {
     if (menuList.length > 0) {
       const filteredMenus = filterMenusByPermissions(menuList, permissions);
-
       const menuListWithIcons = processMenuIcons(filteredMenus);
-
       const treeMenus = buildMenuTree(menuListWithIcons);
-
       const convertToAntdItems = (menus: SideMenu[]): MenuItem[] => {
         return menus.map((menu) => {
           const menuKey = (menu as any).id || (menu as any).key;
@@ -49,12 +46,13 @@ function LayoutMenu() {
           if (menu.children && menu.children.length > 0) {
             item.children = convertToAntdItems(menu.children);
           }
-
           return item;
         });
       };
 
       const antdItems = convertToAntdItems(treeMenus);
+      console.log(111);
+      console.log(antdItems);
       setAntdMenuItems(antdItems);
     } else {
       setAntdMenuItems([]);

@@ -4,7 +4,6 @@ import {
   tableColumns,
   formList,
   type API,
-  getAPIGroupTree,
   type APIGroupTreeNode,
   getAPIMethodOptions,
   type APIMethodOption,
@@ -14,6 +13,7 @@ import { TableActions } from '@/shared/components/TableActions';
 import { getApiList, getApiDetail, addApi, updateApi, deleteApi } from '@/servers/perms/api';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import { getMenuSelectList } from '@/servers/perms/menu'; // 导入您的真实API
 
 // 初始化新增数据
 const initCreate: Partial<API> = {
@@ -36,11 +36,25 @@ const ApiPage = () => {
   // 获取API分组数据
   const fetchApiGroups = async () => {
     try {
-      const groupData = await getAPIGroupTree();
-      console.log('API分组数据:', groupData);
-      setApiGroupData(groupData);
+      const response = await getMenuSelectList({ type: ['2'] });
+      console.log('API分组原始数据:', response);
+
+      // 处理响应数据，转换为TreeSelect需要的格式
+      if (response.code === 2000 && response.data) {
+        const processedData = response.data.map((item: any) => ({
+          title: item.name,
+          value: item.id,
+          key: item.id,
+        }));
+        console.log('API分组处理后数据:', processedData);
+        setApiGroupData(processedData);
+      } else {
+        console.warn('API分组数据格式异常:', response);
+        setApiGroupData([]);
+      }
     } catch (error) {
       console.error('获取API分组失败:', error);
+      setApiGroupData([]);
     }
   };
 
@@ -48,10 +62,20 @@ const ApiPage = () => {
   const fetchApiMethods = async () => {
     try {
       const methodData = await getAPIMethodOptions();
-      console.log('API方法数据:', methodData);
-      setApiMethodOptions(methodData);
+      console.log('API方法原始数据:', methodData);
+
+      // getAPIMethodOptions已经在model.tsx中处理了数据格式
+      // 确保数据格式正确
+      if (Array.isArray(methodData)) {
+        console.log('API方法处理后数据:', methodData);
+        setApiMethodOptions(methodData);
+      } else {
+        console.warn('API方法数据格式异常:', methodData);
+        setApiMethodOptions([]);
+      }
     } catch (error) {
       console.error('获取API方法失败:', error);
+      setApiMethodOptions([]);
     }
   };
 

@@ -24,7 +24,9 @@ function Guards() {
   const [isAutoLogging, setIsAutoLogging] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false); // 标识数据是否已加载完成
   const [isInitialLoad, setIsInitialLoad] = useState(true); // 标识是否为初始加载
-  const { setUserInfo, setPermissions, setMenuPermissions } = useUserStore((state) => state);
+  const { setUserInfo, setPermissions, setMenuPermissions, userInfo } = useUserStore(
+    (state) => state,
+  );
   const { getLoginInfo, clearLoginInfo, permissions, menuList } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
 
@@ -53,7 +55,7 @@ function Guards() {
         setRefreshToken(refresh_token);
 
         const { data: userInfo } = await getUserInfoServe();
-        setUserInfo(user);
+        setUserInfo(userInfo.data);
         // 设置token和用户信息
 
         const permissionsResponse = await getPermissions({ role: userInfo.name });
