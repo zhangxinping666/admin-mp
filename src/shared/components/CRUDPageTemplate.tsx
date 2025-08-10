@@ -124,13 +124,11 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     if (isFetch) {
       fetchTableData();
     }
-    console.log(tableData);
   }, [isFetch, fetchTableData]); // fetchTableData现在已经用useCallback优化，可以安全作为依赖
 
   // 处理选中行变化
   const handleSelectionChange = (selectedRowKeys: Key[]) => {
     setSelectedRowKeys(selectedRowKeys);
-    console.log('selectedRowKeys', selectedRowKeys);
   };
 
   // 批量删除处理
@@ -156,7 +154,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       return;
     }
     try {
-      console.log('selectedRowKeys', selectedRowKeys);
       await apis?.updateApi?.({
         id: selectedRowKeys,
         apply_status,
@@ -197,10 +194,9 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           : null,
     },
   ];
-  console.log('isDelete', isDelete);
   return (
     <>
-      {contextHolder}
+      {contextHolder && contextHolder}
       <BaseContent isPermission={true}>
         <Space direction="vertical" size={'large'} className="w-full overflow-x-auto">
           {/* 导航区域 */}

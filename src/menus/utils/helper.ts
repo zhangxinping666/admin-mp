@@ -129,24 +129,26 @@ export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu 
  * @param permissions - 权限
  */
 export function getFirstMenu(menus: SideMenu[], permissions: string[], result = ''): string {
-  // 有结构时直接返回
+  // 有结果时直接返回
   if (result) return result;
 
   for (let i = 0; i < menus.length; i++) {
-    // 处理子数组
-    if (hasChildren(menus[i]) && !result) {
-      const childResult = getFirstMenu(menus[i].children as SideMenu[], permissions, result);
+    const menu = menus[i];
+    
+    // 如果当前菜单有权限且有路由路径，优先返回当前菜单的路径
+    if (hasPermission(menu, permissions) && menu.route_path && !result) {
+      result = menu.route_path;
+      return result;
+    }
 
-      // 有结果则赋值
+    // 如果当前菜单有子菜单，递归查找子菜单中的第一个有效路由
+    if (hasChildren(menu) && !result) {
+      const childResult = getFirstMenu(menu.children as SideMenu[], permissions, result);
       if (childResult) {
         result = childResult;
         return result;
       }
     }
-
-    // 有权限且没有有子数据
-    if (hasPermission(menus[i], permissions) && !hasChildren(menus[i]) && !result)
-      result = menus[i].route_path;
   }
 
   return result;

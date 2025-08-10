@@ -13,8 +13,6 @@ const useSelectSchoolOptions = () => {
           };
         }),
       );
-      console.log('school', res);
-      console.log('newList', schoolOptions);
     });
   }, []);
 

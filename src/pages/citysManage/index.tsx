@@ -109,8 +109,6 @@ const CitiesPage = () => {
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,
         updateApi: (data: any) => {
-          console.log('城市管理 updateApi 接收到的数据:', data);
-          // useCRUD传递的格式是 { id, ...values }
           return cityApis.update(data);
         },
         deleteApi: (id: Array<number>) => cityApis.delete(id),

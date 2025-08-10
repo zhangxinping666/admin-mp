@@ -79,7 +79,6 @@ function ColleaguesPage() {
 
   // 【新增】当城市选择变化时，调用此函数获取学校列表
   const handleCityChange = async (cityId: string) => {
-    console.log(cityId);
     if (!cityId) {
       setSchoolOptions([]); // 如果清空城市，则清空学校列表
       return;
@@ -95,7 +94,6 @@ function ColleaguesPage() {
       }));
 
       // 【添加这行调试代码】
-      console.log('✅ 即将设置的学校选项 (schoolOptions):', optionsToSet);
 
       setSchoolOptions(optionsToSet);
     } catch (error) {
@@ -108,9 +106,6 @@ function ColleaguesPage() {
   const onEditOpenCallback = (record: any) => {
     // 检查这条记录中是否存在 city_id
     if (record.city_id) {
-      console.log(
-        `编辑框已打开 (回调模式)，检测到 city_id: ${record.city_id}。正在加载学校列表...`,
-      );
       // 调用您已经写好的 handleCityChange 来加载学校列表
       handleCityChange(record.city_id);
     }
@@ -168,7 +163,6 @@ function ColleaguesPage() {
         fetchApi: colonelApis.fetch,
         createApi: colonelApis.create,
         updateApi: (data: any) => {
-          console.log('团长管理 updateApi 接收到的数据:', data);
           // useCRUD传递的格式是 { id, ...values }
           return colonelApis.update(data);
         },

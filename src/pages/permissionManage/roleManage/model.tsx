@@ -238,7 +238,6 @@ export const getDataPermissionTree = async (): Promise<MenuTreeNode[]> => {
       };
     });
 
-    console.log(dataPermissionTree);
     return dataPermissionTree;
   } catch (error) {
     console.error('获取数据权限树时发生根级别错误:', error);

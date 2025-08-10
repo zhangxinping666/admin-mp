@@ -109,7 +109,6 @@ const RolesPage = () => {
           fetchApi: apis.fetchApi,
           createApi: apis.createApi,
           updateApi: (data: any) => {
-            console.log('角色管理 updateApi 接收到的数据:', data);
             return apis.updateApi(data);
           },
 

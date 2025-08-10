@@ -44,7 +44,6 @@ function Guards() {
       try {
         setIsAutoLogging(true);
         const decryptedPassword = decryption(password);
-
         const loginResponse = await login({
           account,
           password: decryptedPassword.value,
@@ -99,10 +98,9 @@ function Guards() {
       const routePermissions = extractRoutePathsFromMenus(menus);
 
       // 合并路径权限和功能权限
-      const finalPermissions = [...routePermissions, ...perms];
+      const finalPermissions = [...routePermissions, ...(perms || [])];
       setPermissions(finalPermissions);
 
-      const menuTree = buildMenuTree(menus);
       setMenuList(menus);
       setMenuPermissions(finalPermissions);
       setIsDataLoaded(true); // 标记数据加载完成
@@ -121,7 +119,8 @@ function Guards() {
   };
 
   useEffect(() => {
-    if (location.pathname === '/login') {
+    // 如果是登录页面且已有token，不要阻止后续逻辑，让第二个useEffect处理重定向
+    if (location.pathname === '/login' && !token) {
       setIsInitialLoad(false);
       return;
     }
@@ -147,11 +146,21 @@ function Guards() {
     } else if (token && permissions.length > 0) {
       setIsInitialLoad(false);
     }
-  }, [permissions.length]);
-
+  }, [permissions.length, token, location.pathname]);
   useEffect(() => {
-    if (!isInitialLoad && token && permissions.length > 0 && menuList.length > 0 && isDataLoaded) {
-      if (['/', '/403', '/404', '/login'].includes(location.pathname)) {
+    if (!isInitialLoad && token && menuList.length > 0) {
+      // 已登录用户访问登录页面时，重定向到首页或第一个有权限的菜单
+      if (location.pathname === '/login') {
+        const firstMenu = getFirstMenu(menuList, permissions);
+        if (firstMenu) {
+          navigate(firstMenu, { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+        return;
+      }
+
+      if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
 
@@ -178,7 +187,6 @@ function Guards() {
       }
     }
   }, [location.pathname, permissions, token, menuList, isDataLoaded, isInitialLoad]);
-
   /** 渲染页面 */
   const renderPage = () => {
     if (isAutoLogging) {
@@ -192,18 +200,7 @@ function Guards() {
       );
     }
 
-    if (token && location.pathname === '/login') {
-      if (menuList.length > 0 && permissions.length > 0) {
-        const firstMenu = getFirstMenu(menuList, permissions);
-        if (firstMenu) {
-          navigate(firstMenu, { replace: true });
-          return null;
-        }
-      }
-      navigate('/', { replace: true });
-      return null;
-    }
-
+    // 移除这里的重复逻辑，让 useEffect 来统一处理已登录用户访问登录页面的情况
     if (location.pathname === '/login') {
       return <div>{outlet}</div>;
     }

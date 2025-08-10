@@ -33,6 +33,8 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
   useEffect(() => {
     if (visible && record) {
       setInitialLoading(true);
+      console.log('开始加载权限数据，角色ID:', record.id);
+      
       // 并行加载权限树数据和角色权限数据
       Promise.all([
         getMenuPermissionTree(),
@@ -41,27 +43,38 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
         getRoleMenuPerms(record.id.toString()),
       ])
         .then(([menuData, dataPermissionData, apiResponse, menuResponse]) => {
+          console.log('权限数据加载完成:');
+          console.log('- 菜单权限树数据:', menuData);
+          console.log('- 数据权限树数据:', dataPermissionData);
+          console.log('- API权限响应:', apiResponse);
+          console.log('- 菜单权限响应:', menuResponse);
+          
           // 设置权限树数据
           setMenuTreeData(menuData);
           setDataPermissionTreeData(dataPermissionData);
 
           // 设置API权限到数据权限
           const apiData = apiResponse.data || [];
+          console.log('原始API权限数据:', apiData);
+          
           // 处理API权限数据，提取ID并转换为带前缀的格式
           const convertedApiIds = apiData.map((item: any) => {
             // 如果是对象，提取id；如果是数字，直接使用
             const id = typeof item === 'object' ? item.id : item;
             return `api-${id}`;
           });
+          console.log('转换后的API权限ID:', convertedApiIds);
           setDataPermissions(convertedApiIds);
 
           // 设置菜单权限到功能权限
           const menuIds = menuResponse.data?.menu_ids || [];
+          console.log('菜单权限ID:', menuIds);
           setFunctionalPermissions(menuIds);
         })
         .catch((error) => {
-          console.error('加载权限数据失败:', error);
-          message.error('加载权限数据失败');
+          console.error('加载权限数据失败，详细错误:', error);
+          console.error('错误堆栈:', error.stack);
+          message.error(`加载权限数据失败: ${error.message || '未知错误'}`);
         })
         .finally(() => {
           setInitialLoading(false);

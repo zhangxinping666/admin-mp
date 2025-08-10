@@ -37,7 +37,6 @@ const ApiPage = () => {
   const fetchApiGroups = async () => {
     try {
       const response = await getMenuSelectList({ type: ['2'] });
-      console.log('API分组原始数据:', response);
 
       // 处理响应数据，转换为TreeSelect需要的格式
       if (response.code === 2000 && response.data) {
@@ -46,7 +45,6 @@ const ApiPage = () => {
           value: item.id,
           key: item.id,
         }));
-        console.log('API分组处理后数据:', processedData);
         setApiGroupData(processedData);
       } else {
         console.warn('API分组数据格式异常:', response);
@@ -62,12 +60,10 @@ const ApiPage = () => {
   const fetchApiMethods = async () => {
     try {
       const methodData = await getAPIMethodOptions();
-      console.log('API方法原始数据:', methodData);
 
       // getAPIMethodOptions已经在model.tsx中处理了数据格式
       // 确保数据格式正确
       if (Array.isArray(methodData)) {
-        console.log('API方法处理后数据:', methodData);
         setApiMethodOptions(methodData);
       } else {
         console.warn('API方法数据格式异常:', methodData);
@@ -86,10 +82,7 @@ const ApiPage = () => {
   }, []);
 
   // 监听数据变化
-  useEffect(() => {
-    console.log('当前API分组数据状态:', apiGroupData);
-    console.log('当前API方法数据状态:', apiMethodOptions);
-  }, [apiGroupData, apiMethodOptions]);
+  useEffect(() => {}, [apiGroupData, apiMethodOptions]);
 
   // API接口配置
   const apis = {
@@ -150,9 +143,6 @@ const ApiPage = () => {
           return apis.createApi(transformedData);
         },
         updateApi: (data: any) => {
-          console.log('API管理 updateApi 接收到的数据:', data);
-
-          // useCRUD传递的格式是 { id, ...values }
           // 确保id是number类型，而不是数组
           const { id, ...values } = data;
           const apiId = Array.isArray(id) ? id[0] : id;
@@ -171,7 +161,6 @@ const ApiPage = () => {
           // 移除原始的group和method字段
           delete transformedData.group;
           delete transformedData.method;
-          console.log('API管理 转换后的数据:', transformedData);
           return apis.updateApi(transformedData);
         },
         deleteApi: (id: number[]) => apis.deleteApi(id),

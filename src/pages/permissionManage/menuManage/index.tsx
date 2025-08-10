@@ -152,7 +152,6 @@ const MenuPage = () => {
   };
   const handleFormValuesChange = (changedValues: any, allValues: any) => {
     if (changedValues.type) {
-      console.log('菜单类型已切换为:', changedValues.type);
       fetchMenuOptionsByType(changedValues.type);
     }
   };
@@ -169,26 +168,21 @@ const MenuPage = () => {
       onFormValuesChange={handleFormValuesChange}
       onEditOpen={(record) => {
         const parentId = record.pid || 0;
-        console.log('编辑菜单，父级菜单ID:', parentId, '菜单数据:', record);
         if (record.type) {
           fetchMenuOptionsByType(record.type);
         }
         if (parentId === 0) {
-          console.log('当前菜单为顶级菜单，父级为根目录');
         } else {
-          console.log('当前菜单有父级菜单，父级ID为:', parentId);
         }
       }}
       apis={{
         fetchApi: async (params: any) => {
-          console.log('菜单管理 fetchApi 接收到的搜索参数:', params);
           // 处理搜索参数，过滤掉空值和无效值
           const searchParams: any = {};
 
           // 菜单名称筛选
           if (params.name && typeof params.name === 'string' && params.name.trim()) {
             searchParams.name = params.name.trim();
-            console.log('添加菜单名称搜索:', searchParams.name);
           }
 
           // 状态筛选 - 只有当状态值为1或2时才添加到搜索参数
@@ -196,17 +190,13 @@ const MenuPage = () => {
             const statusValue = Number(params.status);
             if (statusValue === 1 || statusValue === 2) {
               searchParams.status = statusValue;
-              console.log('添加状态搜索:', searchParams.status);
             }
           }
 
-          console.log('最终发送的搜索参数:', searchParams);
           const response = await menuApis.fetch(searchParams);
-          console.log('API响应数据:', response);
           const flatList = response?.data || [];
           // 调用树形转换函数
           const treeData = buildTree(flatList);
-          console.log('转换后的树形数据:', treeData);
           return {
             data: treeData,
           };
@@ -214,8 +204,6 @@ const MenuPage = () => {
         createApi: menuApis.create,
         // ... existing code ...
         updateApi: (data: any) => {
-          console.log('菜单管理 updateApi 接收到的数据:', data);
-          // useCRUD传递的格式是 { id, ...values }
           return menuApis.update(data);
         },
         // ... existing code ...

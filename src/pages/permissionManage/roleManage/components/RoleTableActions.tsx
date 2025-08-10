@@ -25,30 +25,38 @@ export const RoleTableActions = ({
   disableEdit = false,
   disableDelete = false,
   disablePermissionEdit = false,
-}: RoleTableActionsProps) => (
-  <Space direction="horizontal" size={8}>
-    <Tooltip title={disablePermissionEdit ? '无权限操作' : ''}>
-      <Button
-        type="link"
-        size="small"
-        icon={<SettingOutlined />}
-        onClick={() => !disablePermissionEdit && onEditPermissions(record)}
-        disabled={disablePermissionEdit}
-      >
-        修改权限
-      </Button>
-    </Tooltip>
+}: RoleTableActionsProps) => {
+  // 判断是否为超级管理员角色
+  const isSuperAdmin = record.code === 'SuperAdmin';
+  
+  return (
+    <Space direction="horizontal" size={8}>
+      {/* 如果是超级管理员，则不显示修改权限按钮 */}
+      {!isSuperAdmin && (
+        <Tooltip title={disablePermissionEdit ? '无权限操作' : ''}>
+          <Button
+            type="link"
+            size="small"
+            icon={<SettingOutlined />}
+            onClick={() => !disablePermissionEdit && onEditPermissions(record)}
+            disabled={disablePermissionEdit}
+          >
+            修改权限
+          </Button>
+        </Tooltip>
+      )}
     <Tooltip title={disableEdit ? '无权限操作' : ''}>
       <BaseBtn onClick={() => !disableEdit && onEdit(record)} disabled={disableEdit}>
         {editText}
       </BaseBtn>
     </Tooltip>
-    <Tooltip title={disableDelete ? '无权限操作' : ''}>
-      <DeleteBtn 
-        handleDelete={() => !disableDelete && onDelete(record.id)} 
-        name={deleteText} 
-        disabled={disableDelete}
-      />
-    </Tooltip>
-  </Space>
-);
+      <Tooltip title={disableDelete ? '无权限操作' : ''}>
+        <DeleteBtn 
+          handleDelete={() => !disableDelete && onDelete(record.id)} 
+          name={deleteText} 
+          disabled={disableDelete}
+        />
+      </Tooltip>
+    </Space>
+  );
+};

@@ -91,7 +91,6 @@ const DictionaryManagePage = () => {
             setCurrentItem(record);
             setItemModalVisible(true);
             setIsEditMode(true);
-            console.log('current', currentItem);
           }}
           onDelete={handleDeleteItem}
           deleteText="删除"
@@ -181,7 +180,6 @@ const DictionaryManagePage = () => {
             }
           : completeDictionary,
       );
-      console.log('selectedDictionary', selectedDictionary);
     } catch (error) {
       message.error('获取字典项失败');
     } finally {
@@ -193,7 +191,6 @@ const DictionaryManagePage = () => {
   // 处理选中行变化
   const handleSelectionChange = (selectedRowKeys: Key[]) => {
     setSelectedRowKeys(selectedRowKeys);
-    console.log('selectedRowKeys', selectedRowKeys);
   };
 
   // 删除函数
@@ -355,7 +352,6 @@ const DictionaryManagePage = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 dictionaryForm.setFieldsValue(item);
-                console.log('item', item);
                 setEditModalVisible(true);
                 setIsEditDictionary(true);
               }}
@@ -453,7 +449,6 @@ const DictionaryManagePage = () => {
     dictionaryForm
       .validateFields()
       .then(async (values) => {
-        console.log('values', values);
         try {
           if (isEditDictionary) {
             // 编辑模式

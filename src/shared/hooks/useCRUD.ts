@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, Key, useEffect } from 'react';
-import { message, type FormInstance } from 'antd';
+import { type FormInstance } from 'antd';
+import { message } from '@manpao/message';
 import type { BaseFormData } from '#/form';
 import { INIT_PAGINATION } from '@/utils/config';
 
@@ -18,7 +19,8 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
   // 表单引用
   const createFormRef = useRef<FormInstance>(null);
-  const [messageApi, contextHolder] = message.useMessage();
+  // 使用全局message，无需contextHolder
+  const messageApi = message;
 
   // 状态管理
   const [isFetch, setFetch] = useState(false);
@@ -52,7 +54,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
   // 搜索处理
   const handleSearch = (values: BaseFormData) => {
-    console.log('搜索参数:', values);
     setPage(1);
     setSearchData(values);
     setFetch(true);
@@ -72,10 +73,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     // 【新增】第三个参数：一个可选的回调函数
     onOpen?: (record: T) => void,
   ) => {
-    console.log(record);
     if (!record || record.id === undefined) {
       console.error('handleEdit: record is undefined or missing id property');
-      messageApi.error('编辑失败：数据异常');
+      messageApi.error({ content: '编辑失败：数据异常', duration: 3 });
       return;
     }
     setCreateTitle(title);
@@ -97,10 +97,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       // 确保 deleteApi 存在
       if (deleteApi) {
         // 1. 调用后端的删除接口
-        console.log('deleteApi', id);
         await deleteApi(id);
         // 2. 提示用户操作成功
-        messageApi.success('删除成功');
+        messageApi.success({ content: '删除成功', duration: 3 });
         // 3. 【核心改动 1】检查并处理分页，提升用户体验
         if (tableData.length === 1 && page > 1) {
           setPage(page - 1);
@@ -110,7 +109,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       }
     } catch (error) {
       // 5. 如果接口调用失败，提示错误
-      messageApi.error('删除失败');
+      messageApi.error({ content: '删除失败', duration: 3 });
       console.error('[CRUD] 删除操作失败:', error);
     }
   };
@@ -119,11 +118,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     setCreateLoading(true);
     const isEditing = createId != -1;
     const operationType = isEditing ? '编辑' : '新增';
-
-    console.log(`[CRUD] ${operationType}操作开始`, {
-      data: values,
-      id: isEditing ? createId : undefined,
-    });
     try {
       if (isEditing) {
         // --- 编辑逻辑 ---
@@ -134,7 +128,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
         // 确保id格式正确：如果是application模式且不是数组则转为数组，否则直接使用createId
         const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
         const result = await updateApi({ id: idToPass, ...values });
-        messageApi.success('编辑成功');
+        messageApi.success({ content: '编辑成功', duration: 3 });
 
         // 【核心】触发列表重新获取
         setFetch(true);
@@ -149,8 +143,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           setTotal((prev) => prev + 1);
         } else {
           const result = await createApi(values);
-          console.log(`[CRUD] 新增API调用成功`, { result });
-          messageApi.success('新增成功');
+          messageApi.success({ content: '新增成功', duration: 3 });
           // 【核心】重置到第一页，并触发列表重新获取
           setPage(1);
           setFetch(true);
@@ -165,7 +158,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       });
       // 显示具体的错误信息，如果有的话
       const errorMessage = error?.message || error?.error || `${operationType}失败`;
-      messageApi.error(errorMessage);
+      messageApi.error({ content: errorMessage, duration: 3 });
     } finally {
       setCreateLoading(false);
     }
@@ -175,8 +168,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     async (mockData?: T[]) => {
       setLoading(true);
       try {
-        console.log('触发fetchTableData');
-        console.log('fetchApi:', fetchApi);
         if (fetchApi) {
           const params: any = { ...searchData };
           if (pagination) {
@@ -184,9 +175,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
             params.page = page;
             params.page_size = pageSize;
           }
-          console.log('searchData', params);
           const { data } = await fetchApi(params);
-          console.log('fetch了', data);
           setTableData(data.list || data.data || data || []);
           setTotal(data.total || 0);
         } else if (mockData) {
@@ -195,7 +184,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           setTotal(mockData.length);
         }
       } catch (error) {
-        messageApi.error('获取数据失败');
+        messageApi.error({ content: '获取数据失败', duration: 3 });
       } finally {
         setLoading(false);
         setFetch(false);
@@ -206,7 +195,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
   return {
     // 状态
-    contextHolder,
+    contextHolder: null, // 使用全局message，不需要contextHolder
     createFormRef,
     isFetch,
     setFetch,

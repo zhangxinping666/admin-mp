@@ -125,7 +125,9 @@ function Login() {
       const routePermissions = extractRoutePathsFromMenus(menus);
 
       // 合并路径权限和功能权限
-      const finalPermissions = [...routePermissions, ...perms];
+
+      const finalPermissions = [...routePermissions, ...(perms || [])];
+      console.log(finalPermissions);
       setMenuList(menus);
       setPermissions(finalPermissions);
       return { menus: menus, perms: finalPermissions };
@@ -159,8 +161,6 @@ function Login() {
       const user = await getUserInfo();
       // 获取权限信息 - data 字段直接是 PermissionsData 对象
       const { menus, perms } = await getUserPermissions(user);
-      console.log(menus);
-      console.log(perms);
       setMenuPermissions(extractRoutePathsFromMenus(menus));
       // 处理记住我逻辑 - 在登录成功后保存账号密码
       const passwordObj = { value: values.password, expire: 0 };

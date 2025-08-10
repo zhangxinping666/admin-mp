@@ -57,11 +57,9 @@ const BuildingsPage = () => {
 
   // 查看楼层信息
   const handleShowFloor = async (record: Building) => {
-    console.log('当前选择的楼栋:', record);
     setCurrentData((prev) => ({ ...prev, building: record }));
     try {
       await getFloorInfo(record.id);
-      console.log('当前楼层数据:', currentData.floor);
     } catch (error) {
       console.error('Failed to get floor info:', error);
     }
@@ -112,9 +110,7 @@ const BuildingsPage = () => {
   const getFloorInfo = async (id: number) => {
     try {
       const res = await apis.queryFloorItem();
-      console.log('楼层数据列表:', res.data.list);
       const floor = res.data.list.find((item: Floor) => item.school_building_id === id);
-      console.log(`查找ID为${id}的楼栋对应的楼层:`, floor);
 
       if (!floor) {
         message.error('暂无楼层信息，请联系管理员添加');
@@ -136,7 +132,6 @@ const BuildingsPage = () => {
         // 使用setTimeout确保状态更新后再设置表单值
         setTimeout(() => {
           form.setFieldsValue(floor);
-          console.log('表单已设置的值:', form.getFieldsValue());
         }, 0);
       }
     } catch (error) {

@@ -51,8 +51,6 @@ function LayoutMenu() {
       };
 
       const antdItems = convertToAntdItems(treeMenus);
-      console.log(111);
-      console.log(antdItems);
       setAntdMenuItems(antdItems);
     } else {
       setAntdMenuItems([]);
