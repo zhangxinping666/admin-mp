@@ -254,43 +254,6 @@ const BuildingsPage = () => {
     return item;
   });
 
-  // 异步请求楼栋列表
-  // async function getBuildsFn(param?: object) {
-  //   try {
-  //     const res = await apis.queryBuilding();
-  //   } catch (error) {
-  //     console.error('获取楼栋列表失败:', error);
-  //     message.error('获取楼栋列表失败');
-  //   }
-  // }
-
-  // 异步新增楼栋学校楼层列表
-  // async function createBuildFn(param: any) {
-  //   try {
-  //     const res = await apis.addBuilding({
-  //       name: param.name,
-  //       school_id: param.school_id,
-  //       address: param.address,
-  //       longitude: param.longitude,
-  //       latitude: param.latitude,
-  //       status: param.status,
-  //     });
-  //     // 创建成功后刷新列表
-  //     await getBuildsFn();
-  //     return res;
-  //   } catch (error) {
-  //     console.error('创建记录失败:', error);
-  //     message.error('创建记录失败');
-  //     throw error;
-  //   }
-  // }
-
-  // // 数据获取副作用
-  // useEffect(() => {
-  //   // 请求楼栋信息
-  //   getBuildsFn();
-  // }, []);
-
   return (
     <>
       <CRUDPageTemplate

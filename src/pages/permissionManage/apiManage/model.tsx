@@ -64,8 +64,8 @@ export interface APIDetailResult {
 // 搜索配置
 export const searchList = (): BaseSearchList[] => [
   {
-    label: 'API类别',
-    name: 'group',
+    label: 'API 路径',
+    name: 'path',
     component: 'Input',
     placeholder: '请输入接口路径',
   },

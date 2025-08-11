@@ -95,7 +95,7 @@ const CitiesPage = () => {
 
   return (
     <CRUDPageTemplate
-      title="城市管理"
+      title="城市运营商管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({

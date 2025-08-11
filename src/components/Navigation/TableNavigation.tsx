@@ -71,12 +71,6 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
         case 'merchantApplication':
           segmentTitle = '商户申请';
           break;
-        case 'content':
-          segmentTitle = '内容管理';
-          break;
-        case 'article':
-          segmentTitle = '文章管理';
-          break;
         case 'dictionaryManage':
           segmentTitle = '字典管理';
           break;
@@ -93,13 +87,13 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
           segmentTitle = '余额管理';
           break;
         case 'buildsManage':
-          segmentTitle = '建筑管理';
+          segmentTitle = '楼栋楼层管理';
           break;
         case 'certManage':
-          segmentTitle = '认证管理';
+          segmentTitle = '实名认证管理';
           break;
         case 'citysManage':
-          segmentTitle = '城市管理';
+          segmentTitle = '城市运营商管理';
           break;
         case 'colonelManage':
           segmentTitle = '团长管理';
