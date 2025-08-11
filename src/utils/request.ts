@@ -60,11 +60,9 @@ const updateTokenByRefreshToken = () => {
       if (!newAccessToken) {
         throw new Error('刷新令牌响应中缺少访问令牌');
       }
-
       console.log('令牌刷新成功，更新本地令牌');
       // 更新本地 Token
       setTokens(newAccessToken, newRefreshToken || refreshToken);
-
       console.log(`重新发送 ${expiredRequestArr.length} 个失败的请求`);
       // 重新发送失败的请求
       expiredRequestArr.forEach(({ resolve, reject, request }) => {

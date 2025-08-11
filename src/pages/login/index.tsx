@@ -21,6 +21,7 @@ import { THEME_KEY, PASSWORD_RULE } from '@/utils/config';
 import { ThemeType } from '@/stores/public';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
+import { MENU_ACTIONS } from '@/utils/constants';
 const CHECK_REMEMBER = 'remember-me';
 
 function Login() {
