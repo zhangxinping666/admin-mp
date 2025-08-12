@@ -19,13 +19,14 @@
     "prettier": "prettier --write ."
   },
   "dependencies": {
+    "@amap/amap-react": "^0.1.5",
     "@ant-design/cssinjs": "^1.23.0",
     "@ant-design/icons": "^6.0.0",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@manpao/message": "workspace:^",
     "@manpao/request": "workspace:^",
-    "@manpao/utils": "workspace:^",
     "@manpao/status-codes": "workspace:^",
+    "@manpao/utils": "workspace:^",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-react": "^1.0.6",
     "antd": "^5.25.4",
@@ -57,6 +58,7 @@
     "@loadable/component": "^5.16.7",
     "@manpao/stylelint": "workspace:^",
     "@remix-run/router": "^1.23.0",
+    "@types/amap-js-api": "^1.4.16",
     "@types/loadable__component": "^5.13.9",
     "@types/lodash": "^4.17.17",
     "@types/node": "^22.15.30",

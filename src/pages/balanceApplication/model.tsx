@@ -3,6 +3,7 @@ export interface BalanceApplication {
   user_id: number;
   amount: number;
   order_number: string;
+  status: number;
 }
 
 export interface BalanceApplicationForm {
@@ -54,6 +55,10 @@ export const tableColumns: TableColumn[] = [
     render: (value) => {
       let color = '';
       switch (value) {
+        case 0:
+          color = 'gray';
+          return <span style={{ color }}>待审核</span>;
+
         case 1:
           color = 'green';
           return <span style={{ color }}>成功</span>;
@@ -62,12 +67,6 @@ export const tableColumns: TableColumn[] = [
           return <span style={{ color }}>失败</span>;
       }
     },
-  },
-  {
-    title: '失败原因',
-    dataIndex: 'fail_reason',
-    key: 'fail_reason',
-    width: 80,
   },
 ];
 

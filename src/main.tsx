@@ -3,6 +3,10 @@ import Router from './router';
 import '@/assets/css/public.less';
 import '@/assets/fonts/font.less';
 
+import { config as AmapConfig } from '@amap/amap-react';
+
+AmapConfig.key = import.meta.env.VITE_AMAP_KEY;
+
 // 样式
 import { StyleProvider, legacyLogicalPropertiesTransformer } from '@ant-design/cssinjs'; // 兼容低版本浏览器
 import 'uno.css';

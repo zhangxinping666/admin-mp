@@ -1,7 +1,7 @@
 import request from '@/utils/request';
 
 const apis = {
-  getBalanceApplication: '/withdrawService/list',
+  getBalanceApplication: '/reviewService/list',
   updateBalanceApplication: '/reviewService/reviewResultBack',
 };
 

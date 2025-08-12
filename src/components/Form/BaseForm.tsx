@@ -126,7 +126,9 @@ const BaseForm = forwardRef((props: Props, ref: Ref<FormInstance>) => {
 
     return (
       <Form.Item {...filterFormItem(item)} valuePropName={handleValuePropName(item.component)}>
-        {getComponent(t, item, onPressEnter)}
+        {item.component === 'customize'
+          ? getComponent(t, item, onPressEnter, form)
+          : getComponent(t, item, onPressEnter)}
       </Form.Item>
     );
   };

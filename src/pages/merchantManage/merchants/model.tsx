@@ -4,6 +4,7 @@ import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { Modal } from 'antd';
 import { useState } from 'react';
+import MapPicker from '@/components/MapPicker';
 
 // 添加图片预览组件
 
@@ -288,15 +289,17 @@ export const formList = ({
   groupedCityOptions,
   isLoadingOptions,
   categoryOptions,
+  timer_range,
 }: {
   groupedCityOptions: any;
   isLoadingOptions: boolean;
   categoryOptions: any;
+  timer_range: string[];
 }): BaseFormList[] => [
   {
     label: 'ID',
     name: 'id',
-    component: 'InputNumber',
+    component: 'Input',
     rules: FORM_REQUIRED,
     componentProps: {
       placeholder: '请输入ID',
@@ -401,31 +404,23 @@ export const formList = ({
     },
   },
   {
-    label: '经度',
-    name: 'longitude',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入经度',
-      min: -180,
-      max: 180,
-      step: 0.000001,
-      precision: 6,
-      style: { width: '100%' },
+    label: '位置',
+    name: 'location',
+    component: 'customize',
+    componentProps: (form) => {
+      return {
+        center: [116.397428, 39.90923],
+        zoom: 15,
+        onChange: (value: number[]) => {
+          console.log(value);
+          form.setFieldsValue({
+            location: value,
+          });
+        },
+      };
     },
-  },
-  {
-    label: '纬度',
-    name: 'latitude',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入纬度',
-      min: -90,
-      max: 90,
-      step: 0.000001,
-      precision: 6,
-      style: { width: '100%' },
+    render: () => {
+      return <MapPicker />;
     },
   },
   {
@@ -475,22 +470,12 @@ export const formList = ({
     },
   },
   {
-    label: '营业开始时间',
-    name: 'open_hour',
+    label: '营业时间',
+    name: 'time_range',
     rules: FORM_REQUIRED,
-    component: 'TimePicker',
+    component: 'TimeRangePicker',
     componentProps: {
-      placeholder: '请选择营业开始时间',
-      format: 'HH:mm',
-    },
-  },
-  {
-    label: '营业结束时间',
-    name: 'closed_hour',
-    rules: FORM_REQUIRED,
-    component: 'TimePicker',
-    componentProps: {
-      placeholder: '请选择营业结束时间',
+      placeholder: '请选择营业时间',
       format: 'HH:mm',
     },
   },

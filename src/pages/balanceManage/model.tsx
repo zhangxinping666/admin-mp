@@ -39,8 +39,6 @@ export interface Balance {
   order_no: string; //订单号
   transaction_type: string; //交易收支（1-收入/2-支出）
   transaction_type_name: string; //交易收支名称
-  voucher: number; //交易凭证
-  status: number; //状态:1-处理中，2-成功，3-失败
   opening_balance: number; //变动前余额
   closing_balance: number; //变动后余额
   created_at: string; //创建时间
@@ -56,12 +54,9 @@ export interface BalanceDetail {
   order_no: string; // 订单号
   transaction_type: 'income' | 'expense'; // 交易收支（收入/支出）
   transaction_type_name: string; // 交易收支名称
-  voucher: number; // 交易凭证
-  status: number; // 状态
   opening_balance: number;
   closing_balance: number;
   created_at: string; // 创建时间
-  is_valid: string;
   action?: React.ReactNode;
 }
 

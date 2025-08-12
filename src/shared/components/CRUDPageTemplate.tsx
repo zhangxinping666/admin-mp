@@ -31,6 +31,8 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   formConfig: BaseFormList[];
   initCreate: Partial<T>;
   mockData?: T[];
+  onRow?: any;
+
   apis?: {
     fetchApi?: (params: any) => Promise<any>;
     createApi?: (params: any) => Promise<any>;
@@ -68,6 +70,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   mockData,
   onEditOpen,
   apis,
+  onRow,
   pagination,
   optionRender,
   onCreateClick,
@@ -197,6 +200,23 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           : null,
     },
   ];
+  // 处理搜索项，默认添加一个状态搜索
+  const searchList = [
+    ...searchConfig,
+    {
+      label: '状态',
+      name: 'status',
+      component: 'Select',
+      componentProps: {
+        placeholder: '请选择状态',
+        options: [
+          { label: '全部', value: 0 },
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 2 },
+        ],
+      },
+    },
+  ];
   console.log('isDelete', isDelete);
   return (
     <>
@@ -214,7 +234,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
 
           {/* 搜索区域 */}
           <BaseCard>
-            <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
+            <BaseSearch data={{}} list={searchList} handleFinish={handleSearch} />
           </BaseCard>
 
           {/* 表格区域 */}
@@ -272,6 +292,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
               getPage={() => {
                 fetchTableData();
               }}
+              onRow={onRow}
               dataSource={tableData}
               rowKey={(record: any) => record.id}
               pagination={false}

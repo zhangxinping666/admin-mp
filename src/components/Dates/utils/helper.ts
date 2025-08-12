@@ -32,7 +32,34 @@ export function string2Dayjs(value: Dayjs | string): Dayjs {
   if (dayjs.isDayjs(value)) {
     return value;
   }
-  return dayjs(value);
+  // 标准化处理
+  let normalized = value
+    .replace(/[：]/g, ':')
+    .replace(/[﹣－]/g, '-')
+    .replace(/\s/g, '')
+    .replace(/(?<!\d)(\d)(?=:)/g, (m) => m.padStart(2, '0'));
+
+  // 支持的格式列表（新增H:mm格式）
+  const formats = [
+    'H:mm', // 单数字小时
+    'HH:mm',
+    'H:mm:ss',
+    'HH:mm:ss',
+    'h:mm a',
+    'YYYY-M-D HH:mm',
+    'YYYY/MM/DD HH:mm',
+  ];
+
+  // 依次尝试各个格式
+  for (const fmt of formats) {
+    const dt = dayjs(normalized, fmt, true);
+    if (dt.isValid()) {
+      return dt;
+    }
+  }
+
+  // 最后尝试dayjs自动解析
+  return dayjs(normalized).isValid() ? dayjs(normalized) : dayjs();
 }
 
 /**

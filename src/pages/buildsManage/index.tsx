@@ -375,13 +375,7 @@ const BuildingsPage = () => {
         width={800}
       >
         {currentData.floor ? (
-          <Form
-            form={form}
-            onFinish={handleUpdateFloor}
-            initialValues={currentData.floor}
-            // 添加监听以确保表单始终与状态同步
-            watch={Object.keys(currentData.floor || {})}
-          >
+          <Form form={form} onFinish={handleUpdateFloor} initialValues={currentData.floor}>
             <Form.Item label="所属楼栋" name="building_name">
               <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
                 {currentData.building?.name || '暂无数据'}

@@ -93,7 +93,7 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
           segmentTitle = '余额管理';
           break;
         case 'buildsManage':
-          segmentTitle = '建筑管理';
+          segmentTitle = '楼栋楼层管理';
           break;
         case 'certManage':
           segmentTitle = '认证管理';
