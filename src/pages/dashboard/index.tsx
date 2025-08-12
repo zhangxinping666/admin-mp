@@ -47,9 +47,7 @@ function Dashboard() {
     handleSearch(initSearch);
   }, [handleSearch]);
 
-  useEffect(() => {
-    console.log(isPermission);
-  }, [isPermission]);
+  useEffect(() => {}, [isPermission]);
 
   return (
     <BaseContent isPermission={isPermission}>

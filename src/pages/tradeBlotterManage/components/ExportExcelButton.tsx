@@ -205,7 +205,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
 
             // 处理成功状态
             if (status === 'success' && file && !isHandledRef.current) {
-              console.log('Export task succeeded, preparing to download file');
               // 立即标记为已处理，防止重复处理
               isHandledRef.current = true;
               // 立即清除轮询定时器
@@ -217,7 +216,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
             }
             // 处理失败状态
             else if (status === 'failed' && !isHandledRef.current) {
-              console.log('Export task failed');
               // 立即标记为已处理，防止重复处理
               isHandledRef.current = true;
               // 立即清除轮询定时器

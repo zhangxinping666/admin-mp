@@ -95,7 +95,7 @@ const CitiesPage = () => {
 
   return (
     <CRUDPageTemplate
-      title="城市管理"
+      title="城市运营商管理"
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({
@@ -109,8 +109,6 @@ const CitiesPage = () => {
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,
         updateApi: (data: any) => {
-          console.log('城市管理 updateApi 接收到的数据:', data);
-          // useCRUD传递的格式是 { id, ...values }
           return cityApis.update(data);
         },
         deleteApi: (id: Array<number>) => cityApis.delete(id),

@@ -60,8 +60,6 @@ const CertPage = () => {
       apis={{
         fetchApi: certApis.fetch,
         updateApi: (data: any) => {
-          console.log('updateApi received data:', data);
-          // 从useCRUD传来的数据格式是 { id: number, ...formValues }
           // 需要提取id和status字段
           const { id, status } = data;
           return certApis.update({ id, status });

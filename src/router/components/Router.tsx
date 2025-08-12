@@ -27,21 +27,23 @@ function getRoutePaths(menus: any[]): string[] {
 
 const newRoutes: RouteObject[] = [
   {
-    path: 'login',
-    element: <Login />,
-  },
-  {
-    path: 'forget',
-    element: <Forget />,
-  },
-  {
-    path: '',
-    element: <Guards />,
-    children: layouts, // layouts 是在模块加载时就计算好的
-  },
-  {
     path: '*',
-    element: <NotFound />,
+    element: <Guards />,
+    children: [
+      {
+        path: 'login',
+        element: <Login />,
+      },
+      {
+        path: 'forget',
+        element: <Forget />,
+      },
+      ...layouts, // layouts 是在模块加载时就计算好的
+      {
+        path: '*',
+        element: <NotFound />,
+      },
+    ],
   },
 ];
 

@@ -57,11 +57,9 @@ const BuildingsPage = () => {
 
   // 查看楼层信息
   const handleShowFloor = async (record: Building) => {
-    console.log('当前选择的楼栋:', record);
     setCurrentData((prev) => ({ ...prev, building: record }));
     try {
       await getFloorInfo(record.id);
-      console.log('当前楼层数据:', currentData.floor);
     } catch (error) {
       console.error('Failed to get floor info:', error);
     }
@@ -112,9 +110,7 @@ const BuildingsPage = () => {
   const getFloorInfo = async (id: number) => {
     try {
       const res = await apis.queryFloorItem();
-      console.log('楼层数据列表:', res.data.list);
       const floor = res.data.list.find((item: Floor) => item.school_building_id === id);
-      console.log(`查找ID为${id}的楼栋对应的楼层:`, floor);
 
       if (!floor) {
         message.error('暂无楼层信息，请联系管理员添加');
@@ -136,7 +132,6 @@ const BuildingsPage = () => {
         // 使用setTimeout确保状态更新后再设置表单值
         setTimeout(() => {
           form.setFieldsValue(floor);
-          console.log('表单已设置的值:', form.getFieldsValue());
         }, 0);
       }
     } catch (error) {
@@ -259,48 +254,12 @@ const BuildingsPage = () => {
     return item;
   });
 
-  // 异步请求楼栋列表
-  // async function getBuildsFn(param?: object) {
-  //   try {
-  //     const res = await apis.queryBuilding();
-  //   } catch (error) {
-  //     console.error('获取楼栋列表失败:', error);
-  //     message.error('获取楼栋列表失败');
-  //   }
-  // }
-
-  // 异步新增楼栋学校楼层列表
-  // async function createBuildFn(param: any) {
-  //   try {
-  //     const res = await apis.addBuilding({
-  //       name: param.name,
-  //       school_id: param.school_id,
-  //       address: param.address,
-  //       longitude: param.longitude,
-  //       latitude: param.latitude,
-  //       status: param.status,
-  //     });
-  //     // 创建成功后刷新列表
-  //     await getBuildsFn();
-  //     return res;
-  //   } catch (error) {
-  //     console.error('创建记录失败:', error);
-  //     message.error('创建记录失败');
-  //     throw error;
-  //   }
-  // }
-
-  // // 数据获取副作用
-  // useEffect(() => {
-  //   // 请求楼栋信息
-  //   getBuildsFn();
-  // }, []);
-
   return (
     <>
       <CRUDPageTemplate
         isAddOpen={true}
         isDelete={true}
+        disableBatchUpdate={true}
         title="楼栋楼层管理"
         searchConfig={searchList()}
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
@@ -316,9 +275,19 @@ const BuildingsPage = () => {
           })
         }
         apis={{
-          createApi: apis.addBuilding,
+          createApi: (params) => {
+            params.longitude = params.location[0];
+            params.latitude = params.location[1];
+            delete params.location;
+            return apis.addBuilding(params);
+          },
           fetchApi: apis.queryBuilding,
-          updateApi: apis.updateBuilding,
+          updateApi: (params) => {
+            params.longitude = params.location[0];
+            params.latitude = params.location[1];
+            delete params.location;
+            return apis.updateBuilding(params);
+          },
           deleteApi: apis.deleteBuilding,
         }}
       />
@@ -566,9 +535,6 @@ const BuildingsPage = () => {
             <p>暂无楼层信息，且您没有添加楼层的权限</p>
           </div>
         )}
-        <div style={{ padding: 24 }}>
-          <Skeleton active paragraph={{ rows: 5 }} title={{ width: '50%' }} />
-        </div>
       </Modal>
     </>
   );

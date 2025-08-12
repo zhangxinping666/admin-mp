@@ -75,8 +75,6 @@ const ColleaguesPage = () => {
       apis={{
         fetchApi: userApis.fetch,
         updateApi: (data: any) => {
-          console.log('用户管理 updateApi 接收到的数据:', data);
-          // useCRUD传递的格式是 { id, ...values }
           return userApis.update(data);
         },
         deleteApi: (id: number[]) => userApis.delete(id),

@@ -20,7 +20,6 @@ export function getExportTaskStatusServe(taskId: number | string) {
 
 // 下载导出文件
 export function downloadExportFileServe(filePath: string) {
-  console.log('file', filePath)
   return request.get<any, Blob>(`/tradeBlotter/export/task/download?file=${filePath}`, {
     // params: { file: filePath },
     responseType: 'blob'

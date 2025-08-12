@@ -286,15 +286,12 @@ export const tableColumns: TableColumn[] = [
 
 // 表单配置项
 export const formList = ({
-  groupedCityOptions,
-  isLoadingOptions,
   categoryOptions,
-  timer_range,
 }: {
-  groupedCityOptions: any;
-  isLoadingOptions: boolean;
+  groupedCityOptions?: any;
+  isLoadingOptions?: boolean;
   categoryOptions: any;
-  timer_range: string[];
+  timer_range?: string[];
 }): BaseFormList[] => [
   {
     label: 'ID',
@@ -409,18 +406,18 @@ export const formList = ({
     component: 'customize',
     componentProps: (form) => {
       return {
-        center: [116.397428, 39.90923],
+        initCenter: [116.397428, 39.90923],
         zoom: 15,
         onChange: (value: number[]) => {
-          console.log(value);
+          console.log('value', value);
           form.setFieldsValue({
             location: value,
           });
         },
       };
     },
-    render: () => {
-      return <MapPicker />;
+    render: (props: any) => {
+      return <MapPicker {...props} />;
     },
   },
   {

@@ -115,7 +115,6 @@ const SchoolsPage = () => {
         createApi: schoolApis.create,
         fetchApi: schoolApis.fetch,
         updateApi: (data: any) => {
-          console.log('学校管理 updateApi 接收到的数据:', data);
           return schoolApis.update(data);
         },
         deleteApi: (id: number[]) => schoolApis.delete(id),

@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Card, Row, Col, Form, Button, Space, Divider, Typography, message } from 'antd';
-import { ImageUpload, AdvancedImageUpload, CropImageUpload, ImagePreview } from '@/components/Upload';
+import {
+  ImageUpload,
+  AdvancedImageUpload,
+  CropImageUpload,
+  ImagePreview,
+} from '@/components/Upload';
 import type { UploadFile } from 'antd';
 import type { UploadImg } from '@/components/Upload';
 
@@ -18,19 +23,17 @@ const ImageUploadExample: React.FC = () => {
       url: 'https://via.placeholder.com/300x200/4CAF50/FFFFFF?text=Image+1',
     },
     {
-      uid: '2', 
+      uid: '2',
       name: '示例图片2.jpg',
       url: 'https://via.placeholder.com/300x200/2196F3/FFFFFF?text=Image+2',
     },
   ]);
 
   const handleFormSubmit = (values: any) => {
-    console.log('表单数据:', values);
     message.success('表单提交成功！');
   };
 
   const handleUploadSuccess = (file: UploadFile, fileList: UploadFile[]) => {
-    console.log('上传成功:', file, fileList);
     message.success(`${file.name} 上传成功！`);
   };
 
@@ -104,9 +107,7 @@ const ImageUploadExample: React.FC = () => {
         <Col span={24}>
           <Card title="裁剪图片上传 (CropImageUpload)" size="small">
             <Paragraph>
-              <Text type="secondary">
-                带图片裁剪功能的上传组件，支持自定义裁剪比例和形状。
-              </Text>
+              <Text type="secondary">带图片裁剪功能的上传组件，支持自定义裁剪比例和形状。</Text>
             </Paragraph>
             <Space direction="vertical" style={{ width: '100%' }}>
               <div>
@@ -121,7 +122,7 @@ const ImageUploadExample: React.FC = () => {
                   onUploadError={handleUploadError}
                 />
               </div>
-              
+
               <div>
                 <Text strong>圆形裁剪:</Text>
                 <CropImageUpload
@@ -132,12 +133,12 @@ const ImageUploadExample: React.FC = () => {
                   onUploadError={handleUploadError}
                 />
               </div>
-              
+
               <div>
                 <Text strong>16:9 比例裁剪:</Text>
                 <CropImageUpload
                   maxCount={1}
-                  aspectRatio={16/9}
+                  aspectRatio={16 / 9}
                   cropShape="rect"
                   onUploadSuccess={handleUploadSuccess}
                   onUploadError={handleUploadError}
@@ -165,12 +166,12 @@ const ImageUploadExample: React.FC = () => {
                 <Text strong>单张图片预览:</Text>
                 <ImagePreview images={previewImages[0]} />
               </div>
-              
+
               <div>
                 <Text strong>多张图片预览:</Text>
                 <ImagePreview images={previewImages} />
               </div>
-              
+
               <div>
                 <Text strong>字符串URL预览:</Text>
                 <ImagePreview images="https://via.placeholder.com/150x150/FF5722/FFFFFF?text=URL" />
@@ -183,9 +184,7 @@ const ImageUploadExample: React.FC = () => {
         <Col span={24}>
           <Card title="表单集成示例" size="small">
             <Paragraph>
-              <Text type="secondary">
-                演示如何在Ant Design表单中使用图片上传组件。
-              </Text>
+              <Text type="secondary">演示如何在Ant Design表单中使用图片上传组件。</Text>
             </Paragraph>
             <Form
               form={form}
@@ -202,33 +201,15 @@ const ImageUploadExample: React.FC = () => {
                 name="avatar"
                 rules={[{ required: true, message: '请上传头像' }]}
               >
-                <CropImageUpload
-                  maxCount={1}
-                  aspectRatio={1}
-                  cropShape="round"
-                  maxSize={1}
-                />
+                <CropImageUpload maxCount={1} aspectRatio={1} cropShape="round" maxSize={1} />
               </Form.Item>
 
-              <Form.Item
-                label="图片库"
-                name="gallery"
-              >
-                <AdvancedImageUpload
-                  maxCount={6}
-                  listType="picture-card"
-                  enableCompress
-                />
+              <Form.Item label="图片库" name="gallery">
+                <AdvancedImageUpload maxCount={6} listType="picture-card" enableCompress />
               </Form.Item>
 
-              <Form.Item
-                label="缩略图"
-                name="thumbnail"
-              >
-                <ImageUpload
-                  maxCount={1}
-                  maxSize={0.5}
-                />
+              <Form.Item label="缩略图" name="thumbnail">
+                <ImageUpload maxCount={1} maxSize={0.5} />
               </Form.Item>
 
               <Form.Item>
@@ -236,9 +217,7 @@ const ImageUploadExample: React.FC = () => {
                   <Button type="primary" htmlType="submit">
                     提交表单
                   </Button>
-                  <Button onClick={() => form.resetFields()}>
-                    重置
-                  </Button>
+                  <Button onClick={() => form.resetFields()}>重置</Button>
                 </Space>
               </Form.Item>
             </Form>

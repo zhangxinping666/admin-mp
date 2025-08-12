@@ -107,7 +107,6 @@ const initCreate: Partial<Balance> = {
 // ];
 // 获取数据
 const getBalanceInfo = async (params?: any) => {
-  console.log('我写的');
   const res = await apis.getBalanceInfo(params);
   return res;
 };

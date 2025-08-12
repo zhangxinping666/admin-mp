@@ -86,7 +86,7 @@ function getRouterPage(path: string): string {
   let result = path.substring(pageIndex, lastIndex);
 
   // 如果是首页则直接返回/
-  if (result === '/index') return '/';
+  if (result === '/index') return '';
 
   // 如果结尾是index则去除
   if (result.includes('index')) {
@@ -99,6 +99,11 @@ function getRouterPage(path: string): string {
   // 如果是动态参数路由
   if (result.includes('[') && result.includes(']')) {
     result = handleRouterDynamic(result);
+  }
+
+  // 移除开头的斜杠，使其成为相对路径
+  if (result.startsWith('/')) {
+    result = result.substring(1);
   }
 
   return result;

@@ -76,8 +76,8 @@ const MerchantsPage = () => {
       status: params.status,
       type: params.type,
       category: params.category,
-      longitude: params.longitude,
-      latitude: params.latitude,
+      longitude: params.location[0],
+      latitude: params.location[1],
       is_dormitory_store: params.is_dormitory_store,
       recommend: params.recommend,
       open_hour: params.open_hour,
@@ -101,10 +101,9 @@ const MerchantsPage = () => {
       title="商家管理"
       isDelete={true}
       searchConfig={searchList(groupedCityOptions, isLoadingOptions)}
+      disableBatchUpdate={true}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList({
-        groupedCityOptions,
-        isLoadingOptions,
         categoryOptions,
       })}
       initCreate={initCreate}
