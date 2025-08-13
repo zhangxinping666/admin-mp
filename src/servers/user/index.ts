@@ -22,3 +22,7 @@ export function updateUser(data: updateUserForm) {
 export function deleteUser(id: Array<number>) {
   return request.delete('/backUser/delete', { data: { id_list: id } });
 }
+//用户列表
+export function getUserListByPage() {
+  return request.get('/backUser/simple_list');
+}

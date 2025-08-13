@@ -14,6 +14,7 @@ export interface Colonel {
   school_id: number;
   province: string;
   status: number;
+  user_id?: number;
 }
 
 export interface addColonelForm {
@@ -23,6 +24,7 @@ export interface addColonelForm {
   school_id: number;
   city_id: number;
   status: number;
+  user_id?: number;
 }
 
 export interface updateColonelForm {
@@ -33,6 +35,7 @@ export interface updateColonelForm {
   school_id: number;
   city_id: number;
   status: number;
+  user_id?: number;
 }
 
 export interface Pagination {
@@ -132,12 +135,16 @@ export const formList = ({
   isLoadingOptions,
   schoolOptions,
   isSchoolLoading,
+  userOptions,
+  isLoadingUsers,
 }: {
   // 建议使用更具体的类型，但 any[] 也能工作
   groupedCityOptions: any[];
   isLoadingOptions: boolean;
   schoolOptions: any[];
   isSchoolLoading: boolean;
+  userOptions: any[];
+  isLoadingUsers: boolean;
 }): BaseFormList[] => [
   {
     label: '团长名称',
@@ -181,6 +188,20 @@ export const formList = ({
       optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
       options: schoolOptions,
       disabled: isSchoolLoading,
+    },
+  },
+  {
+    name: 'user_id',
+    label: '用户',
+    component: 'Select',
+    placeholder: isLoadingUsers ? '正在加载用户数据...' : '请选择或搜索用户',
+    required: true,
+    componentProps: {
+      loading: isLoadingUsers,
+      showSearch: true,
+      optionFilterProp: 'label',
+      options: userOptions,
+      disabled: isLoadingUsers,
     },
   },
   {

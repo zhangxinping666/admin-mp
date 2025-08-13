@@ -135,10 +135,14 @@ export const tableColumns: TableColumn[] = [
 export const formList = ({
   groupedCityOptions,
   isLoadingOptions,
+  userOptions,
+  isLoadingUsers,
 }: {
   // 建议使用更具体的类型，但 any[] 也能工作
   groupedCityOptions: any[];
+  userOptions: any[];
   isLoadingOptions: boolean;
+  isLoadingUsers: boolean;
 }): BaseFormList[] => [
   {
     label: '运营商名称',
@@ -156,6 +160,19 @@ export const formList = ({
       { required: true, message: '请输入用户电话' },
       { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
     ],
+  },
+  {
+    name: 'user_id',
+    label: '用户',
+    component: 'Select',
+    required: true,
+    placeholder: '请选择用户',
+    componentProps: {
+      loading: isLoadingUsers,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+      options: userOptions,
+    },
   },
 
   {
@@ -175,7 +192,7 @@ export const formList = ({
     label: '运营商密码',
     name: 'password',
     component: 'Input',
-    placeholder: '私密不展示密码',
+    placeholder: '不展示密码',
     componentProps: {
       style: { width: '100%' },
     },

@@ -3,6 +3,7 @@ import { searchList, tableColumns, formList, type Colonel } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getProvinceList, getCityName } from '@/servers/city';
+import { getUserListByPage } from '@/servers/user';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import {
@@ -13,13 +14,16 @@ import {
   getSchoolListByCityId,
 } from '@/servers/colonel';
 // 初始化新增数据
-const initCreate: Partial<Colonel> = {
+// 初始化数据将在数据加载完成后动态设置
+let initCreate: Partial<Colonel> = {
   id: 0,
   name: '',
   phone: '',
   password: '',
-  city_id: 1, // 默认城市ID
+  city_id: undefined, // 将在数据加载后设置为第一个城市ID
   status: 1, // 默认状态
+  school_id: undefined, // 将在数据加载后设置为第一个学校ID
+  user_id: undefined, // 关联用户ID
 };
 const colonelApis = {
   fetch: getColonelList,
@@ -36,16 +40,60 @@ interface SchoolOption {
   value: number;
 }
 
+interface UserOption {
+  label: string;
+  value: number;
+}
+
 function ColleaguesPage() {
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   // 【新增】学校选择框的状态
   const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
   const [isSchoolLoading, setIsSchoolLoading] = useState(false);
+  // 【新增】用户选择框的状态
+  const [userOptions, setUserOptions] = useState<UserOption[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   // 检查权限的辅助函数
   const { permissions } = useUserStore();
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
+  };
+
+  // 【新增】加载用户数据
+  const fetchUserOptions = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const response = await getUserListByPage();
+      console.log('用户接口返回数据:', response);
+
+      // 检查不同的数据结构可能性
+      if (response && response.code === 2000) {
+        // 直接在response层级有code
+        const users = response.data || [];
+        console.log('用户数据 (方式1):', users);
+        const userOptionsList = users.map((user: any) => ({
+          label: user.username,
+          value: user.id,
+        }));
+        setUserOptions(userOptionsList);
+      } else if (response.data && response.data.code === 0) {
+        // 在response.data层级有code
+        const users = response.data.data || [];
+        console.log('用户数据 (方式2):', users);
+        const userOptionsList = users.map((user: any) => ({
+          label: user.username,
+          value: user.id,
+        }));
+        setUserOptions(userOptionsList);
+      } else {
+        console.log('未知的数据结构:', response);
+      }
+    } catch (error) {
+      console.error('加载用户选项失败:', error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
   };
   useEffect(() => {
     const fetchAndGroupData = async () => {
@@ -68,6 +116,30 @@ function ColleaguesPage() {
           };
         });
         setGroupedCityOptions(finalOptions);
+
+        // 获取第一个城市的ID并加载其学校列表
+        if (finalOptions.length > 0 && finalOptions[0].options.length > 0) {
+          const firstCityId = finalOptions[0].options[0].value;
+          initCreate.city_id = firstCityId;
+
+          // 加载第一个城市的学校列表
+          try {
+            const schoolResponse = await getSchoolListByCityId(firstCityId.toString());
+            const schools = schoolResponse.data || [];
+            const schoolOptionsList = schools.map((school: any) => ({
+              label: school.name,
+              value: school.id,
+            }));
+            setSchoolOptions(schoolOptionsList);
+
+            // 设置第一个学校为默认值
+            if (schoolOptionsList.length > 0) {
+              initCreate.school_id = schoolOptionsList[0].value;
+            }
+          } catch (schoolError) {
+            console.error('加载默认学校列表失败:', schoolError);
+          }
+        }
       } catch (error) {
         console.error('加载省市选项失败:', error);
       } finally {
@@ -75,6 +147,7 @@ function ColleaguesPage() {
       }
     };
     fetchAndGroupData();
+    fetchUserOptions();
   }, []);
 
   // 【新增】当城市选择变化时，调用此函数获取学校列表
@@ -155,6 +228,8 @@ function ColleaguesPage() {
         isLoadingOptions,
         schoolOptions,
         isSchoolLoading,
+        userOptions,
+        isLoadingUsers,
       })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:colonel:add')}
