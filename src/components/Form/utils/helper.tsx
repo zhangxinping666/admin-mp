@@ -13,6 +13,9 @@ export function handleValuePropName(component: ComponentType): string {
     case 'Switch':
       return 'checked';
 
+    case 'Checkbox':
+      return 'checked';
+
     case 'Upload':
       return 'fileList';
 

@@ -34,7 +34,7 @@ const MerchantApplicationPage = () => {
   // 获取用户信息
   const userStorage = useUserStore();
   const schoolId = userStorage?.userInfo?.school_id;
-  const userId = userStorage?.userInfo?.id;
+  const roleId = userStorage?.userInfo?.role_id;
   const schoolName = userStorage?.userInfo?.school_name;
   const { permissions } = useUserStore();
   const [categoryOptions] = useCategoryOptions(schoolId);
@@ -91,7 +91,7 @@ const MerchantApplicationPage = () => {
   return (
     <CRUDPageTemplate
       disableBatchUpdate={false}
-      isAddOpen={true}
+      isAddOpen={roleId === 4}
       isDelete={true}
       addFormConfig={addFormList({
         categoryOptions,
@@ -115,6 +115,9 @@ const MerchantApplicationPage = () => {
         fetchApi: getApplicationList,
         createApi: async (data) => {
           data.is_dorm_store = data.is_dorm_store === 0 ? false : true;
+          data.longitude = data.location?.[0];
+          data.latitude = data.location?.[1];
+          delete data.location;
           const res = await apis.createApplication(data);
           return res;
         },

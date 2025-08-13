@@ -1,6 +1,8 @@
 import { CRUDPageTemplate } from '@/shared';
 import { searchList, tableColumns, formList, type Balance } from './model';
 import * as apis from './apis';
+import { isNumber, isString } from 'lodash';
+import { Modal, Table } from 'antd';
 
 // 初始化新增数据
 const initCreate: Partial<Balance> = {
@@ -11,8 +13,6 @@ const initCreate: Partial<Balance> = {
   order_no: '',
   transaction_type: '',
   transaction_type_name: '',
-  voucher: 0,
-  status: 1,
   opening_balance: 0,
   closing_balance: 0,
   created_at: '',
@@ -120,22 +120,60 @@ const BalanceRecordsPage = () => {
   //     handleDelete: (id: Key[]) => void;
   //   },
   // ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
+  const [visible, setVisible] = useState(false);
+  const [detailData, setDetailData] = useState<any[]>([]);
 
   return (
-    <CRUDPageTemplate
-      isAddOpen={false}
-      isDelete={false}
-      title="余额明细管理"
-      searchConfig={searchList()}
-      columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
-      formConfig={formList()}
-      initCreate={initCreate}
-      // mockData={mockData}
-      // optionRender={optionRender}
-      apis={{
-        fetchApi: getBalanceInfo,
-      }}
-    />
+    <>
+      <CRUDPageTemplate
+        isAddOpen={false}
+        isDelete={false}
+        disableBatchUpdate={true}
+        disableBatchDelete={true}
+        title="余额明细管理"
+        searchConfig={searchList()}
+        columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
+        formConfig={formList()}
+        initCreate={initCreate}
+        onRow={(record: any) => {
+          return {
+            onClick: (event: any) => {
+              event.stopPropagation();
+              apis.getBalanceDetailInfo({ user_id: record.user_id }).then((res) => {
+                setDetailData(res.data || []);
+                setVisible(true);
+              });
+            },
+          };
+        }}
+        // mockData={mockData}
+        // optionRender={optionRender}
+        apis={{
+          fetchApi: getBalanceInfo,
+        }}
+      />
+      <Modal
+        title="用户余额明细"
+        open={visible}
+        width={800}
+        onCancel={() => setVisible(false)}
+        footer={null}
+      >
+        <Table
+          columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
+          dataSource={detailData}
+          rowKey="id"
+          pagination={false}
+          locale={{
+            emptyText: (
+              <div style={{ padding: '16px 0', textAlign: 'center' }}>
+                <span>暂无数据</span>
+              </div>
+            ),
+          }}
+        />
+      </Modal>
+    </>
   );
 };
 

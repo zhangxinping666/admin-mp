@@ -78,9 +78,17 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       messageApi.error({ content: '编辑失败：数据异常', duration: 3 });
       return;
     }
+
+    // 添加类型断言和泛型约束
+    const processedRecord = Object.entries(record).reduce<Partial<T>>((acc, [key, value]) => {
+      acc[key] = typeof value === 'boolean' ? (value ? 1 : 0) : value;
+      return acc;
+    }, {});
+    console.log('processedRecord', processedRecord);
+
     setCreateTitle(title);
     setCreateId(record.id);
-    setCreateData(record);
+    setCreateData(processedRecord);
     setCreateOpen(true);
 
     // 【新增】在设置完所有状态后，如果传入了回调函数，就执行它
@@ -128,7 +136,10 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
         // 确保id格式正确：如果是application模式且不是数组则转为数组，否则直接使用createId
         const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
         const result = await updateApi({ id: idToPass, ...values });
-        messageApi.success({ content: '编辑成功', duration: 3 });
+        if (result?.code === 0) {
+          throw new Error('编辑失败:' + result.msg);
+        }
+        messageApi.success('编辑成功');
 
         // 【核心】触发列表重新获取
         setFetch(true);

@@ -68,7 +68,12 @@ CreateBusiness();
  * @param onPressEnter - 回车事件
  * @param form - 表单实例
  */
-export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () => void, form?: any) {
+export function getComponent(
+  t: TFunction,
+  item: BaseFormList,
+  onPressEnter: () => void,
+  form?: any,
+) {
   const { component, componentProps } = item;
 
   // 输入框渲染
@@ -85,6 +90,7 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
     // 获取组件自定义渲染失败直接返回空标签
     if (!render) return renderInput;
     addComponent('customize', render);
+    console.log('componentProps', componentProps);
   }
 
   const Comp = componentMap.get(component);
@@ -92,10 +98,10 @@ export function getComponent(t: TFunction, item: BaseFormList, onPressEnter: () 
   if (!Comp) return renderInput;
 
   // 处理componentProps为函数的情况
-  const props = typeof componentProps === 'function' 
-    ? componentProps(form) 
-    : componentProps;
-
+  const props = typeof componentProps === 'function' ? componentProps(form) : componentProps;
+  if (component == 'customize') {
+    console.log('自定义组件', props);
+  }
   return (
     <>
       {component == 'Upload' ? (

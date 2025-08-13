@@ -123,25 +123,23 @@ export const formList = (): BaseFormList[] => [
     rules: FORM_REQUIRED,
   },
   {
-    label: '经度',
-    name: 'longitude',
-    component: 'InputNumber',
-    placeholder: '请输入经度',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      precision: 6,
-      style: { width: '100%' },
+    label: '位置',
+    name: 'location',
+    component: 'customize',
+    componentProps: (form) => {
+      return {
+        initCenter: [116.397428, 39.90923],
+        zoom: 15,
+        onChange: (value: number[]) => {
+          console.log('value', value);
+          form.setFieldsValue({
+            location: value,
+          });
+        },
+      };
     },
-  },
-  {
-    label: '纬度',
-    name: 'latitude',
-    component: 'InputNumber',
-    placeholder: '请输入纬度',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      precision: 6,
-      style: { width: '100%' },
+    render: (props: any) => {
+      return <MapPicker {...props} />;
     },
   },
   {
@@ -149,6 +147,19 @@ export const formList = (): BaseFormList[] => [
     name: 'status',
     component: 'Select',
     placeholder: '请选择状态',
+    componentProps: {
+      options: [
+        {
+          label: '启用',
+          value: 1,
+        },
+        {
+          label: '禁用',
+          value: 0,
+        },
+      ],
+    },
+
     rules: FORM_REQUIRED,
   },
 ];

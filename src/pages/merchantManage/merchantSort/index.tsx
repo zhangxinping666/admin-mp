@@ -67,6 +67,7 @@ const MerchantSortPage = () => {
     <CRUDPageTemplate
       isDelete={true}
       isAddOpen={true}
+      disableBatchUpdate={true}
       title="商家分类"
       searchConfig={searchList()}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}

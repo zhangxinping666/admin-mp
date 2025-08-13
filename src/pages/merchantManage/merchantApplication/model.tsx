@@ -12,7 +12,9 @@ export interface MerchantApplication {
   category_id?: number;
   close_hour?: string;
   fee_description?: string;
-  image_path?: string[];
+  storefront_image?: string;
+  business_license_image?: string;
+  medical_certificate_image?: string;
   id: number;
   merchant_type?: string;
   name?: string;
@@ -80,9 +82,9 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '商家申请图片',
-    dataIndex: 'image_path',
-    key: 'image_path',
+    title: '店铺门头图片',
+    dataIndex: 'storefront_image',
+    key: 'storefront_image',
     width: 220,
     ellipsis: true,
     render: (merchant_img: any) => {
@@ -97,19 +99,78 @@ export const tableColumns: TableColumn[] = [
         urlStr = urlStr.replace(/\\/g, '/'); // 添加这一行
         return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
       };
-
-      const displayUrl = merchant_img.map((item: any) => getFullImageUrl(item));
-
+      const displayUrl = getFullImageUrl(merchant_img);
       return displayUrl ? (
         <div>
-          {displayUrl.map((url: any, index: number) => (
-            <img
-              key={index}
-              src={url}
-              alt="商家图片"
-              className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
-            />
-          ))}
+          <img
+            src={displayUrl}
+            alt="店铺门头图片"
+            className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
+          />
+        </div>
+      ) : (
+        <span style={{ color: '#999' }}>无图片</span>
+      );
+    },
+  },
+  {
+    title: '营业执照图片',
+    dataIndex: 'business_license_image',
+    key: 'business_license_image',
+    width: 220,
+    ellipsis: true,
+    render: (merchant_img: any) => {
+      const getFullImageUrl = (url: any) => {
+        if (!url) return '';
+        // 确保url是字符串类型
+        let urlStr = String(url);
+        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+          return urlStr;
+        }
+        urlStr = urlStr.replace(/\+/g, '%20'); // 取消注释这一行
+        urlStr = urlStr.replace(/\\/g, '/'); // 添加这一行
+        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+      };
+      const displayUrl = getFullImageUrl(merchant_img);
+      return displayUrl ? (
+        <div>
+          <img
+            src={displayUrl}
+            alt="营业执照图片"
+            className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
+          />
+        </div>
+      ) : (
+        <span style={{ color: '#999' }}>无图片</span>
+      );
+    },
+  },
+  {
+    title: '健康证明图片',
+    dataIndex: 'medical_certificate_image',
+    key: 'medical_certificate_image',
+    width: 220,
+    ellipsis: true,
+    render: (merchant_img: any) => {
+      const getFullImageUrl = (url: any) => {
+        if (!url) return '';
+        // 确保url是字符串类型
+        let urlStr = String(url);
+        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+          return urlStr;
+        }
+        urlStr = urlStr.replace(/\+/g, '%20'); // 取消注释这一行
+        urlStr = urlStr.replace(/\\/g, '/'); // 添加这一行
+        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
+      };
+      const displayUrl = getFullImageUrl(merchant_img);
+      return displayUrl ? (
+        <div>
+          <img
+            src={displayUrl}
+            alt="健康证明图片"
+            className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
+          />
         </div>
       ) : (
         <span style={{ color: '#999' }}>无图片</span>
@@ -340,27 +401,29 @@ export const addFormList = (params: {
     },
   },
   {
-    name: 'longitude',
-    label: '经度',
-    component: 'InputNumber',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入经度',
+    label: '位置',
+    name: 'location',
+    component: 'customize',
+    componentProps: (form) => {
+      return {
+        initCenter: [116.397428, 39.90923],
+        zoom: 15,
+        onChange: (value: number[]) => {
+          console.log('value', value);
+          form.setFieldsValue({
+            location: value,
+          });
+        },
+      };
     },
-  },
-  {
-    name: 'latitude',
-    label: '纬度',
-    component: 'InputNumber',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入纬度',
+    render: (props: any) => {
+      return <MapPicker {...props} />;
     },
   },
   {
     name: 'is_dorm_store',
     label: '是否宿舍店',
-    component: 'Radio',
+    component: 'Select',
     rules: FORM_REQUIRED,
     componentProps: {
       options: [
@@ -410,8 +473,9 @@ export const addFormList = (params: {
     },
   },
   {
-    name: 'merchant_image',
-    label: '店铺图片',
+    name: 'storefront_image',
+    label: '商家门头图片',
+
     component: 'customize',
     rules: FORM_REQUIRED,
     render: (props: any) => {
@@ -421,14 +485,49 @@ export const addFormList = (params: {
           value={value}
           onChange={onChange}
           maxSize={2}
-          maxCount={3}
           baseUrl="http://192.168.10.7:8082"
         />
       );
     },
   },
   {
-    name: 'store_apply_status',
+    name: 'business_license_image',
+    label: '营业执照图片',
+
+    component: 'customize',
+    rules: FORM_REQUIRED,
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
+    },
+  },
+  {
+    name: 'medical_certificate_image',
+    label: '健康证明图片',
+
+    component: 'customize',
+    rules: FORM_REQUIRED,
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
+    },
+  },
+  {
+    name: 'apply_status',
     label: '审批状态',
     component: 'Select',
     rules: FORM_REQUIRED,

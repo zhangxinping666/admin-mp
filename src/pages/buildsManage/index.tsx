@@ -259,6 +259,7 @@ const BuildingsPage = () => {
       <CRUDPageTemplate
         isAddOpen={true}
         isDelete={true}
+        disableBatchUpdate={true}
         title="楼栋楼层管理"
         searchConfig={searchList()}
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
@@ -274,9 +275,19 @@ const BuildingsPage = () => {
           })
         }
         apis={{
-          createApi: apis.addBuilding,
+          createApi: (params) => {
+            params.longitude = params.location[0];
+            params.latitude = params.location[1];
+            delete params.location;
+            return apis.addBuilding(params);
+          },
           fetchApi: apis.queryBuilding,
-          updateApi: apis.updateBuilding,
+          updateApi: (params) => {
+            params.longitude = params.location[0];
+            params.latitude = params.location[1];
+            delete params.location;
+            return apis.updateBuilding(params);
+          },
           deleteApi: apis.deleteBuilding,
         }}
       />
@@ -333,13 +344,7 @@ const BuildingsPage = () => {
         width={800}
       >
         {currentData.floor ? (
-          <Form
-            form={form}
-            onFinish={handleUpdateFloor}
-            initialValues={currentData.floor}
-            // 添加监听以确保表单始终与状态同步
-            watch={Object.keys(currentData.floor || {})}
-          >
+          <Form form={form} onFinish={handleUpdateFloor} initialValues={currentData.floor}>
             <Form.Item label="所属楼栋" name="building_name">
               <span className="inline-block px-2 py-1 bg-gray-100 rounded text-sm text-gray-800">
                 {currentData.building?.name || '暂无数据'}
@@ -530,9 +535,6 @@ const BuildingsPage = () => {
             <p>暂无楼层信息，且您没有添加楼层的权限</p>
           </div>
         )}
-        <div style={{ padding: 24 }}>
-          <Skeleton active paragraph={{ rows: 5 }} title={{ width: '50%' }} />
-        </div>
       </Modal>
     </>
   );
