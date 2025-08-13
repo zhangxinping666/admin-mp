@@ -1,8 +1,10 @@
 import { CRUDPageTemplate } from '@/shared';
-import { searchList, tableColumns, formList, type Balance } from './model';
+import { searchList, tableColumns, detailTableColumns, formList, type Balance } from './model';
 import * as apis from './apis';
 import { isNumber, isString } from 'lodash';
-import { message, Modal, Table } from 'antd';
+import { message, Modal, Table, Card, Statistic, Row, Col, Divider } from 'antd';
+import { useState } from 'react';
+import styles from './index.module.less';
 
 // 初始化新增数据
 const initCreate: Partial<Balance> = {
@@ -18,93 +20,6 @@ const initCreate: Partial<Balance> = {
   created_at: '',
 };
 
-// 模拟数据
-// const mockData: BalanceRecord[] = [
-//   {
-//     id: 1,
-//     category: '商品销售',
-//     amount: 129.5,
-//     transactionNo: 'TX202405120001',
-//     orderNo: 'ORD202405120001',
-//     transactionType: 'income',
-//     voucherUrl: [
-//       {
-//         uid: '1',
-//         name: '商品销售凭证',
-//         status: 'done',
-//         url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-//       },
-//     ],
-//     status: 'success',
-//     initialBalance: 5000.0,
-//     finalBalance: 5129.5,
-//     imageUrl: [
-//       {
-//         uid: '1',
-//         name: '商品销售凭证',
-//         status: 'done',
-//         url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-//       },
-//     ],
-//     createdAt: '2024-05-12 10:30:00',
-//   },
-//   {
-//     id: 2,
-//     category: '退款',
-//     amount: 59.9,
-//     transactionNo: 'TX202405120002',
-//     orderNo: 'ORD202405110045',
-//     transactionType: 'expense',
-//     voucherUrl: [
-//       {
-//         uid: '1',
-//         name: '退款凭证',
-//         status: 'done',
-//         url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-//       },
-//     ],
-//     status: 'success',
-//     initialBalance: 5129.5,
-//     finalBalance: 5069.6,
-//     imageUrl: [
-//       {
-//         uid: '1',
-//         name: '退款凭证',
-//         status: 'done',
-//         url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-//       },
-//     ],
-//     createdAt: '2024-05-12 11:15:00',
-//   },
-//   {
-//     id: 3,
-//     category: '会员充值',
-//     amount: 200.0,
-//     transactionNo: 'TX202405120003',
-//     orderNo: 'ORD202405120002',
-//     transactionType: 'income',
-//     voucherUrl: [
-//       {
-//         uid: '1',
-//         name: '会员充值凭证',
-//         status: 'done',
-//         url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-//       },
-//     ],
-//     status: 'processing',
-//     initialBalance: 5069.6,
-//     finalBalance: 5269.6,
-//     imageUrl: [
-//       {
-//         uid: '1',
-//         name: '会员充值凭证',
-//         status: 'done',
-//         url: 'https://ts4.tc.mm.bing.net/th/id/OIP-C.CFev6LAEXxvcqAH9BkJvMwHaNK?rs=1&pid=ImgDetMain&o=7&rm=3',
-//       },
-//     ],
-//     createdAt: '2024-05-12 14:20:00',
-//   },
-// ];
 // 获取数据
 const getBalanceInfo = async (params?: any) => {
   const res = await apis.getBalanceInfo(params);
@@ -123,6 +38,7 @@ const BalanceRecordsPage = () => {
   const [visible, setVisible] = useState(false);
   const [detailData, setDetailData] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<any>();
+  const [currentUserInfo, setCurrentUserInfo] = useState<any>(null);
 
   return (
     <>
@@ -144,6 +60,7 @@ const BalanceRecordsPage = () => {
                 .getBalanceDetailInfo({ user_id: record.user_id })
                 .then((res: any) => {
                   setDetailData(res.data.list || []);
+                  setCurrentUserInfo(record);
                   setVisible(true);
                   setCurrentUserId(record.user_id);
                 })
@@ -160,23 +77,63 @@ const BalanceRecordsPage = () => {
         }}
       />
       <Modal
-        title={currentUserId + '的余额明细'}
+        title={<div className={styles.modalTitle}>用户 {currentUserId} 的余额明细</div>}
         open={visible}
-        width={'70%'}
+        width={'90%'}
         onCancel={() => setVisible(false)}
         footer={null}
+        className={styles.detailModal}
       >
+        {/* 交易统计卡片 */}
+        <Card className={styles.statisticsCard} title="交易统计">
+          <Row gutter={24}>
+            <Col span={8}>
+              <Statistic
+                title="总交易笔数"
+                value={detailData.length}
+                valueStyle={{ color: '#1890ff', fontSize: '20px', fontWeight: 600 }}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                title="收入笔数"
+                value={detailData.filter((item) => item.transaction_type === 1).length}
+                valueStyle={{ color: '#52c41a', fontSize: '20px', fontWeight: 600 }}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                title="支出笔数"
+                value={detailData.filter((item) => item.transaction_type === 2).length}
+                valueStyle={{ color: '#ff4d4f', fontSize: '20px', fontWeight: 600 }}
+              />
+            </Col>
+          </Row>
+        </Card>
+
+        <Divider className={styles.divider} />
+
+        {/* 详情表格 */}
         <Table
-          columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
+          className={styles.detailTable}
+          columns={detailTableColumns}
           dataSource={detailData}
           rowKey="id"
+          scroll={{ x: 1200 }}
+          size="small"
           pagination={false}
           locale={{
             emptyText: (
-              <div style={{ padding: '16px 0', textAlign: 'center' }}>
-                <span>暂无数据</span>
+              <div className={styles.emptyState}>
+                <div className={styles.emptyText}>暂无交易记录</div>
               </div>
             ),
+          }}
+          rowClassName={(record, index) => {
+            if (record.category === 'withdraw_failed') {
+              return 'error-row';
+            }
+            return index % 2 === 0 ? 'even-row' : 'odd-row';
           }}
         />
       </Modal>

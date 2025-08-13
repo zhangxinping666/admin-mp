@@ -55,6 +55,19 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Input',
     placeholder: '请输入手机号',
   },
+  {
+    component: 'Select',
+    name: 'status',
+    label: '状态',
+    componentProps: {
+      options: [
+        { label: '全部', value: 0 },
+        { label: '待审批', value: 1 },
+        { label: '审批通过', value: 2 },
+        { label: '审批失败', value: 3 },
+      ],
+    },
+  },
 ];
 
 // 表格列配置

@@ -42,7 +42,7 @@ const BuildingsPage = () => {
   });
 
   const [form] = Form.useForm();
-  const [schoolOptions] = useSelectSchoolOptions();
+  const { schoolOptions, loading: schoolOptionsLoading } = useSelectSchoolOptions();
 
   // 查看学校信息
   const handleShowSchool = async (record: Building) => {
@@ -248,6 +248,12 @@ const BuildingsPage = () => {
         componentProps: {
           options: schoolOptions,
           placeholder: '请选择学校',
+          loading: schoolOptionsLoading,
+          showSearch: true,
+          filterOption: (input: string, option: any) => {
+            return option?.label?.toLowerCase().includes(input.toLowerCase()) || false;
+          },
+          notFoundContent: schoolOptionsLoading ? '加载中...' : '暂无数据',
         },
       };
     }
@@ -283,8 +289,11 @@ const BuildingsPage = () => {
           },
           fetchApi: apis.queryBuilding,
           updateApi: (params) => {
-            params.longitude = params.location[0];
-            params.latitude = params.location[1];
+            // 安全检查location数组
+            if (params.location && Array.isArray(params.location) && params.location.length >= 2) {
+              params.longitude = params.location[0];
+              params.latitude = params.location[1];
+            }
             delete params.location;
             return apis.updateBuilding(params);
           },
@@ -312,7 +321,15 @@ const BuildingsPage = () => {
             {/* 学校信息表单内容 */}
             <Form.Item label="学校名称" name="name">
               {currentData.editSchoolMode ? (
-                <Select options={schoolOptions as any}></Select>
+                <Select 
+                  options={schoolOptions}
+                  loading={schoolOptionsLoading}
+                  showSearch
+                  placeholder="请选择学校"
+                  filterOption={(input: string, option: any) => {
+                    return option?.label?.toLowerCase().includes(input.toLowerCase()) || false;
+                  }}
+                />
               ) : (
                 <span className="inline-block px-3 py-1 bg-gray-100 rounded text-sm text-gray-800">
                   {currentData.school?.name || '暂无数据'}

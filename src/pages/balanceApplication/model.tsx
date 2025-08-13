@@ -52,21 +52,11 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'status',
     key: 'status',
     width: 80,
-    render: (value) => {
-      let color = '';
-      switch (value) {
-        case 0:
-          color = 'gray';
-          return <span style={{ color }}>待审核</span>;
-
-        case 1:
-          color = 'green';
-          return <span style={{ color }}>成功</span>;
-        case 2:
-          color = 'black';
-          return <span style={{ color }}>失败</span>;
-      }
-    },
+    render: (value: number) => (
+      <span style={{ color: value === 0 ? '#faad14' : value === 1 ? '#1890ff' : '#ff4d4f' }}>
+        {value === 0 ? '审核中' : value === 1 ? '审核成功' : '审核失败'}
+      </span>
+    ),
   },
 ];
 
@@ -81,6 +71,7 @@ export const formList: BaseFormList[] = [
       maxLength: 200,
     },
   },
+
   {
     label: '审核状态',
     name: 'status',
@@ -88,11 +79,15 @@ export const formList: BaseFormList[] = [
     componentProps: {
       options: [
         {
-          label: '成功',
+          label: '审核中',
+          value: 0,
+        },
+        {
+          label: '审核成功',
           value: 1,
         },
         {
-          label: '失败',
+          label: '审核失败',
           value: 2,
         },
       ],

@@ -78,6 +78,18 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Input',
     placeholder: '请输入角色名称',
   },
+  {
+    component: 'Select',
+    name: 'status',
+    label: '状态',
+    componentProps: {
+      options: [
+        { label: '全部', value: 0 },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 2 },
+      ],
+    },
+  },
 ];
 
 // 菜单数据接口（从菜单管理页面引入）

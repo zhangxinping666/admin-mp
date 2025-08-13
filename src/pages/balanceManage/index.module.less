@@ -1,0 +1,65 @@
+.detailModal {
+  .ant-modal-body {
+    padding: 20px;
+  }
+
+  .statisticsCard {
+    margin-bottom: 16px;
+
+    .ant-card-body {
+      padding: 16px 24px;
+    }
+  }
+
+  .detailTable {
+    :global {
+      .error-row {
+        background-color: #fff2f0 !important;
+
+        &:hover {
+          background-color: #ffe7e7 !important;
+        }
+      }
+
+      .even-row {
+        background-color: #fafafa;
+
+        &:hover {
+          background-color: #e6f7ff !important;
+        }
+      }
+
+      .odd-row {
+        background-color: #ffffff;
+
+        &:hover {
+          background-color: #e6f7ff !important;
+        }
+      }
+
+      .ant-table-tbody > tr.ant-table-row:hover > td {
+        background-color: #e6f7ff !important;
+      }
+    }
+  }
+
+  .emptyState {
+    padding: 40px 0;
+    text-align: center;
+
+    .emptyText {
+      font-size: 14px;
+      color: #999;
+    }
+  }
+
+  .modalTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #262626;
+  }
+
+  .divider {
+    margin: 16px 0;
+  }
+}

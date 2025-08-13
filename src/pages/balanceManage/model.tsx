@@ -33,31 +33,37 @@ const VoucherPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
 export interface Balance {
   id: number; // 编号
   user_id: number; // 用户ID
-  category: string; //业务类别
-  amount: number; //变动金额
-  transaction_no: string; //交易流水号
-  order_no: string; //订单号
-  transaction_type: string; //交易收支（1-收入/2-支出）
-  transaction_type_name: string; //交易收支名称
-  opening_balance: number; //变动前余额
-  closing_balance: number; //变动后余额
-  created_at: string; //创建时间
+  total_amount: number; //业务类别
+  available_amount: number; //变动金额
+  frozen_amount: number; //交易流水号
+  status: number; //订单号
+  status_name: string; //交易收支（1-收入/2-支出）
+  school_id: string; //交易收支名称
+  school_name: number; //变动前余额
+  city_id: number; //变动后余额
+  city_name: string; //创建时间
+  user_nickname: string; //用户名称
+  user_phone: string; //用户手机号
+  created_at: string; // 创建时间
+  updated_at: string; // 更新时间
 }
 
 // 余额明细数据接口
 export interface BalanceDetail {
   id: number; // 编号
-  user_id: number;
-  category: string; // 类别
-  amount: number; // 金额
+  user_id: number; // 用户ID
+  category: string; // 业务类别
+  amount: number; // 变动金额
   transaction_no: string; // 交易流水号
   order_no: string; // 订单号
-  transaction_type: 'income' | 'expense'; // 交易收支（收入/支出）
+  transaction_type: number; // 交易收支（1-收入/2-支出）
   transaction_type_name: string; // 交易收支名称
-  opening_balance: number;
-  closing_balance: number;
+  opening_balance: number; // 变动前余额
+  closing_balance: number; // 变动后余额
   created_at: string; // 创建时间
-  action?: React.ReactNode;
+  is_valid: boolean; // 是否有效
+  status: number; // 状态
+  voucher: number; // 凭证
 }
 
 export interface BalanceDetailResult {
@@ -87,10 +93,10 @@ export interface BalanceResult {
 
 export const searchList = (): BaseSearchList[] => [
   {
-    label: '用户ID',
-    name: 'user_id',
-    component: 'InputNumber',
-    placeholder: '请输入用户ID',
+    label: '用户名称',
+    name: 'user_nickname',
+    component: 'Input',
+    placeholder: '请输入用户名称',
   },
   {
     label: '账户状态',
@@ -100,7 +106,6 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '全部', value: '' },
-
         { label: '正常', value: 1 },
         { label: '冻结', value: 2 },
         { label: '禁用', value: 3 },
@@ -109,96 +114,183 @@ export const searchList = (): BaseSearchList[] => [
   },
 ];
 
-// 表格列配置
-export const tableColumns: TableColumn[] = [
+// 详情表格列配置
+export const detailTableColumns: TableColumn[] = [
   {
-    title: '编号',
+    title: '交易ID',
     dataIndex: 'id',
     key: 'id',
-    width: 80,
-  },
-  {
-    title: '用户ID',
-    dataIndex: 'user_id',
-    key: 'user_id',
     width: 80,
   },
   {
     title: '业务类别',
     dataIndex: 'category',
     key: 'category',
-    width: 80,
+    width: 120,
+    render: (value: string) => {
+      const categoryMap: Record<string, { text: string; color: string }> = {
+        withdraw_failed: { text: '提现失败', color: '#ff4d4f' },
+        withdraw_success: { text: '提现成功', color: '#52c41a' },
+        withdraw_processing: { text: '提现处理中', color: '#fa8c16' },
+      };
+
+      const category = categoryMap[value] || { text: value, color: '#666' };
+
+      return (
+        <span
+          style={{
+            color: category.color,
+            fontWeight: 500,
+          }}
+        >
+          {category.text}
+        </span>
+      );
+    },
   },
   {
     title: '变动金额',
     dataIndex: 'amount',
     key: 'amount',
-    width: 80,
+    width: 100,
+    render: (value: number, record: BalanceDetail) => (
+      <span
+        style={{
+          color: record.transaction_type === 1 ? '#52c41a' : '#ff4d4f',
+          fontWeight: 500,
+        }}
+      >
+        {record.transaction_type === 1 ? '+' : '-'}
+        {Math.abs(value)}
+      </span>
+    ),
+  },
+  {
+    title: '交易类型',
+    dataIndex: 'transaction_type_name',
+    key: 'transaction_type_name',
+    width: 100,
+    render: (value: string, record: BalanceDetail) => (
+      <span
+        style={{
+          color: record.transaction_type === 1 ? '#52c41a' : '#ff4d4f',
+        }}
+      >
+        {value}
+      </span>
+    ),
   },
   {
     title: '变动前余额',
     dataIndex: 'opening_balance',
     key: 'opening_balance',
-    width: 80,
+    width: 120,
+    render: (value: number) => <span style={{ color: '#666' }}>{value}</span>,
   },
   {
     title: '变动后余额',
     dataIndex: 'closing_balance',
     key: 'closing_balance',
-    width: 80,
+    width: 120,
+    render: (value: number) => <span style={{ color: '#1890ff', fontWeight: 500 }}>{value}</span>,
   },
   {
     title: '交易流水号',
     dataIndex: 'transaction_no',
     key: 'transaction_no',
-    width: 80,
+    width: 180,
+    render: (value: string) => (
+      <span
+        style={{
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: '#666',
+        }}
+      >
+        {value}
+      </span>
+    ),
   },
   {
     title: '订单号',
     dataIndex: 'order_no',
     key: 'order_no',
-    width: 80,
+    width: 180,
+    render: (value: string) => (
+      <span
+        style={{
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: '#666',
+        }}
+      >
+        {value}
+      </span>
+    ),
   },
   {
-    title: '交易类型',
-    dataIndex: 'transaction_type',
-    key: 'transaction_type',
-    width: 80,
-    render: (value) => {
-      if (value === '1') {
-        return <span style={{ color: 'green' }}>收入</span>;
-      }
-      if (value === '2') {
-        return <span style={{ color: 'red' }}>支出</span>;
-      }
-    },
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: 160,
+    render: (value: string) => <span style={{ color: '#666' }}>{value}</span>,
   },
-  {
-    title: '交易收支',
-    dataIndex: 'transaction_type_name',
-    key: 'transaction_type_name',
-    width: 80,
-  },
+];
 
+// 主表格列配置
+export const tableColumns: TableColumn[] = [
+  {
+    title: '用户名',
+    dataIndex: 'user_nickname',
+    key: 'user_nickname',
+    width: 80,
+  },
+  {
+    title: '学校',
+    dataIndex: 'school_name',
+    key: 'school_name',
+    width: 80,
+  },
+  {
+    title: '城市',
+    dataIndex: 'city_name',
+    key: 'city_name',
+    width: 80,
+  },
+  {
+    title: '用户手机号',
+    dataIndex: 'user_phone',
+    key: 'user_phone',
+    width: 80,
+  },
+  {
+    title: '总余额',
+    dataIndex: 'total_amount',
+    key: 'total_amount',
+    width: 80,
+  },
+  {
+    title: '可用余额',
+    dataIndex: 'available_amount',
+    key: 'available_amount',
+    width: 80,
+  },
+  {
+    title: '冻结余额',
+    dataIndex: 'frozen_amount',
+    key: 'frozen_amount',
+    width: 80,
+  },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
     width: 80,
-    render: (value) => {
-      let color = '';
-      switch (value) {
-        case 1:
-          color = 'green';
-          return <span style={{ color }}>正常</span>;
-        case 2:
-          color = 'black';
-          return <span style={{ color }}>冻结</span>;
-        case 3:
-          color = 'red';
-          return <span style={{ color }}>已提现</span>;
-      }
-    },
+    render: (value: number) => (
+      <span style={{ color: value === 1 ? '#1890ff' : value === 2 ? ' #faad14' : '#ff4d4f' }}>
+        {value === 1 ? '正常' : value === 2 ? '冻结' : '禁用'}
+      </span>
+    ),
   },
   {
     title: '创建时间',
@@ -215,101 +307,4 @@ export const tableColumns: TableColumn[] = [
 ];
 
 // 表单配置项
-export const formList = (): BaseFormList[] => [
-  {
-    label: '类别',
-    name: 'category',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入类别',
-      maxLength: 50,
-    },
-  },
-  {
-    label: '金额',
-    name: 'amount',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入金额',
-      min: 0,
-      step: 0.01,
-      precision: 2,
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '交易流水号',
-    name: 'transactionNo',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入交易流水号',
-      maxLength: 50,
-    },
-  },
-  {
-    label: '订单号',
-    name: 'orderNo',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入订单号',
-      maxLength: 50,
-    },
-  },
-  {
-    label: '交易收支',
-    name: 'transactionType',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择交易类型',
-      options: [
-        { label: '收入', value: 'income' },
-        { label: '支出', value: 'expense' },
-      ],
-    },
-  },
-  {
-    label: '状态',
-    name: 'status',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择状态',
-      options: [
-        { label: '成功', value: 'success' },
-        { label: '失败', value: 'failed' },
-        { label: '处理中', value: 'processing' },
-      ],
-    },
-  },
-  {
-    label: '期初余额',
-    name: 'initialBalance',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入期初余额',
-      min: 0,
-      step: 0.01,
-      precision: 2,
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '期末余额',
-    name: 'finalBalance',
-    rules: FORM_REQUIRED,
-    component: 'InputNumber',
-    componentProps: {
-      placeholder: '请输入期末余额',
-      min: 0,
-      step: 0.01,
-      precision: 2,
-      style: { width: '100%' },
-    },
-  },
-];
+export const formList = (): BaseFormList[] => [];

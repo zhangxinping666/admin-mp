@@ -71,6 +71,18 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Input',
     placeholder: '请输入城市名称',
   },
+    {
+    component: 'Select',
+    name: 'status',
+    label: '状态',
+    componentProps: {
+      options: [
+        { label: '全部', value: 0 },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 2 },
+      ],
+    },
+  },
 ];
 
 // 表格列配置

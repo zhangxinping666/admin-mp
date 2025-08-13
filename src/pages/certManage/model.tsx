@@ -84,6 +84,7 @@ export const searchList = (): BaseSearchList[] => [
     placeholder: '请选择状态',
     componentProps: {
       options: [
+        { label: '全部', value: 0 },
         { label: '审核成功', value: 2 },
         { label: '审核失败', value: 3 },
         { label: '审核中', value: 1 },

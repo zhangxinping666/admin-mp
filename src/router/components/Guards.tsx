@@ -170,19 +170,6 @@ function Guards() {
   }, [permissions.length, token, location.pathname]);
   useEffect(() => {
     if (!isInitialLoad && token && menuList.length > 0 && permissions.length > 0) {
-      // 已登录用户访问登录页面时，重定向到首页或第一个有权限的菜单
-      if (location.pathname === '/login') {
-        const firstMenu = getFirstMenu(menuList, permissions);
-        if (firstMenu) {
-          navigate(firstMenu, { replace: true });
-        } else {
-          // 如果没有有权限的菜单，说明权限数据有问题，跳转到登录页面
-          console.warn('没有找到有权限的菜单，可能权限数据异常');
-          navigate('/login', { replace: true });
-        }
-        return;
-      }
-
       if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
@@ -210,6 +197,31 @@ function Guards() {
       }
     }
   }, [location.pathname, permissions, token, menuList, isDataLoaded, isInitialLoad]);
+
+  // 专门处理已登录用户访问登录页面的情况
+  useEffect(() => {
+    if (token && location.pathname === '/login' && !isAutoLogging) {
+      // 如果有权限数据，跳转到第一个有权限的菜单
+      if (permissions.length > 0 && menuList.length > 0) {
+        const firstMenu = getFirstMenu(menuList, permissions);
+        if (firstMenu) {
+          navigate(firstMenu, { replace: true });
+        } else {
+          // 如果没有有权限的菜单，说明权限数据有问题，清除token
+          console.warn('没有找到有权限的菜单，可能权限数据异常，清除token');
+          setAccessToken('');
+          setRefreshToken('');
+          setPermissions([]);
+          setMenuPermissions([]);
+          setMenuList([]);
+          setUserInfo(null);
+        }
+      } else {
+        // 如果还没有权限数据，先跳转到根路径，让权限加载逻辑处理
+        navigate('/', { replace: true });
+      }
+    }
+  }, [token, location.pathname, isAutoLogging, navigate, permissions, menuList]);
   /** 渲染页面 */
   const renderPage = () => {
     if (isAutoLogging) {
@@ -223,7 +235,19 @@ function Guards() {
       );
     }
 
-    // 移除这里的重复逻辑，让 useEffect 来统一处理已登录用户访问登录页面的情况
+    // 如果有token但访问登录页面，显示加载状态（实际会被useEffect重定向）
+    if (token && location.pathname === '/login') {
+      return (
+        <div className="w-screen h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <div>正在跳转...</div>
+          </div>
+        </div>
+      );
+    }
+
+    // 没有token时才显示登录页面
     if (location.pathname === '/login') {
       return <div>{outlet}</div>;
     }
