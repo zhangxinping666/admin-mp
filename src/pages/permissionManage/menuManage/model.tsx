@@ -91,20 +91,6 @@ export const searchList = (): BaseSearchList[] => [
     component: 'Input',
     placeholder: '请输入菜单名称',
   },
-  {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    placeholder: '请选择状态',
-    componentProps: {
-      allowClear: true,
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-        { label: '全部', value: 0 },
-      ],
-    },
-  },
 ];
 
 // 表格列配置

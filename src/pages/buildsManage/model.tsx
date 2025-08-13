@@ -86,8 +86,10 @@ export const tableColumns: TableColumn[] = [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 120,
-    ellipsis: true,
+    width: 80,
+    render: (value: number) => (
+      <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
+    ),
   },
   {
     title: '操作',
