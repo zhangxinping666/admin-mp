@@ -325,23 +325,6 @@ export const formList = ({
   //   },
   // },
   // {
-  //   label: '商家图片',
-  //   name: 'merchant_img',
-  //   component: 'customize',
-  //   rules: FORM_REQUIRED,
-  //   render: (props: any) => {
-  //     const { value, onChange } = props;
-  //     return (
-  //       <EnhancedImageUploader
-  //         value={value}
-  //         onChange={onChange}
-  //         maxSize={2}
-  //         baseUrl="http://192.168.10.7:8082"
-  //       />
-  //     );
-  //   },
-  // },
-  // {
   //   label: '学校ID',
   //   name: 'school_id',
   //   rules: FORM_REQUIRED,
@@ -403,16 +386,24 @@ export const formList = ({
   {
     label: '位置',
     name: 'location',
+    rules: FORM_REQUIRED,
     component: 'customize',
     componentProps: (form) => {
       return {
         initCenter: [116.397428, 39.90923],
         zoom: 15,
+        style: {
+          width: '100%',
+          height: 400,
+        },
         onChange: (value: number[]) => {
           console.log('value', value);
           form.setFieldsValue({
             location: value,
           });
+        },
+        initValue: () => {
+          return form.getFieldValue('location');
         },
       };
     },
@@ -423,6 +414,7 @@ export const formList = ({
   {
     label: '是否为宿舍商家',
     name: 'is_dormitory_store',
+    rules: FORM_REQUIRED,
     component: 'Select',
     componentProps: {
       placeholder: '请选择是否为宿舍商家',
@@ -464,6 +456,7 @@ export const formList = ({
     componentProps: {
       placeholder: '请输入联系电话',
       maxLength: 20,
+      disabled: true,
     },
   },
   {

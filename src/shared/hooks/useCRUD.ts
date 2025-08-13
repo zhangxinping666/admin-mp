@@ -12,10 +12,11 @@ interface UseCRUDOptions<T> {
   deleteApi?: (id: Key | Key[]) => Promise<any>;
   pagination?: boolean;
   isApplication?: boolean;
+  handleFormValue?: (value: any) => any;
 }
 
 export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) => {
-  const { initCreate, fetchApi, createApi, updateApi, deleteApi } = options;
+  const { initCreate, fetchApi, createApi, updateApi, deleteApi, handleFormValue } = options;
 
   // 表单引用
   const createFormRef = useRef<FormInstance>(null);
@@ -88,7 +89,11 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
     setCreateTitle(title);
     setCreateId(record.id);
-    setCreateData(processedRecord);
+    if (handleFormValue) {
+      setCreateData(handleFormValue(processedRecord));
+    } else {
+      setCreateData(processedRecord);
+    }
     setCreateOpen(true);
 
     // 【新增】在设置完所有状态后，如果传入了回调函数，就执行它

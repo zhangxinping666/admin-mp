@@ -87,34 +87,24 @@ export interface BalanceResult {
 
 export const searchList = (): BaseSearchList[] => [
   {
-    label: '余额变动类别',
-    name: 'category',
+    label: '用户ID',
+    name: 'user_id',
+    component: 'InputNumber',
+    placeholder: '请输入用户ID',
+  },
+  {
+    label: '账户状态',
+    name: 'status',
     component: 'Select',
-    placeholder: '请选择余额变动类别',
+    placeholder: '请选择账户状态',
     componentProps: {
       options: [
         { label: '全部', value: '' },
-        { label: '收入', value: 'income' },
-        { label: '支出', value: 'expense' },
+
+        { label: '正常', value: 1 },
+        { label: '冻结', value: 2 },
+        { label: '禁用', value: 3 },
       ],
-    },
-  },
-  {
-    label: '开始时间',
-    name: 'start_time',
-    component: 'DatePicker',
-    placeholder: '请选择开始时间',
-    componentProps: {
-      format: 'YYYY-MM-DD',
-    },
-  },
-  {
-    label: '结束时间',
-    name: 'end_time',
-    component: 'DatePicker',
-    placeholder: '请选择结束时间',
-    componentProps: {
-      format: 'YYYY-MM-DD',
     },
   },
 ];

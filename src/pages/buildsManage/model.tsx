@@ -88,6 +88,15 @@ export const tableColumns: TableColumn[] = [
     key: 'status',
     width: 120,
     ellipsis: true,
+    render: (status: number) => {
+      if (status === 1) {
+        return <span style={{ color: 'green' }}>启用</span>;
+      }
+      if (status === 2) {
+        return <span style={{ color: 'red' }}>禁用</span>;
+      }
+      return '-';
+    },
   },
   {
     title: '操作',
@@ -155,7 +164,7 @@ export const formList = (): BaseFormList[] => [
         },
         {
           label: '禁用',
-          value: 0,
+          value: 2,
         },
       ],
     },

@@ -354,7 +354,7 @@ const BuildingsPage = () => {
               {currentData.editFloorMode ? (
                 <Select>
                   <Select.Option value={1}>启用</Select.Option>
-                  <Select.Option value={0}>禁用</Select.Option>
+                  <Select.Option value={2}>禁用</Select.Option>
                 </Select>
               ) : (
                 <span
@@ -500,7 +500,7 @@ const BuildingsPage = () => {
             >
               <Select>
                 <Select.Option value={1}>启用</Select.Option>
-                <Select.Option value={0}>禁用</Select.Option>
+                <Select.Option value={2}>禁用</Select.Option>
               </Select>
             </Form.Item>
             <Form.Item

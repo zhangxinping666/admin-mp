@@ -6,6 +6,7 @@ import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
 import useUsersOptions from '@/shared/hooks/useUsersOptions';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import dayjs from 'dayjs';
 
 // 获取数据
 async function getApplicationList(params?: any) {
@@ -65,7 +66,40 @@ const MerchantApplicationPage = () => {
     status: 1,
     is_dorm_store: 1,
   };
-  // 封装新增表单配置
+  // 处理表单值
+  const handleFormValue = (value: any) => {
+    value.location = [value.longitude, value.latitude];
+
+    /**
+     * 将时间字符串转换为dayjs对象
+     * @param timeStr 时间字符串，可以是HH:mm格式或时间戳
+     * @param defaultHour 默认小时数
+     * @returns dayjs对象
+     */
+    const parseTime = (timeStr: any, defaultHour: number) => {
+      if (!timeStr) return dayjs().hour(defaultHour).minute(0);
+
+      // 如果是时间戳
+      if (typeof timeStr === 'number') {
+        return dayjs(timeStr);
+      }
+
+      // 如果是HH:mm格式
+      if (typeof timeStr === 'string' && timeStr.includes(':')) {
+        const [hours, minutes] = timeStr.split(':');
+        return dayjs().hour(Number(hours)).minute(Number(minutes));
+      }
+
+      // 其他情况返回默认时间
+      return dayjs().hour(defaultHour).minute(0);
+    };
+
+    value.time_range = [
+      parseTime(value.open_hour, 8), // 默认8:00
+      parseTime(value.closed_hour, 22), // 默认22:00
+    ];
+    return value;
+  };
 
   // 操作列渲染
   const optionRender = (
@@ -91,8 +125,9 @@ const MerchantApplicationPage = () => {
   return (
     <CRUDPageTemplate
       disableBatchUpdate={false}
-      isAddOpen={roleId === 4}
+      // isAddOpen={roleId === 4}
       isDelete={true}
+      handleFormValue={handleFormValue}
       addFormConfig={addFormList({
         categoryOptions,
         usersOptions,
@@ -117,6 +152,8 @@ const MerchantApplicationPage = () => {
           data.is_dorm_store = data.is_dorm_store === 0 ? false : true;
           data.longitude = data.location?.[0];
           data.latitude = data.location?.[1];
+          data.open_hour = data.time_range?.[0];
+          data.close_hour = data.time_range?.[1];
           delete data.location;
           const res = await apis.createApplication(data);
           return res;

@@ -292,16 +292,16 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '关闭时间',
-    dataIndex: 'close_hour',
-    key: 'close_hour',
+    title: '开业时间',
+    dataIndex: 'open_hour',
+    key: 'open_hour',
     width: 120,
     ellipsis: true,
   },
   {
-    title: '开业时间',
-    dataIndex: 'open_hour',
-    key: 'open_hour',
+    title: '关闭时间',
+    dataIndex: 'close_hour',
+    key: 'close_hour',
     width: 120,
     ellipsis: true,
   },
@@ -403,6 +403,7 @@ export const addFormList = (params: {
   {
     label: '位置',
     name: 'location',
+    rules: FORM_REQUIRED,
     component: 'customize',
     componentProps: (form) => {
       return {
@@ -413,6 +414,9 @@ export const addFormList = (params: {
           form.setFieldsValue({
             location: value,
           });
+        },
+        initValue: () => {
+          return form.getFieldValue('location');
         },
       };
     },
@@ -446,21 +450,13 @@ export const addFormList = (params: {
     },
   },
   {
-    name: 'open_hour',
-    label: '开业时间',
-    component: 'TimePicker',
+    label: '营业时间',
+    name: 'time_range',
     rules: FORM_REQUIRED,
+    component: 'TimeRangePicker',
     componentProps: {
-      placeholder: '请选择开业时间',
-    },
-  },
-  {
-    name: 'close_hour',
-    label: '关闭时间',
-    component: 'TimePicker',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择关闭时间',
+      placeholder: '请选择营业时间',
+      format: 'HH:mm',
     },
   },
   {

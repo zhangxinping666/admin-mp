@@ -2,7 +2,7 @@ import { CRUDPageTemplate } from '@/shared';
 import { searchList, tableColumns, formList, type Balance } from './model';
 import * as apis from './apis';
 import { isNumber, isString } from 'lodash';
-import { Modal, Table } from 'antd';
+import { message, Modal, Table } from 'antd';
 
 // 初始化新增数据
 const initCreate: Partial<Balance> = {
@@ -122,6 +122,7 @@ const BalanceRecordsPage = () => {
   // ) => <TableActions record={record} onEdit={actions.handleEdit} onDelete={actions.handleDelete} />;
   const [visible, setVisible] = useState(false);
   const [detailData, setDetailData] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<any>();
 
   return (
     <>
@@ -139,10 +140,16 @@ const BalanceRecordsPage = () => {
           return {
             onClick: (event: any) => {
               event.stopPropagation();
-              apis.getBalanceDetailInfo({ user_id: record.user_id }).then((res) => {
-                setDetailData(res.data || []);
-                setVisible(true);
-              });
+              apis
+                .getBalanceDetailInfo({ user_id: record.user_id })
+                .then((res: any) => {
+                  setDetailData(res.data.list || []);
+                  setVisible(true);
+                  setCurrentUserId(record.user_id);
+                })
+                .catch((err) => {
+                  message.error('获取余额明细失败' + err);
+                });
             },
           };
         }}
@@ -153,7 +160,7 @@ const BalanceRecordsPage = () => {
         }}
       />
       <Modal
-        title="用户余额明细"
+        title={currentUserId + '的余额明细'}
         open={visible}
         width={800}
         onCancel={() => setVisible(false)}
