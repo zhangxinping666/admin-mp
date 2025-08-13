@@ -26,18 +26,7 @@ export const useUserStore = create<UserState>()(
       (set) => ({
         permissions: [],
         menuPermissions: [],
-        userInfo: {
-          id: 0,
-          account_id: '',
-          name: '',
-          phone: '',
-          school_id: 0,
-          school_name: '',
-          city_id: 0,
-          role_id: 0,
-          role_name: '',
-          status: 0,
-        },
+        userInfo: null,
         /** 设置权限 */
         setPermissions: (permissions) => set({ permissions }),
         /** 设置菜单权限 */

@@ -57,6 +57,11 @@ function Login() {
     if (rememberStatus !== null) {
       setRemember(rememberStatus === 'true');
     }
+    // 清除可能存在的过期权限和菜单数据
+    setPermissions([]);
+    setMenuPermissions([]);
+    setMenuList([]);
+    setUserInfo(null);
     // 初始化时获取验证码
     handleGetCaptcha();
   }, []);

@@ -96,6 +96,17 @@ const MerchantsPage = () => {
     return response;
   };
 
+  // 编辑时数据转换函数
+  const handleEditOpen = (record: Merchant) => {
+    // 将longitude和latitude转换为location数组
+    const processedRecord = {
+      ...record,
+      location: record.longitude && record.latitude ? [record.longitude, record.latitude] : undefined,
+    };
+    console.log('handleEditOpen processedRecord:', processedRecord);
+    return processedRecord;
+  };
+
   return (
     <CRUDPageTemplate
       title="商家管理"
@@ -110,6 +121,7 @@ const MerchantsPage = () => {
       isAddOpen={false}
       disableCreate={!hasPermission('mp:merchantSort:add')}
       disableBatchDelete={!hasPermission('mp:merchantSort:delete')}
+      onEditOpen={handleEditOpen}
       apis={{
         fetchApi,
         updateApi,

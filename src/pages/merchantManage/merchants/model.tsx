@@ -160,40 +160,7 @@ export const tableColumns: TableColumn[] = [
     width: 150,
     ellipsis: true,
   },
-  // {
-  //   title: '商家图片',
-  //   dataIndex: 'merchant_img',
-  //   key: 'merchant_img',
-  //   width: 100,
-  //   render: (merchant_img: any) => {
-  //     const getFullImageUrl = (url: any) => {
-  //       if (!url) return '';
-  //       // 确保url是字符串类型
-  //       const urlStr = String(url);
-  //       if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-  //         return urlStr;
-  //       }
-  //       return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
-  //     };
 
-  //     const displayUrl = getFullImageUrl(merchant_img);
-
-  //     return displayUrl ? (
-  //       <img
-  //         src={displayUrl}
-  //         alt="商家图片"
-  //         style={{
-  //           width: '50px',
-  //           height: '50px',
-  //           objectFit: 'cover',
-  //           borderRadius: '4px',
-  //         }}
-  //       />
-  //     ) : (
-  //       <span style={{ color: '#999' }}>无图片</span>
-  //     );
-  //   },
-  // },
   {
     title: '学校ID',
     dataIndex: 'school_id',
@@ -294,17 +261,6 @@ export const formList = ({
   timer_range?: string[];
 }): BaseFormList[] => [
   {
-    label: 'ID',
-    name: 'id',
-    component: 'Input',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入ID',
-      style: { width: '100%' },
-      disabled: true,
-    },
-  },
-  {
     label: '店铺名称',
     name: 'store_name',
     rules: FORM_REQUIRED,
@@ -314,56 +270,6 @@ export const formList = ({
       maxLength: 50,
     },
   },
-  // {
-  //   label: '商家名称',
-  //   name: 'merchant_name',
-  //   rules: FORM_REQUIRED,
-  //   component: 'Input',
-  //   componentProps: {
-  //     placeholder: '请输入商家名称',
-  //     maxLength: 50,
-  //   },
-  // },
-  // {
-  //   label: '商家图片',
-  //   name: 'merchant_img',
-  //   component: 'customize',
-  //   rules: FORM_REQUIRED,
-  //   render: (props: any) => {
-  //     const { value, onChange } = props;
-  //     return (
-  //       <EnhancedImageUploader
-  //         value={value}
-  //         onChange={onChange}
-  //         maxSize={2}
-  //         baseUrl="http://192.168.10.7:8082"
-  //       />
-  //     );
-  //   },
-  // },
-  // {
-  //   label: '学校ID',
-  //   name: 'school_id',
-  //   rules: FORM_REQUIRED,
-  //   component: 'InputNumber',
-  //   componentProps: {
-  //     placeholder: '请输入学校ID',
-  //     style: { width: '100%' },
-  //   },
-  // },
-  // {
-  //   name: 'city_id', // 这个字段的键名，最终提交给后端
-  //   label: '选择城市',
-  //   component: 'Select',
-  //   required: true,
-  //   placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
-  //   componentProps: {
-  //     loading: isLoadingOptions,
-  //     showSearch: true, // 开启搜索功能
-  //     optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-  //     options: groupedCityOptions,
-  //   },
-  // },
   {
     label: '状态',
     name: 'status',
@@ -405,8 +311,24 @@ export const formList = ({
     name: 'location',
     component: 'customize',
     componentProps: (form) => {
+      // 获取当前表单的所有值
+      const formValues = form.getFieldsValue();
+
+      // 如果是编辑模式且有经纬度数据，使用商家的实际位置作为地图中心
+      // 否则使用默认的北京坐标
+      let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
+
+      if (
+        formValues.longitude &&
+        formValues.latitude &&
+        typeof formValues.longitude === 'number' &&
+        typeof formValues.latitude === 'number'
+      ) {
+        initCenter = [formValues.longitude, formValues.latitude];
+      }
+
       return {
-        initCenter: [116.397428, 39.90923],
+        initCenter,
         zoom: 15,
         onChange: (value: number[]) => {
           console.log('value', value);

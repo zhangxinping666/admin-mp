@@ -134,7 +134,7 @@ export function getFirstMenu(menus: SideMenu[], permissions: string[], result = 
 
   for (let i = 0; i < menus.length; i++) {
     const menu = menus[i];
-    
+
     // 如果当前菜单有权限且有路由路径，优先返回当前菜单的路径
     if (hasPermission(menu, permissions) && menu.route_path && !result) {
       result = menu.route_path;
@@ -157,17 +157,26 @@ export function getFirstMenu(menus: SideMenu[], permissions: string[], result = 
 /**
  * 检查菜单项是否有权限
  * @param menu - 菜单项
- * @param permissions - 权限列表（现在基于菜单存在性判断，只要有菜单就有权限）
+ * @param permissions - 权限列表
  */
 function hasPermission(menu: SideMenu, permissions: string[]): boolean {
-  // 新逻辑：只要菜单存在且有路由路径，就认为有权限
-  // 不再检查permissions数组，因为现在的逻辑是有菜单就有权限
-  if (menu.route_path) {
-    return true;
+  // 如果没有权限数组或权限数组为空，则没有权限
+  if (!permissions || permissions.length === 0) {
+    return false;
   }
 
-  // 如果没有路由路径，可能是纯容器菜单，也允许访问
-  return true;
+  // 如果菜单有路由路径，检查权限数组中是否包含该路径
+  if (menu.route_path) {
+    return permissions.includes(menu.route_path);
+  }
+
+  // 如果没有路由路径，可能是纯容器菜单，检查是否有子菜单有权限
+  if (menu.children && menu.children.length > 0) {
+    return menu.children.some((child: SideMenu) => hasPermission(child, permissions));
+  }
+
+  // 默认没有权限
+  return false;
 }
 
 /**
