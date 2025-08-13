@@ -155,6 +155,7 @@ const MerchantsPage = () => {
       isAddOpen={false}
       disableCreate={!hasPermission('mp:merchantSort:add')}
       disableBatchDelete={!hasPermission('mp:merchantSort:delete')}
+      // onEditOpen={handleEditOpen}
       apis={{
         fetchApi,
         updateApi,

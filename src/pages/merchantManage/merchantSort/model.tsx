@@ -115,16 +115,14 @@ export const tableColumns: TableColumn[] = [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
-    render: (value: unknown, record: object) => {
-      const status = value as number;
-      return status === 1 ? '启用' : '禁用';
-    },
-    align: 'center',
-    fixed: 'left',
+    width: 80,
+    render: (value: number) => (
+      <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
+    ),
   },
   {
-    title: '退款比例(%)',
+    title: '返佣比例(%)',
+
     dataIndex: 'drawback',
     key: 'drawback',
     width: 120,
@@ -197,12 +195,12 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
-    label: '退款比例(%)',
+    label: '返佣比例(%)',
     name: 'drawback',
     rules: FORM_REQUIRED,
     component: 'InputNumber',
     componentProps: {
-      placeholder: '请输入退款比例',
+      placeholder: '请输入返佣比例',
       min: 0,
       max: 100,
       precision: 2,
@@ -255,12 +253,12 @@ export const addFormList = (): BaseFormList[] => [
     },
   },
   {
-    label: '退款比例(%)',
+    label: '返佣比例(%)',
     name: 'drawback',
     rules: FORM_REQUIRED,
     component: 'InputNumber',
     componentProps: {
-      placeholder: '请输入退款比例',
+      placeholder: '请输入返佣比例',
       min: 0,
       max: 100,
       precision: 2,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Amap, Marker } from '@amap/amap-react';
 import { Typography } from 'antd';
 import { Space } from 'antd';
@@ -69,25 +69,28 @@ const MapPicker: React.FC<MapPickerProps> = ({
    */
   const handleClick = (map: any, e: { lnglat: { lng: number; lat: number } }) => {
     console.log('e', e.lnglat.lng, e.lnglat.lat);
-    setCenter([e.lnglat.lng, e.lnglat.lat]);
+    const newPosition: [number, number] = [e.lnglat.lng, e.lnglat.lat];
+    setCenter(newPosition);
     console.log('onChange', onChange);
-    onChange?.([e.lnglat.lng, e.lnglat.lat]);
+    onChange?.(newPosition);
   };
+
+  // 确保center是有效的数组
+  const safeCenter =
+    center && Array.isArray(center) && center.length === 2 ? center : defaultCenter;
 
   return (
     <div style={{ height: '300px', paddingBottom: 20, borderRadius: 8 }}>
-      {
-        <div style={{ marginBottom: 8 }}>
-          <Space>
-            <Typography.Text strong>经度:</Typography.Text>
-            <Typography.Text>{center[0].toFixed(6)}</Typography.Text>
-            <Typography.Text strong>纬度:</Typography.Text>
-            <Typography.Text>{center[1].toFixed(6)}</Typography.Text>
-          </Space>
-        </div>
-      }
-      <Amap center={value || center} zoom={zoom} onHotspotClick={handleClick}>
-        {value && <Marker position={value} />}
+      <div style={{ marginBottom: 8 }}>
+        <Space>
+          <Typography.Text strong>经度:</Typography.Text>
+          <Typography.Text>{safeCenter[0].toFixed(6)}</Typography.Text>
+          <Typography.Text strong>纬度:</Typography.Text>
+          <Typography.Text>{safeCenter[1].toFixed(6)}</Typography.Text>
+        </Space>
+      </div>
+      <Amap center={safeCenter} zoom={zoom || 15} onHotspotClick={handleClick}>
+        <Marker position={safeCenter} />
       </Amap>
     </div>
   );

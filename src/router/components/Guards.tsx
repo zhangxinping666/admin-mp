@@ -71,8 +71,13 @@ function Guards() {
         return true;
       } catch (error) {
         console.error('自动登录失败:', error);
+        // 清除登录信息和持久化数据
         clearLoginInfo();
         localStorage.setItem(CHECK_REMEMBER, 'false');
+        setPermissions([]);
+        setMenuPermissions([]);
+        setMenuList([]);
+        setUserInfo(null);
         return false;
       } finally {
         setIsAutoLogging(false);
@@ -105,8 +110,13 @@ function Guards() {
       setMenuPermissions(finalPermissions);
       setIsDataLoaded(true); // 标记数据加载完成
     } catch (error) {
-      navigate(`/login`, { replace: true });
       console.error('Guards获取权限数据失败:', error);
+      // 清除可能存在的过期数据
+      setPermissions([]);
+      setMenuPermissions([]);
+      setMenuList([]);
+      setUserInfo(null);
+      navigate(`/login`, { replace: true });
     }
   };
 
@@ -119,8 +129,13 @@ function Guards() {
   };
 
   useEffect(() => {
-    // 如果是登录页面且已有token，不要阻止后续逻辑，让第二个useEffect处理重定向
+    // 如果是登录页面且没有token，直接完成初始化
     if (location.pathname === '/login' && !token) {
+      // 清除可能存在的过期数据
+      setPermissions([]);
+      setMenuPermissions([]);
+      setMenuList([]);
+      setUserInfo(null);
       setIsInitialLoad(false);
       return;
     }
@@ -131,6 +146,12 @@ function Guards() {
       return;
     }
     if (!token && !isAutoLogging) {
+      // 没有token时，清除所有用户相关数据
+      setPermissions([]);
+      setMenuPermissions([]);
+      setMenuList([]);
+      setUserInfo(null);
+
       tryAutoLogin()
         .then((success) => {
           if (!success) {
@@ -148,14 +169,16 @@ function Guards() {
     }
   }, [permissions.length, token, location.pathname]);
   useEffect(() => {
-    if (!isInitialLoad && token && menuList.length > 0) {
+    if (!isInitialLoad && token && menuList.length > 0 && permissions.length > 0) {
       // 已登录用户访问登录页面时，重定向到首页或第一个有权限的菜单
       if (location.pathname === '/login') {
         const firstMenu = getFirstMenu(menuList, permissions);
         if (firstMenu) {
           navigate(firstMenu, { replace: true });
         } else {
-          navigate('/', { replace: true });
+          // 如果没有有权限的菜单，说明权限数据有问题，跳转到登录页面
+          console.warn('没有找到有权限的菜单，可能权限数据异常');
+          navigate('/login', { replace: true });
         }
         return;
       }

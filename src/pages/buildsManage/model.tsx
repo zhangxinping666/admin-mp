@@ -86,17 +86,10 @@ export const tableColumns: TableColumn[] = [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 120,
-    ellipsis: true,
-    render: (status: number) => {
-      if (status === 1) {
-        return <span style={{ color: 'green' }}>启用</span>;
-      }
-      if (status === 2) {
-        return <span style={{ color: 'red' }}>禁用</span>;
-      }
-      return '-';
-    },
+    width: 80,
+    render: (value: number) => (
+      <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
+    ),
   },
   {
     title: '操作',

@@ -357,6 +357,18 @@ export const addFormList = (params: {
       placeholder: '请选择用户ID',
       disabled: false,
       options: params.usersOptions,
+      // 添加分页和虚拟滚动配置
+      showSearch: true,
+      filterOption: (input: any, option: any) => {
+        return (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+      },
+      listHeight: 256, // 限制下拉框高度
+      virtual: true, // 启用虚拟滚动
+      dropdownMatchSelectWidth: false,
+      dropdownStyle: {
+        maxHeight: '400px',
+        overflow: 'auto',
+      },
     },
   },
   {

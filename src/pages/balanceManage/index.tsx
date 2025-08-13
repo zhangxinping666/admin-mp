@@ -162,7 +162,7 @@ const BalanceRecordsPage = () => {
       <Modal
         title={currentUserId + '的余额明细'}
         open={visible}
-        width={800}
+        width={'70%'}
         onCancel={() => setVisible(false)}
         footer={null}
       >
