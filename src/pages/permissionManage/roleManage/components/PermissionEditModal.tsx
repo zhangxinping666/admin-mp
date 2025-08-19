@@ -53,9 +53,6 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
 
           // 设置菜单权限到功能权限
           const menuIds = menuResponse.data?.menu_ids || [];
-          console.log('=== 初始化权限数据 ===');
-          console.log('后端返回的menuIds:', menuIds);
-          console.log('menuResponse完整数据:', menuResponse);
 
           // 直接设置后端返回的权限ID，Tree组件会自动处理父子关联显示
           setFunctionalPermissions(menuIds);
@@ -105,93 +102,11 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
     );
   };
 
-  // 收集子级ID
-  const collectChildrenIds = (treeData: any[], selectedIds: any[]): any[] => {
-    const childrenIds: any[] = [];
-
-    const getNodeKey = (node: any) => {
-      return node.key || node.id || node.value;
-    };
-
-    const findChildren = (nodes: any[]) => {
-      nodes.forEach((node) => {
-        const nodeKey = getNodeKey(node);
-
-        // 检查当前节点是否被选中
-        if (selectedIds.includes(nodeKey)) {
-          // 收集所有子级ID
-          const collectAllChildren = (children: any[]) => {
-            children.forEach((child) => {
-              const childKey = getNodeKey(child);
-              childrenIds.push(childKey);
-              if (child.children && child.children.length > 0) {
-                collectAllChildren(child.children);
-              }
-            });
-          };
-
-          if (node.children && node.children.length > 0) {
-            collectAllChildren(node.children);
-          }
-        }
-
-        // 递归检查子节点
-        if (node.children && node.children.length > 0) {
-          findChildren(node.children);
-        }
-      });
-    };
-
-    findChildren(treeData);
-    return [...new Set(childrenIds)]; // 去重
-  };
-
-  // 收集所有相关的父级ID
-  const collectParentIds = (treeData: any[], selectedIds: any[]): any[] => {
-    const parentIds: any[] = [];
-
-    const getNodeKey = (node: any) => {
-      return node.key || node.id || node.value;
-    };
-
-    const findParents = (nodes: any[], targetIds: any[], parentPath: any[] = []) => {
-      nodes.forEach((node) => {
-        const nodeKey = getNodeKey(node);
-        const currentPath = [...parentPath, nodeKey];
-
-        // 检查当前节点是否被选中
-        if (targetIds.includes(nodeKey)) {
-          // 将所有父级ID添加到结果中
-          parentIds.push(...parentPath);
-        }
-
-        // 递归检查子节点
-        if (node.children && node.children.length > 0) {
-          findParents(node.children, targetIds, currentPath);
-        }
-      });
-    };
-
-    findParents(treeData, selectedIds);
-    return [...new Set(parentIds)]; // 去重
-  };
-
-  // 收集所有相关的ID（包括父级、选中节点和子级）
-  const collectAllRelatedIds = (treeData: any[], selectedIds: any[]): any[] => {
-    // 收集父级ID
-    const parentIds = collectParentIds(treeData, selectedIds);
-    // 收集子级ID
-    const childrenIds = collectChildrenIds(treeData, selectedIds);
-
-    // 合并所有ID并去重
-    const allIds = [...new Set([...parentIds, ...selectedIds, ...childrenIds])];
-
-    return allIds;
-  };
 
   // 功能权限Tree选中事件处理
   const handleFunctionalTreeCheck = (checkedKeys: any, info: any) => {
-    // 当checkStrictly=false时，checkedKeys自动包含所有选中的节点（父级+子级）
+    // 当checkStrictly=false时，Tree组件自动实现父子联动
+    // checkedKeys包含所有选中的节点（父级菜单+子级权限）
     const keys = Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked || [];
 
     console.log('=== 功能权限Tree选中事件 ===');
@@ -199,14 +114,15 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
     console.log('处理后的keys:', keys);
     console.log('选中信息info:', info);
 
-    // Tree组件已经自动处理父子关联，直接使用checkedKeys
+    // 功能权限需要保留所有选中的ID（包括父级菜单ID和子级权限ID）
     setFunctionalPermissions(keys);
     console.log('设置新的functionalPermissions:', keys);
   };
 
   // 数据权限Tree选中事件处理
   const handleDataTreeCheck = (checkedKeys: any, info: any) => {
-    // 当checkStrictly=false时，checkedKeys自动包含所有选中的节点（父级+子级）
+    // 当checkStrictly=false时，Tree组件自动实现父子联动
+    // checkedKeys包含所有选中的节点（父级分组+子级API）
     const keys = Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked || [];
 
     console.log('=== 数据权限Tree选中事件 ===');
@@ -214,7 +130,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
     console.log('处理后的keys:', keys);
     console.log('选中信息info:', info);
 
-    // Tree组件已经自动处理父子关联，直接使用checkedKeys
+    // 数据权限在显示时包含父级分组，但提交时会过滤掉group-开头的分组ID
     setDataPermissions(keys);
     console.log('设置新的dataPermissions:', keys);
   };
@@ -239,33 +155,34 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
     try {
       setLoading(true);
 
+      // 功能权限：提交所有选中的ID（包括父级菜单和子级权限）
       const allFunctionalIds = functionalPermissions;
 
-      const allDataIds = dataPermissions;
+      // 数据权限：只提交子级ID（api-开头的），过滤掉父级分组（group-开头的）
+      const filteredDataPermissions = dataPermissions.filter((value: string) => {
+        // 只保留API权限，排除分组
+        return typeof value === 'string' && value.startsWith('api-');
+      });
 
-      const convertedDataPermissions = allDataIds
-        .filter((value: string) => {
-          // 保留所有权限相关的值，包括分组(group-)和API(api-)
-          return (
-            typeof value === 'string' && (value.startsWith('api-') || value.startsWith('group-'))
-          );
-        })
+      // 转换数据权限ID（去除api-前缀）
+      const convertedDataPermissions = filteredDataPermissions
         .map((value: string) => {
-          // 将前缀转换为纯数字 ID
-          if (value.startsWith('api-')) {
-            return parseInt(value.replace('api-', ''), 10);
-          } else if (value.startsWith('group-')) {
-            return parseInt(value.replace('group-', ''), 10);
-          }
-          return null;
+          return parseInt(value.replace('api-', ''), 10);
         })
         .filter((id: any) => !isNaN(id) && id !== null && id !== undefined);
+
+      // 如果过滤后没有数据权限了，提示用户
+      if (convertedDataPermissions.length === 0) {
+        message.error('请至少选择一个具体的数据权限（不能只选择分组）');
+        return;
+      }
 
       await updateRoleApiPerms({
         id: record.id,
         id_list: convertedDataPermissions,
       });
 
+      // 转换功能权限ID
       const convertedFunctionalPermissions = allFunctionalIds
         .map((value: any) => {
           const id = typeof value === 'string' ? parseInt(value, 10) : value;
@@ -397,7 +314,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
             >
               <Tree
                 checkable
-                checkStrictly={true}
+                checkStrictly={false}
                 defaultExpandAll
                 checkedKeys={functionalPermissions}
                 treeData={processFunctionalTreeData(menuTreeData)}
@@ -441,7 +358,7 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
             >
               <Tree
                 checkable
-                checkStrictly={true}
+                checkStrictly={false}
                 defaultExpandAll
                 checkedKeys={dataPermissions}
                 treeData={processDataTreeData(dataPermissionTreeData)}

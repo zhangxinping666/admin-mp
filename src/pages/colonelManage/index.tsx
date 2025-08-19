@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { searchList, tableColumns, formList, type Colonel } from './model';
+import { searchList, tableColumns, formList, type Colonel, useLocationOptions } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getProvinceList, getCityName } from '@/servers/city';
@@ -48,6 +48,7 @@ interface UserOption {
 function ColleaguesPage() {
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const locationOptions = useLocationOptions();
   // 【新增】学校选择框的状态
   const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
   const [isSchoolLoading, setIsSchoolLoading] = useState(false);
@@ -221,7 +222,7 @@ function ColleaguesPage() {
   return (
     <CRUDPageTemplate
       title="团长管理"
-      searchConfig={searchList()}
+      searchConfig={searchList(locationOptions)}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,

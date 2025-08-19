@@ -10,6 +10,7 @@ export interface User {
   image_id?: number;
   nickname: string;
   phone: string;
+  city: string;
   school: string;
   wechat: string;
   alipay: string;
@@ -22,6 +23,7 @@ export interface updateUserForm {
   image_id?: number;
   nickname: string;
   phone: string;
+  city: string;
   school: string;
   wechat: string;
   alipay: string;
@@ -55,14 +57,164 @@ export interface UserDetailResult {
   code: number;
   data: User;
 }
+type OptionType = { label: string; value: string | number };
+// 默认“全部”选项
+const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部'): OptionType => ({
+  label,
+  value,
+});
+import {
+  getProvinces,
+  getSchoolsByCityId,
+  getCitiesByProvince,
+} from '@/servers/trade-blotter/location';
+export const useLocationOptions = () => {
+  const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
+  const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
+  const [schoolOptions, setSchoolOptions] = useState<OptionType[]>([]);
 
+  // 加载省份
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const { data } = await getProvinces(0);
+        if (Array.isArray(data) && data.length > 0) {
+          setProvinceOptions([
+            DEFAULT_ALL_OPTION(),
+            ...data.map((p) => ({ label: p.name, value: p.city_id })),
+          ]);
+        }
+      } catch (error) {
+        console.error('加载省份失败', error);
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // 加载城市
+  const loadCities = useCallback(async (province: string) => {
+    console.log(province);
+    if (!province || province === '全部') {
+      setCityOptions([]);
+      return;
+    }
+    try {
+      const { data } = await getCitiesByProvince(Number(province));
+      setCityOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((c) => ({ label: c.name, value: c.city_id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载城市失败', error);
+      setCityOptions([DEFAULT_ALL_OPTION('全部', 0)]);
+    }
+  }, []);
+
+  // 加载学校
+  const loadSchools = useCallback(async (cityId: string | number) => {
+    if (!cityId || cityId === 0) {
+      setSchoolOptions([]);
+      return;
+    }
+    try {
+      const { data } = await getSchoolsByCityId(cityId);
+      setSchoolOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((s) => ({ label: s.name, value: s.id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载学校失败', error);
+      setSchoolOptions([DEFAULT_ALL_OPTION('全部', 0)]);
+    }
+  }, []);
+
+  return {
+    provinceOptions,
+    cityOptions,
+    schoolOptions,
+    loadCities,
+    loadSchools,
+  };
+};
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
   {
     label: '用户昵称',
     name: 'nickname',
     component: 'Input',
     placeholder: '请输入团长昵称',
+  },
+  {
+    label: '电话',
+    name: 'phone',
+    component: 'Input',
+    placeholder: '请输入用户电话',
+  },
+  {
+    component: 'Select',
+    name: 'role_id',
+    label: '身份',
+    componentProps: {
+      options: [
+        { label: '全部', value: 0 },
+        { label: '普通用户', value: 1 },
+        { label: '团长', value: 2 },
+        { label: '商户', value: 3 },
+        { label: '城市运营商', value: 4 },
+      ],
+    },
+  },
+  {
+    label: '地区',
+    name: 'province',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: '请选择省份',
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市和学校选择
+        form.setFieldsValue({ city: undefined, school: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city', 'school']);
+      },
+    }),
+  },
+  {
+    label: '',
+    name: 'city',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => {
+      const provinceValue = form.getFieldValue('province');
+      return {
+        placeholder: '请选择城市',
+        allowClear: true,
+        disabled: !provinceValue,
+        options: options.cityOptions,
+        onChange: async (value: string) => {
+          form.setFieldsValue({ school: undefined });
+          await options.loadSchools(value);
+          form.validateFields(['school']);
+        },
+      };
+    },
+  },
+  {
+    label: '',
+    name: 'school',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => {
+      const cityValue = form.getFieldValue('city');
+      return {
+        placeholder: '请选择学校',
+        allowClear: true,
+        disabled: !cityValue || cityValue === '',
+        options: options.schoolOptions,
+      };
+    },
   },
   {
     component: 'Select',
@@ -81,7 +233,14 @@ export const searchList = (): BaseSearchList[] => [
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
-    title: '用户头像',
+    title: '昵称',
+    dataIndex: 'nickname',
+    key: 'nickname',
+    width: 150,
+    ellipsis: true,
+  },
+  {
+    title: '头像',
     dataIndex: 'avatar',
     key: 'avatar',
     width: 100,
@@ -122,42 +281,42 @@ export const tableColumns: TableColumn[] = [
     },
   },
   {
-    title: '用户昵称',
-    dataIndex: 'nickname',
-    key: 'nickname',
-    width: 150,
-    ellipsis: true,
-  },
-  {
-    title: '用户电话',
+    title: '电话',
     dataIndex: 'phone',
     key: 'phone',
     width: 100,
   },
   {
-    title: '用户学校',
+    title: '身份',
+    dataIndex: 'role',
+    key: 'role',
+    width: 100,
+  },
+  {
+    title: '城市',
+    dataIndex: 'city',
+    key: 'city',
+    width: 100,
+  },
+  {
+    title: '学校',
     dataIndex: 'school',
     key: 'school',
     width: 100,
   },
   {
-    title: '用户微信',
-    dataIndex: 'wechat',
-    key: 'wechat',
-    width: 100,
-  },
-  {
-    title: '用户支付宝',
-    dataIndex: 'alipay',
-    key: 'alipay',
-    width: 100,
-  },
-  {
-    title: '用户最后登录时间',
+    title: '最后登录时间',
     dataIndex: 'last_time',
     key: 'last_time',
     width: 100,
   },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: 100,
+  },
+
   {
     title: '状态',
     dataIndex: 'status',
@@ -179,37 +338,14 @@ export const tableColumns: TableColumn[] = [
 // 表单配置
 export const formList = (): BaseFormList[] => [
   {
-    label: '用户昵称',
+    label: '昵称',
     name: 'nickname',
     component: 'Input',
     placeholder: '请输入学校名称',
     rules: FORM_REQUIRED,
   },
   {
-    label: '用户电话',
-    name: 'phone',
-    component: 'Input',
-    placeholder: '请输入用户电话',
-    rules: [
-      { required: true, message: '请输入用户电话' },
-      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
-    ],
-    componentProps: {
-      maxLength: 11,
-    },
-  },
-  {
-    label: '用户密码',
-    name: 'password',
-    component: 'Input',
-    placeholder: '请输入用户密码',
-    componentProps: {
-      precision: 6,
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '用户头像',
+    label: '头像',
     name: 'image',
     component: 'customize',
     rules: FORM_REQUIRED,
@@ -225,6 +361,30 @@ export const formList = (): BaseFormList[] => [
       );
     },
   },
+  {
+    label: '电话',
+    name: 'phone',
+    component: 'Input',
+    placeholder: '请输入用户电话',
+    rules: [
+      { required: true, message: '请输入用户电话' },
+      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
+    ],
+    componentProps: {
+      maxLength: 11,
+    },
+  },
+  {
+    label: '密码',
+    name: 'password',
+    component: 'Input',
+    placeholder: '请输入用户密码',
+    componentProps: {
+      precision: 6,
+      style: { width: '100%' },
+    },
+  },
+
   {
     label: '状态',
     name: 'status',

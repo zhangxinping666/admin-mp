@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { searchList, tableColumns, formList, type City } from './model';
+import { searchList, tableColumns, formList, type City, useLocationOptions } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import {
@@ -45,6 +45,7 @@ const CitiesPage = () => {
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [userOptions, setUserOptions] = useState<UserOption[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const locationOptions = useLocationOptions();
 
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -153,7 +154,7 @@ const CitiesPage = () => {
   return (
     <CRUDPageTemplate
       title="城市运营商"
-      searchConfig={searchList()}
+      searchConfig={searchList(locationOptions)}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,

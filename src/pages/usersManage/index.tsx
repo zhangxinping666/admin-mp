@@ -1,4 +1,4 @@
-import { searchList, tableColumns, formList, type User } from './model';
+import { searchList, tableColumns, useLocationOptions, formList, type User } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import { getUserList, updateUser, deleteUser } from '@/servers/user';
@@ -24,6 +24,7 @@ const userApis = {
 
 const ColleaguesPage = () => {
   const { permissions } = useUserStore();
+  const locationOptions = useLocationOptions();
 
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -64,7 +65,7 @@ const ColleaguesPage = () => {
   return (
     <CRUDPageTemplate
       title="用户管理"
-      searchConfig={searchList()}
+      searchConfig={searchList(locationOptions)}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}

@@ -2,8 +2,10 @@ import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
+import AddressWithLocation from './components/AddressWithLocation';
+import MapPicker from '@/components/MapPicker';
 
-// 楼栋接口定义
+// 学校定义
 export interface School {
   id: number;
   name: string;
@@ -13,6 +15,9 @@ export interface School {
   logo_image_url: string;
   city_name: string;
   province: string;
+  latitude: number;
+  longitude: number;
+  store_numbers: number;
   status: number;
 }
 
@@ -21,6 +26,8 @@ export interface addSchoolForm {
   address: string;
   city_id: number;
   logo_image_url: string;
+  latitude?: number;
+  longitude?: number;
   status: number;
 }
 
@@ -30,6 +37,8 @@ export interface updateSchoolForm {
   address: string;
   city_id: number;
   logo_image_url: string;
+  latitude?: number;
+  longitude?: number;
   status: number;
 }
 
@@ -56,14 +65,102 @@ export interface SchoolListResult {
     total: number;
   };
 }
+type OptionType = { label: string; value: string | number };
+// 默认“全部”选项
+const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部'): OptionType => ({
+  label,
+  value,
+});
+import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
+export const useLocationOptions = () => {
+  const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
+  const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
 
+  // 加载省份
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const { data } = await getProvinces(0);
+        if (Array.isArray(data) && data.length > 0) {
+          setProvinceOptions([
+            DEFAULT_ALL_OPTION(),
+            ...data.map((p) => ({ label: p.name, value: p.city_id })),
+          ]);
+        }
+      } catch (error) {
+        console.error('加载省份失败', error);
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // 加载城市
+  const loadCities = useCallback(async (province: string) => {
+    console.log(province);
+    if (!province || province === '全部') {
+      setCityOptions([]);
+      return;
+    }
+    try {
+      const { data } = await getCitiesByProvince(Number(province));
+      setCityOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((c) => ({ label: c.name, value: c.city_id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载城市失败', error);
+      setCityOptions([DEFAULT_ALL_OPTION('全部', 0)]);
+    }
+  }, []);
+
+  return {
+    provinceOptions,
+    cityOptions,
+    loadCities,
+  };
+};
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
   {
     label: '学校名称',
     name: 'name',
     component: 'Input',
     placeholder: '请输入学校名称',
+  },
+  {
+    label: '地区',
+    name: 'province',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: '请选择省份',
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市和学校选择
+        form.setFieldsValue({ city: undefined, school: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city', 'school']);
+      },
+    }),
+  },
+  {
+    label: '',
+    name: 'city',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => {
+      const provinceValue = form.getFieldValue('province');
+      return {
+        placeholder: '请选择城市',
+        allowClear: true,
+        disabled: !provinceValue,
+        options: options.cityOptions,
+        onChange: async (value: string) => {
+          form.setFieldsValue({ school: undefined });
+        },
+      };
+    },
   },
   {
     component: 'Select',
@@ -82,27 +179,14 @@ export const searchList = (): BaseSearchList[] => [
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
-    title: '学校名称',
+    title: '名称',
     dataIndex: 'name',
     key: 'name',
     width: 150,
     ellipsis: true,
   },
   {
-    title: '学校地址',
-    dataIndex: 'address',
-    key: 'address',
-    width: 150,
-    ellipsis: true,
-  },
-  {
-    title: '城市',
-    dataIndex: 'city_name',
-    key: 'city_name',
-    width: 100,
-  },
-  {
-    title: '学校logo',
+    title: 'logo',
     dataIndex: 'logo_image_url',
     key: 'logo_image_url',
     width: 100,
@@ -136,6 +220,32 @@ export const tableColumns: TableColumn[] = [
     },
   },
   {
+    title: '地址',
+    dataIndex: 'address',
+    key: 'address',
+    width: 200,
+    ellipsis: true,
+    render: (_: any, record: School) => <AddressWithLocation record={record} />,
+  },
+  {
+    title: '所属省份',
+    dataIndex: 'province',
+    key: 'province',
+    width: 100,
+  },
+  {
+    title: '所属城市',
+    dataIndex: 'city_name',
+    key: 'city_name',
+    width: 100,
+  },
+  {
+    title: '商家数量',
+    dataIndex: 'store_numbers',
+    key: 'store_numbers',
+    width: 100,
+  },
+  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
@@ -163,34 +273,14 @@ export const formList = ({
   isLoadingOptions: boolean;
 }): BaseFormList[] => [
   {
-    label: '学校名称',
+    label: '名称',
     name: 'name',
     component: 'Input',
     placeholder: '请输入学校名称',
     rules: FORM_REQUIRED,
   },
   {
-    label: '学校地址',
-    name: 'address',
-    component: 'Input',
-    placeholder: '请输入学校地址',
-    rules: FORM_REQUIRED,
-  },
-  {
-    name: 'city_id', // 这个字段的键名，最终提交给后端
-    label: '城市',
-    component: 'Select',
-    required: true,
-    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
-    componentProps: {
-      loading: isLoadingOptions,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-      options: groupedCityOptions,
-    },
-  },
-  {
-    label: '学校logo',
+    label: 'logo',
     name: 'school_logo',
     component: 'customize',
     rules: FORM_REQUIRED,
@@ -206,6 +296,73 @@ export const formList = ({
       );
     },
   },
+  {
+    label: '地址',
+    name: 'address',
+    component: 'Input',
+    placeholder: '请输入学校地址',
+    rules: FORM_REQUIRED,
+  },
+  {
+    name: 'city_id', // 这个字段的键名，最终提交给后端
+    label: '城市',
+    component: 'Select',
+    rules: FORM_REQUIRED,
+    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择城市',
+    componentProps: {
+      loading: isLoadingOptions,
+      showSearch: true, // 开启搜索功能
+      optionFilterProp: 'label', // 按选项的显示文本进行搜索
+      options: groupedCityOptions, // 使用分组选项
+      dropdownMatchSelectWidth: false, // 下拉框宽度自适应
+      style: { width: '100%' },
+    },
+  },
+  {
+    label: '位置',
+    name: 'location',
+    rules: FORM_REQUIRED,
+    component: 'customize',
+    componentProps: (form) => {
+      // 获取当前表单的所有值
+      const formValues = form.getFieldsValue();
+
+      // 如果是编辑模式且有经纬度数据，使用学校的实际位置作为地图中心
+      // 否则使用默认的北京坐标
+      let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
+
+      if (
+        formValues.longitude &&
+        formValues.latitude &&
+        typeof formValues.longitude === 'number' &&
+        typeof formValues.latitude === 'number'
+      ) {
+        initCenter = [formValues.longitude, formValues.latitude];
+      }
+
+      return {
+        initCenter,
+        zoom: 15,
+        style: {
+          width: '100%',
+          height: 400,
+        },
+        onChange: (value: number[]) => {
+          console.log('位置更新:', value);
+          form.setFieldsValue({
+            location: value,
+          });
+        },
+        initValue: () => {
+          return form.getFieldValue('location');
+        },
+      };
+    },
+    render: (props: any) => {
+      return <MapPicker {...props} />;
+    },
+  },
+
   {
     label: '状态',
     name: 'status',

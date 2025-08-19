@@ -1,6 +1,8 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
+import { useState, useEffect, useCallback } from 'react';
+import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
 
 // 楼栋接口定义
 export interface City {
@@ -12,6 +14,8 @@ export interface City {
   city_id: number;
   province: string;
   status: number;
+  account_id: string;
+  created_at: string;
 }
 
 export interface getCityResult {
@@ -63,15 +67,103 @@ export interface CityListResult {
   };
 }
 
+type OptionType = { label: string; value: string | number };
+
+// 默认"全部"选项
+const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部'): OptionType => ({
+  label,
+  value,
+});
+
+// 省市选项Hook
+export const useLocationOptions = () => {
+  const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
+  const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
+
+  // 加载省份
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const { data } = await getProvinces(0);
+        if (Array.isArray(data) && data.length > 0) {
+          setProvinceOptions([
+            DEFAULT_ALL_OPTION(),
+            ...data.map((p) => ({ label: p.name, value: p.city_id })),
+          ]);
+        }
+      } catch (error) {
+        console.error('加载省份失败', error);
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // 加载城市
+  const loadCities = useCallback(async (province: string) => {
+    if (!province || province === '全部') {
+      setCityOptions([]);
+      return;
+    }
+    try {
+      const { data } = await getCitiesByProvince(Number(province));
+      setCityOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((c) => ({ label: c.name, value: c.city_id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载城市失败', error);
+      setCityOptions([DEFAULT_ALL_OPTION('全部', 0)]);
+    }
+  }, []);
+
+  return {
+    provinceOptions,
+    cityOptions,
+    loadCities,
+  };
+};
+
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
   {
-    label: '城市名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入城市名称',
+    label: '地区',
+    name: 'province',
+    component: 'Select',
+    wrapperWidth: 180,
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: '请选择省份',
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市选择
+        form.setFieldsValue({ city: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city']);
+      },
+    }),
   },
-    {
+  {
+    label: '',
+    name: 'city',
+    component: 'Select',
+    wrapperWidth: 180,
+    componentProps: (form) => {
+      const provinceValue = form.getFieldValue('province');
+      return {
+        placeholder: '请选择城市',
+        allowClear: true,
+        disabled: !provinceValue,
+        options: options.cityOptions,
+      };
+    },
+  },
+  {
+    label: '电话',
+    name: 'phone',
+    component: 'Input',
+    placeholder: '请输入电话',
+  },
+  {
     component: 'Select',
     name: 'status',
     label: '状态',
@@ -88,22 +180,23 @@ export const searchList = (): BaseSearchList[] => [
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
-    title: '城市运营商名称',
+    title: '名称',
     dataIndex: 'name',
     key: 'name',
     width: 150,
     ellipsis: true,
   },
   {
-    title: '城市运营商电话',
+    title: '账号',
+    dataIndex: 'account_id',
+    key: 'account_id',
+    width: 80,
+  },
+
+  {
+    title: '电话',
     dataIndex: 'phone',
     key: 'phone',
-    width: 100,
-  },
-  {
-    title: '城市名称',
-    dataIndex: 'city_name',
-    key: 'city_name',
     width: 100,
   },
   {
@@ -111,6 +204,18 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'province',
     key: 'province',
     width: 100,
+  },
+  {
+    title: '城市',
+    dataIndex: 'city_name',
+    key: 'city_name',
+    width: 100,
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: 180,
   },
   {
     title: '状态',

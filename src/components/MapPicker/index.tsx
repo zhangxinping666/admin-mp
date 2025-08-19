@@ -76,6 +76,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   };
 
   // 确保center是有效的数组
+  const defaultCenter: [number, number] = [116.397428, 39.90923]; // 北京天安门坐标
   const safeCenter =
     center && Array.isArray(center) && center.length === 2 ? center : defaultCenter;
 
