@@ -168,7 +168,7 @@ export const searchList = (
     }),
   },
   {
-    label: t('tradeBlotter.city'),
+    label: t(''),
     name: 'city',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
@@ -188,7 +188,7 @@ export const searchList = (
     },
   },
   {
-    label: t('tradeBlotter.school'),
+    label: t(''),
     name: 'school',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度

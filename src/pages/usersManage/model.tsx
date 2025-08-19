@@ -12,6 +12,7 @@ export interface User {
   image_id?: number;
   nickname: string;
   phone: string;
+  city: string;
   school: string;
   wechat: string;
   alipay: string;
@@ -24,6 +25,7 @@ export interface updateUserForm {
   image_id?: number;
   nickname: string;
   phone: string;
+  city: string;
   school: string;
   wechat: string;
   alipay: string;
@@ -101,14 +103,164 @@ export const searchDetailList = (): BaseSearchList[] => [
     },
   },
 ];
+type OptionType = { label: string; value: string | number };
+// 默认“全部”选项
+const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部'): OptionType => ({
+  label,
+  value,
+});
+import {
+  getProvinces,
+  getSchoolsByCityId,
+  getCitiesByProvince,
+} from '@/servers/trade-blotter/location';
+export const useLocationOptions = () => {
+  const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
+  const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
+  const [schoolOptions, setSchoolOptions] = useState<OptionType[]>([]);
 
+  // 加载省份
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const { data } = await getProvinces(0);
+        if (Array.isArray(data) && data.length > 0) {
+          setProvinceOptions([
+            DEFAULT_ALL_OPTION(),
+            ...data.map((p) => ({ label: p.name, value: p.city_id })),
+          ]);
+        }
+      } catch (error) {
+        console.error('加载省份失败', error);
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // 加载城市
+  const loadCities = useCallback(async (province: string) => {
+    console.log(province);
+    if (!province || province === '全部') {
+      setCityOptions([]);
+      return;
+    }
+    try {
+      const { data } = await getCitiesByProvince(Number(province));
+      setCityOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((c) => ({ label: c.name, value: c.city_id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载城市失败', error);
+      setCityOptions([DEFAULT_ALL_OPTION('全部', 0)]);
+    }
+  }, []);
+
+  // 加载学校
+  const loadSchools = useCallback(async (cityId: string | number) => {
+    if (!cityId || cityId === 0) {
+      setSchoolOptions([]);
+      return;
+    }
+    try {
+      const { data } = await getSchoolsByCityId(cityId);
+      setSchoolOptions([
+        DEFAULT_ALL_OPTION('全部', 0),
+        ...(Array.isArray(data) ? data.map((s) => ({ label: s.name, value: s.id })) : []),
+      ]);
+    } catch (error) {
+      console.error('加载学校失败', error);
+      setSchoolOptions([DEFAULT_ALL_OPTION('全部', 0)]);
+    }
+  }, []);
+
+  return {
+    provinceOptions,
+    cityOptions,
+    schoolOptions,
+    loadCities,
+    loadSchools,
+  };
+};
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
   {
     label: '用户昵称',
     name: 'nickname',
     component: 'Input',
     placeholder: '请输入团长昵称',
+  },
+  {
+    label: '电话',
+    name: 'phone',
+    component: 'Input',
+    placeholder: '请输入用户电话',
+  },
+  {
+    component: 'Select',
+    name: 'role_id',
+    label: '身份',
+    componentProps: {
+      options: [
+        { label: '全部', value: 0 },
+        { label: '普通用户', value: 1 },
+        { label: '团长', value: 2 },
+        { label: '商户', value: 3 },
+        { label: '城市运营商', value: 4 },
+      ],
+    },
+  },
+  {
+    label: '地区',
+    name: 'province',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: '请选择省份',
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市和学校选择
+        form.setFieldsValue({ city: undefined, school: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city', 'school']);
+      },
+    }),
+  },
+  {
+    label: '',
+    name: 'city',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => {
+      const provinceValue = form.getFieldValue('province');
+      return {
+        placeholder: '请选择城市',
+        allowClear: true,
+        disabled: !provinceValue,
+        options: options.cityOptions,
+        onChange: async (value: string) => {
+          form.setFieldsValue({ school: undefined });
+          await options.loadSchools(value);
+          form.validateFields(['school']);
+        },
+      };
+    },
+  },
+  {
+    label: '',
+    name: 'school',
+    component: 'Select',
+    wrapperWidth: 180, // 添加固定宽度
+    componentProps: (form) => {
+      const cityValue = form.getFieldValue('city');
+      return {
+        placeholder: '请选择学校',
+        allowClear: true,
+        disabled: !cityValue || cityValue === '',
+        options: options.schoolOptions,
+      };
+    },
   },
   {
     component: 'Select',
@@ -128,6 +280,13 @@ export const searchList = (): BaseSearchList[] => [
 export const tableColumns: (
   handleViewDetails: (record: any, event?: React.MouseEvent) => void,
 ) => TableColumn[] = (handleViewDetails) => [
+  {
+    title: '昵称',
+    dataIndex: 'nickname',
+    key: 'nickname',
+    width: 150,
+    ellipsis: true,
+  },
   {
     title: '头像',
     dataIndex: 'avatar',
@@ -170,13 +329,6 @@ export const tableColumns: (
     },
   },
   {
-    title: '昵称',
-    dataIndex: 'nickname',
-    key: 'nickname',
-    width: 150,
-    ellipsis: true,
-  },
-  {
     title: '电话',
     dataIndex: 'phone',
     key: 'phone',
@@ -189,70 +341,16 @@ export const tableColumns: (
     width: 100,
   },
   {
-    title: '微信',
-    dataIndex: 'wechat',
-    key: 'wechat',
+    title: '城市',
+    dataIndex: 'city',
+    key: 'city',
     width: 100,
   },
   {
-    title: '支付宝',
-    dataIndex: 'alipay',
-    key: 'alipay',
+    title: '学校',
+    dataIndex: 'school',
+    key: 'school',
     width: 100,
-  },
-  {
-    title: '余额',
-    dataIndex: 'balance',
-    key: 'balance',
-    width: 100,
-    render: (value: number, record: any) => {
-      return (
-        <Tooltip title="查看余额明细">
-          <Space
-            size={8}
-            className="blinking-eye"
-            style={{ cursor: 'pointer' }}
-            onClick={(e: React.MouseEvent) => handleViewDetails(record, e)}
-          >
-            {/* 金额：千位分隔 + 两位小数 */}
-            <span>
-              {value != null
-                ? value.toLocaleString('zh-CN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                : '0.00'}
-            </span>
-
-            {/* 眨眼眼睛 */}
-
-            <span
-              className="blinking-eye"
-              style={{
-                cursor: 'pointer',
-                display: 'inline-block',
-                color: 'var(--brand-color, #1677ff)',
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 4C7 4 2 7 2 12C2 17 7 20 12 20C17 20 22 17 22 12C22 7 17 4 12 4Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <circle cx="12" cy="12" r="4" fill="currentColor" />
-              </svg>
-            </span>
-          </Space>
-        </Tooltip>
-      );
-    },
   },
   {
     title: '最后登录时间',
@@ -260,6 +358,13 @@ export const tableColumns: (
     key: 'last_time',
     width: 100,
   },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: 100,
+  },
+
   {
     title: '状态',
     dataIndex: 'status',
@@ -368,6 +473,23 @@ export const formList = (): BaseFormList[] => [
     rules: FORM_REQUIRED,
   },
   {
+    label: '头像',
+    name: 'image',
+    component: 'customize',
+    rules: FORM_REQUIRED,
+    render: (props: any) => {
+      const { value, onChange } = props;
+      return (
+        <EnhancedImageUploader
+          value={value}
+          onChange={onChange}
+          maxSize={2}
+          baseUrl="http://192.168.10.7:8082"
+        />
+      );
+    },
+  },
+  {
     label: '电话',
     name: 'phone',
     component: 'Input',
@@ -390,23 +512,7 @@ export const formList = (): BaseFormList[] => [
       style: { width: '100%' },
     },
   },
-  {
-    label: '头像',
-    name: 'image',
-    component: 'customize',
-    rules: FORM_REQUIRED,
-    render: (props: any) => {
-      const { value, onChange } = props;
-      return (
-        <EnhancedImageUploader
-          value={value}
-          onChange={onChange}
-          maxSize={2}
-          baseUrl="http://192.168.10.7:8082"
-        />
-      );
-    },
-  },
+
   {
     label: '状态',
     name: 'status',

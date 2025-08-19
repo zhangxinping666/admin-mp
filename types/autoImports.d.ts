@@ -52,6 +52,7 @@ declare global {
   const Loading: typeof import('../src/components/Selects/components/Loading')['default']
   const MAX_TAG_COUNT: typeof import('../src/components/Selects/index')['MAX_TAG_COUNT']
   const MapPicker: typeof import('../src/components/MapPicker/index')['default']
+  const MapViewer: typeof import('../src/components/MapViewer/index')['default']
   const NavLink: typeof import('react-router-dom')['NavLink']
   const Navigate: typeof import('react-router-dom')['Navigate']
   const Outlet: typeof import('react-router-dom')['Outlet']

@@ -4,6 +4,7 @@ import {
   detailTableColumns,
   formList,
   searchDetailList,
+  useLocationOptions,
   type User,
 } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
@@ -44,6 +45,9 @@ const ColleaguesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  // 城市选项
+
+  const locationOptions = useLocationOptions();
 
   // 余额明细搜索
   const handleSearch = (values: any) => {
@@ -190,7 +194,7 @@ const ColleaguesPage = () => {
       <CRUDPageTemplate
         title="用户管理"
         isDelete={true}
-        searchConfig={searchList()}
+        searchConfig={searchList(locationOptions)}
         columns={tableColumns(handleViewDetails).filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}
         initCreate={initCreate}

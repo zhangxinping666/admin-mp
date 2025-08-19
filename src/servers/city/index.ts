@@ -23,10 +23,10 @@ export function deleteCity(id: Array<number>) {
 }
 
 //获取城市列表
-export function getCityName(province: string) {
-  return request.get('/citySchool/getCitiesByProvince', { params: { province } });
+export function getCityName(pid: number) {
+  return request.get('/citySchool/getCityByID', { params: { pid } });
 }
 //获取省份列表
-export function getProvinceList() {
-  return request.get('/citySchool/getAllProvinces');
+export function getProvinceList(pid: number) {
+  return request.get('/citySchool/getCityByID', { params: { pid } });
 }

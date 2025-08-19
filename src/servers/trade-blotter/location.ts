@@ -3,18 +3,22 @@ import request from '@/utils/request';
 /**
  * 获取省份列表
  */
-export const getProvinces = () => {
-  return request.get('/citySchool/getAllProvinces');
+export const getProvinces = (pid: number) => {
+  return request.get('/citySchool/getCityByID', {
+    params: {
+      pid,
+    },
+  });
 };
 
 /**
  * 根据省份ID获取城市列表
  * @param province - 省份名称
  */
-export const getCitiesByProvince = (province: string) => {
-  return request.get('/citySchool/getCitiesByProvince', {
+export const getCitiesByProvince = (pid: number) => {
+  return request.get('/citySchool/getCityByID', {
     params: {
-      province,
+      pid,
     },
   });
 };
