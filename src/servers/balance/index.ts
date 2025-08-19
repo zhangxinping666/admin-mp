@@ -1,6 +1,10 @@
 import {
-
-} from '../../pages/balanceManage/model';
+  addCityForm,
+  getCityResult,
+  PaginationParams,
+  updateCityForm,
+} from '@/pages/citysManage/model';
+import {} from '../../pages/balanceManage/model';
 import request from '@/utils/request';
 // 获取城市运营商列表
 export function getCityList(params: PaginationParams) {
@@ -27,3 +31,21 @@ export function getCityName(province: string) {
 export function getProvinceList() {
   return request.get('/citySchool/getAllProvinces');
 }
+
+/**
+ * 获取余额明细信息
+ * @param params
+ */
+interface BalanceDetailParams {
+  user_id: string;
+  params?: object;
+}
+
+export const getBalanceDetailInfo = (params?: BalanceDetailParams) => {
+  return request.get(
+    '/admin/balance/accounts/{user_id}/details'.replace('{user_id}', params?.user_id || ''),
+    {
+      params: params?.params,
+    },
+  );
+};

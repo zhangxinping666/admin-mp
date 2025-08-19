@@ -25,6 +25,28 @@ export const searchList = (): BaseSearchList[] => [
     component: 'InputNumber',
     placeholder: '请输入提现金额',
   },
+  {
+    label: '状态',
+    name: 'status',
+    component: 'Select',
+    componentProps: {
+      options: [
+        {
+          label: '审核中',
+          value: 0,
+        },
+        {
+          label: '审核成功',
+          value: 1,
+        },
+        {
+          label: '审核失败',
+          value: 2,
+        },
+      ],
+    },
+  },
+
 ];
 
 // 表格列配置
@@ -40,6 +62,9 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'amount',
     key: 'amount',
     width: 80,
+    render: (value: number) => {
+      return `${value?.toFixed(2) || '0.00'}元`;
+    },
   },
   {
     title: '订单号',

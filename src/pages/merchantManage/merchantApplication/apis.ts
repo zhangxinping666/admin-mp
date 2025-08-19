@@ -5,7 +5,6 @@ const apis = {
   delete: '/approval/batchDelete',
   update: '/approval/batchUpdate',
   create: '/approval/addApproval',
-  getCategory: '/category/getCategory',
 };
 
 // 获取列表请求查询参数接口

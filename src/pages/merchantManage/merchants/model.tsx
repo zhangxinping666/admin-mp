@@ -341,16 +341,15 @@ export const formList = ({
       }
 
       return {
-        initCenter,
         zoom: 15,
         style: {
           width: '100%',
           height: 400,
         },
-        onChange: (value: number[]) => {
-          console.log('value', value);
+        onSave: (data: any) => {
+          console.log('value', data);
           form.setFieldsValue({
-            location: value,
+            location: [data.location.lng, data.location.lat],
           });
         },
         initValue: () => {

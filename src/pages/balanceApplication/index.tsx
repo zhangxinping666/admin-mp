@@ -9,11 +9,6 @@ const BalanceApplication = () => {
   const useStore = useUserStore();
   const userInfo = useStore?.userInfo;
 
-  // 过滤提现申请
-  const filterWithdrawalApplications = (records: BalanceApplication[]) => {
-    return records.filter((record) => record.status === 0);
-  };
-
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, useStore?.permissions);
@@ -67,12 +62,11 @@ const BalanceApplication = () => {
       apis={{
         fetchApi: async (params) => {
           const res = await getBalanceApplication(params);
-          const filteredRecords = filterWithdrawalApplications(res.data.list);
-          console.log('filteredRecords', filteredRecords);
+          console.log('res', res);
           return {
             data: {
-              list: filteredRecords,
-              total: filteredRecords.length,
+              list: res.data.list,
+              total: res.data.total,
             },
           };
         },

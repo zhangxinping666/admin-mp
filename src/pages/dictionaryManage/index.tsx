@@ -88,6 +88,19 @@ const DictionaryManagePage = () => {
         <TableActions
           record={record}
           onEdit={() => {
+            // 重置表单
+            itemForm.resetFields();
+            // 设置当前字典项数据
+            itemForm.setFieldsValue({
+              id: record.id,
+              dict_type_code: selectedDictionary?.code,
+              label: record.label,
+              value: record.value,
+              sort: record.sort,
+              status: record.status,
+              description: record.description,
+              extend_value: record.extend_value,
+            });
             setCurrentItem(record);
             setItemModalVisible(true);
             setIsEditMode(true);
@@ -158,34 +171,27 @@ const DictionaryManagePage = () => {
   };
   // 选择字典
   // 修改handleDictionarySelect函数
-  const handleDictionarySelect = async (dictionary: Partial<Dictionary>) => {
-    // 确保dictionary不为null或undefined，且不在加载中
-    if (!dictionary || isLoading) return;
+  const handleDictionarySelect = (dictionary: any) => {
+    setSelectedDictionary(dictionary);
+    setSelectedKey(dictionary.id || dictionary.code);
 
-    setIsLoading(true);
-    // 将Partial<Dictionary>转换为Dictionary类型
-    const completeDictionary = dictionary as Dictionary;
-    setSelectedDictionary(completeDictionary);
+    // 重置表单数据
+    itemForm.resetFields();
 
-    try {
-      // 直接使用dictionary.code而不是依赖selectedDictionary状态
-      const itemRes = await apis.queryDictionaryItem({
+    // 加载新字典的字典项
+    apis
+      .queryDictionaryItem({
         dict_type_code: dictionary.code,
+      })
+      .then((res) => {
+        setSelectedDictionary((prev) => ({
+          ...prev!,
+          items: res.data.list,
+        }));
+      })
+      .catch(() => {
+        message.error('加载字典项失败');
       });
-      setSelectedDictionary((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: itemRes.data.list,
-            }
-          : completeDictionary,
-      );
-    } catch (error) {
-      message.error('获取字典项失败');
-    } finally {
-      // 无论成功失败都关闭加载状态
-      setIsLoading(false);
-    }
   };
 
   // 处理选中行变化
@@ -352,6 +358,7 @@ const DictionaryManagePage = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 dictionaryForm.setFieldsValue(item);
+
                 setEditModalVisible(true);
                 setIsEditDictionary(true);
               }}

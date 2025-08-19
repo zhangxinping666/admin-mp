@@ -152,26 +152,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     }
   };
 
-  // 批量更新处理
-  const handleBatchUpdate = async (apply_status: number) => {
-    if (selectedRowKeys.length === 0) {
-      message.warning('请至少选择一条数据');
-      return;
-    }
-    try {
-      await apis?.updateApi?.({
-        id: selectedRowKeys,
-        apply_status,
-      });
-      message.success('批量更新成功');
-      setSelectedRowKeys([]);
-      // 移除重复的fetchTableData调用，应该通过setFetch(true)触发刷新
-      setFetch(true);
-    } catch (error) {
-      message.error('批量更新失败');
-    }
-  };
-
   // 处理表格列，添加操作列
   const finalColumns = [
     ...columns,
@@ -236,34 +216,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                     disabled={selectedRowKeys.length === 0 || disableBatchDelete}
                   >
                     批量删除 ({selectedRowKeys.length})
-                  </BaseBtn>
-                </Popconfirm>
-                <Popconfirm
-                  title="确定要通过选中的项吗？"
-                  onConfirm={() => handleBatchUpdate(2)}
-                  okText="确定"
-                  cancelText="取消"
-                  disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
-                >
-                  <BaseBtn
-                    type="primary"
-                    disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
-                  >
-                    批量通过 ({selectedRowKeys.length})
-                  </BaseBtn>
-                </Popconfirm>
-                <Popconfirm
-                  title="确定要拒绝选中的项吗？"
-                  onConfirm={() => handleBatchUpdate(3)}
-                  okText="确定"
-                  cancelText="取消"
-                  disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
-                >
-                  <BaseBtn
-                    type="primary"
-                    disabled={selectedRowKeys.length === 0 || disableBatchUpdate}
-                  >
-                    批量拒绝 ({selectedRowKeys.length})
                   </BaseBtn>
                 </Popconfirm>
               </Space>

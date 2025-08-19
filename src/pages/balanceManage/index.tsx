@@ -9,14 +9,6 @@ import styles from './index.module.less';
 // 初始化新增数据
 const initCreate: Partial<Balance> = {
   user_id: 1,
-  category: '',
-  amount: 0,
-  transaction_no: '',
-  order_no: '',
-  transaction_type: '',
-  transaction_type_name: '',
-  opening_balance: 0,
-  closing_balance: 0,
   created_at: '',
 };
 
@@ -129,7 +121,7 @@ const BalanceRecordsPage = () => {
               </div>
             ),
           }}
-          rowClassName={(record, index) => {
+          rowClassName={(record: any, index) => {
             if (record.category === 'withdraw_failed') {
               return 'error-row';
             }

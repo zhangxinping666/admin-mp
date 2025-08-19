@@ -145,13 +145,15 @@ export const formList = (): BaseFormList[] => [
     component: 'customize',
     componentProps: (form) => {
       return {
-        initCenter: [116.397428, 39.90923],
         zoom: 15,
-        onChange: (value: number[]) => {
-          console.log('value', value);
+        onSave: (data: any) => {
+          console.log('value', data);
           form.setFieldsValue({
-            location: value,
+            location: [data.location.lng, data.location.lat],
           });
+        },
+        initValue: () => {
+          return form.getFieldValue('location');
         },
       };
     },

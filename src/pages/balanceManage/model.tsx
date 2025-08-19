@@ -153,7 +153,7 @@ export const detailTableColumns: TableColumn[] = [
     dataIndex: 'amount',
     key: 'amount',
     width: 100,
-    render: (value: number, record: BalanceDetail) => (
+    render: (value: number, record: any) => (
       <span
         style={{
           color: record.transaction_type === 1 ? '#52c41a' : '#ff4d4f',
@@ -161,7 +161,7 @@ export const detailTableColumns: TableColumn[] = [
         }}
       >
         {record.transaction_type === 1 ? '+' : '-'}
-        {Math.abs(value)}
+        {Math.abs(value)?.toFixed(2)}
       </span>
     ),
   },
@@ -170,7 +170,7 @@ export const detailTableColumns: TableColumn[] = [
     dataIndex: 'transaction_type_name',
     key: 'transaction_type_name',
     width: 100,
-    render: (value: string, record: BalanceDetail) => (
+    render: (value: string, record: any) => (
       <span
         style={{
           color: record.transaction_type === 1 ? '#52c41a' : '#ff4d4f',
@@ -185,14 +185,16 @@ export const detailTableColumns: TableColumn[] = [
     dataIndex: 'opening_balance',
     key: 'opening_balance',
     width: 120,
-    render: (value: number) => <span style={{ color: '#666' }}>{value}</span>,
+    render: (value: number) => <span style={{ color: '#666' }}>{value?.toFixed(2) || '0.00'}</span>,
   },
   {
     title: '变动后余额',
     dataIndex: 'closing_balance',
     key: 'closing_balance',
     width: 120,
-    render: (value: number) => <span style={{ color: '#1890ff', fontWeight: 500 }}>{value}</span>,
+    render: (value: number) => (
+      <span style={{ color: '#1890ff', fontWeight: 500 }}>{value?.toFixed(2) || '0.00'}</span>
+    ),
   },
   {
     title: '交易流水号',
@@ -268,17 +270,20 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'total_amount',
     key: 'total_amount',
     width: 80,
+    render: (value: number) => <span style={{ color: '#666' }}>{value?.toFixed(2) || '0.00'}</span>,
   },
   {
     title: '可用余额',
     dataIndex: 'available_amount',
     key: 'available_amount',
     width: 80,
+    render: (value: number) => <span style={{ color: '#666' }}>{value?.toFixed(2) || '0.00'}</span>,
   },
   {
     title: '冻结余额',
     dataIndex: 'frozen_amount',
     key: 'frozen_amount',
+    render: (value: number) => <span style={{ color: '#666' }}>{value?.toFixed(2) || '0.00'}</span>,
     width: 80,
   },
   {

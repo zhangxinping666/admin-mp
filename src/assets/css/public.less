@@ -106,3 +106,44 @@ body,
   opacity: 1;
   transform: translateY(0);
 }
+
+/* 可以添加到全局CSS文件或组件样式中 */
+.blinking-eye:hover svg {
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0% {
+    transform: scaleY(1);
+    animation-timing-function: ease-in;
+  }
+  10% {
+    transform: scaleY(0.2);
+    animation-timing-function: ease-out;
+  }
+  30% {
+    transform: scaleY(1);
+    animation-timing-function: ease-in;
+  }
+  40% {
+    transform: scaleY(0.3);
+    animation-timing-function: ease-out;
+  }
+  60% {
+    transform: scaleY(1);
+    animation-timing-function: linear;
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@-webkit-keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}

@@ -1,7 +1,7 @@
 import request from '@/utils/request';
 
 const apis = {
-  getCategory: '/category/getCategory',
+  getCategory: '/store_category_manage/query',
 };
 
 // 获取商家分类列表

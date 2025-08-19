@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, Key, useEffect } from 'react';
+import { useState, useRef, useCallback, Key } from 'react';
 import { type FormInstance } from 'antd';
 import { message } from '@manpao/message';
 import type { BaseFormData } from '#/form';
