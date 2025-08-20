@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
+    "@amap/amap-react": "^0.1.5",
     "@ant-design/cssinjs": "^1.23.0",
     "@ant-design/icons": "^6.0.0",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",

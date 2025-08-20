@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
@@ -300,8 +301,11 @@ export const formList = ({
     label: '地址',
     name: 'address',
     component: 'Input',
-    placeholder: '请输入学校地址',
+    placeholder: '请输入学校地址（选择地图位置时会自动更新）',
     rules: FORM_REQUIRED,
+    componentProps: {
+      placeholder: '请输入学校地址（选择地图位置时会自动更新）',
+    },
   },
   {
     name: 'city_id', // 这个字段的键名，最终提交给后端
@@ -341,14 +345,26 @@ export const formList = ({
       }
 
       return {
-        initCenter,
+        center: initCenter,
         zoom: 15,
         style: {
           width: '100%',
           height: 400,
         },
+        // 处理地图搜索选择（包含地址信息）
+        onSave: (data: any) => {
+          console.log('地图搜索选择:', data);
+          form.setFieldsValue({
+            location: [data.location.lng, data.location.lat],
+            // 如果选择了具体地点，自动更新地址字段
+            address: data.address || data.name || form.getFieldValue('address'),
+            longitude: data.location.lng,
+            latitude: data.location.lat,
+          });
+        },
+        // 处理地图点击选择（只有经纬度）
         onChange: (value: number[]) => {
-          console.log('位置更新:', value);
+          console.log('地图点击选择:', value);
           form.setFieldsValue({
             location: value,
           });
