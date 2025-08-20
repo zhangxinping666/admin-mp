@@ -335,12 +335,6 @@ export const tableColumns: (
     width: 100,
   },
   {
-    title: '学校',
-    dataIndex: 'school',
-    key: 'school',
-    width: 100,
-  },
-  {
     title: '城市',
     dataIndex: 'city',
     key: 'city',

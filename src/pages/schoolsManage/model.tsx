@@ -330,6 +330,7 @@ export const formList = ({
     componentProps: (form) => {
       // 获取当前表单的所有值
       const formValues = form.getFieldsValue();
+      const locationValue = form.getFieldValue('location');
 
       // 如果是编辑模式且有经纬度数据，使用学校的实际位置作为地图中心
       // 否则使用默认的北京坐标
@@ -345,6 +346,7 @@ export const formList = ({
       }
 
       return {
+        value: locationValue, // 传递当前的location值作为受控组件的value
         center: initCenter,
         zoom: 15,
         style: {
@@ -353,21 +355,36 @@ export const formList = ({
         },
         // 处理地图搜索选择（包含地址信息）
         onSave: (data: any) => {
-          console.log('地图搜索选择:', data);
-          form.setFieldsValue({
+          console.log('===== 地图搜索选择 =====');
+          console.log('搜索数据:', data);
+          const newValues = {
             location: [data.location.lng, data.location.lat],
             // 如果选择了具体地点，自动更新地址字段
             address: data.address || data.name || form.getFieldValue('address'),
             longitude: data.location.lng,
             latitude: data.location.lat,
-          });
+          };
+          console.log('即将设置的新值:', newValues);
+          form.setFieldsValue(newValues);
+          console.log(
+            '设置后的表单值:',
+            form.getFieldsValue(['location', 'longitude', 'latitude', 'address']),
+          );
         },
-        // 处理地图点击选择（只有经纬度）
+        // 处理地图拖拽选择（只有经纬度）
         onChange: (value: number[]) => {
-          console.log('地图点击选择:', value);
-          form.setFieldsValue({
+          console.log('新位置:', value);
+          const newValues = {
             location: value,
-          });
+            longitude: value[0],
+            latitude: value[1],
+          };
+          console.log('即将设置的新值:', newValues);
+          form.setFieldsValue(newValues);
+          console.log(
+            '设置后的表单值:',
+            form.getFieldsValue(['location', 'longitude', 'latitude']),
+          );
         },
         initValue: () => {
           return form.getFieldValue('location');
@@ -378,7 +395,31 @@ export const formList = ({
       return <MapPicker {...props} />;
     },
   },
-
+  // 隐藏的经纬度字段，用于存储实际的经纬度值
+  {
+    label: '',
+    name: 'longitude',
+    component: 'Input',
+    componentProps: {
+      type: 'hidden',
+    },
+    hidden: true,
+    wrapperProps: {
+      style: { display: 'none' },
+    },
+  },
+  {
+    label: '',
+    name: 'latitude',
+    component: 'Input',
+    componentProps: {
+      type: 'hidden',
+    },
+    hidden: true,
+    wrapperProps: {
+      style: { display: 'none' },
+    },
+  },
   {
     label: '状态',
     name: 'status',

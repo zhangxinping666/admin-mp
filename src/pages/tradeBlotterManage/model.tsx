@@ -45,11 +45,11 @@ export const useLocationOptions = () => {
   useEffect(() => {
     const loadProvinces = async () => {
       try {
-        const { data } = await getProvinces();
+        const { data } = await getProvinces(0);
         if (Array.isArray(data) && data.length > 0) {
           setProvinceOptions([
             DEFAULT_ALL_OPTION(),
-            ...data.map((p) => ({ label: p.province, value: p.province })),
+            ...data.map((p) => ({ label: p.name, value: p.city_id })),
           ]);
         }
       } catch (error) {
@@ -61,15 +61,16 @@ export const useLocationOptions = () => {
 
   // 加载城市
   const loadCities = useCallback(async (province: string) => {
+    console.log(province);
     if (!province || province === '全部') {
       setCityOptions([]);
       return;
     }
     try {
-      const { data } = await getCitiesByProvince(province);
+      const { data } = await getCitiesByProvince(Number(province));
       setCityOptions([
         DEFAULT_ALL_OPTION('全部', 0),
-        ...(Array.isArray(data) ? data.map((c) => ({ label: c.city_name, value: c.id })) : []),
+        ...(Array.isArray(data) ? data.map((c) => ({ label: c.name, value: c.city_id })) : []),
       ]);
     } catch (error) {
       console.error('加载城市失败', error);

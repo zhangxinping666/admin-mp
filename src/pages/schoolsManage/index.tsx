@@ -73,13 +73,28 @@ const SchoolsPage = () => {
 
   // 编辑时的数据转换
   const handleEditOpen = (record: School) => {
-    return {
+    console.log('===== 编辑数据初始化 =====');
+    console.log('原始记录:', record);
+    const editData = {
       ...record,
       school_logo: record.logo_image_url,
       city_id: record.city_id, // Select组件直接使用城市ID即可
       location:
         record.longitude && record.latitude ? [record.longitude, record.latitude] : undefined,
+      longitude: record.longitude,
+      latitude: record.latitude,
     };
+    console.log('编辑表单初始数据:', editData);
+    return editData;
+  };
+
+  // 处理表单值，将后端的longitude/latitude转换为前端的location数组
+  const handleFormValue = (value: any) => {
+    // 如果有经纬度数据，转换为location数组
+    if (value.longitude && value.latitude) {
+      value.location = [value.longitude, value.latitude];
+    }
+    return value;
   };
 
   // 操作列渲染
@@ -115,33 +130,47 @@ const SchoolsPage = () => {
       })}
       initCreate={initCreate}
       onEditOpen={handleEditOpen}
+      handleFormValue={handleFormValue}
       isAddOpen={true}
       disableCreate={!hasPermission('mp:school:add')}
       disableBatchDelete={!hasPermission('mp:school:delete')}
       apis={{
         createApi: (data: any) => {
-          // 处理位置数据
           const submitData = { ...data };
-
-          // 处理位置数据
+          // 从location数组提取经纬度
           if (data.location && Array.isArray(data.location)) {
             submitData.longitude = data.location[0];
             submitData.latitude = data.location[1];
-            delete submitData.location;
           }
+          // 删除location字段，因为后端不需要
+          delete submitData.location;
+          console.log('提交的学校数据:', submitData);
           return schoolApis.create(submitData);
         },
         fetchApi: schoolApis.fetch,
         updateApi: (data: any) => {
-          // 处理位置数据
+          console.log('===== 更新前的表单数据 =====');
+          console.log('原始数据:', data);
+          console.log('location字段:', data.location);
+          console.log('longitude字段:', data.longitude);
+          console.log('latitude字段:', data.latitude);
+          
           const submitData = { ...data };
-
-          // 处理位置数据
+          // 从location数组提取经纬度
           if (data.location && Array.isArray(data.location)) {
             submitData.longitude = data.location[0];
             submitData.latitude = data.location[1];
-            delete submitData.location;
+            console.log('从location提取经纬度:', {
+              longitude: submitData.longitude,
+              latitude: submitData.latitude
+            });
+          } else {
+            console.log('使用原有的longitude和latitude字段');
           }
+          // 删除location字段，因为后端不需要
+          delete submitData.location;
+          console.log('===== 最终提交的数据 =====');
+          console.log('提交数据:', submitData);
           return schoolApis.update(submitData);
         },
         deleteApi: (id: number[]) => schoolApis.delete(id),

@@ -24,9 +24,12 @@ export interface Cert {
   id: number;
   name: string;
   card_id: number;
+  user_phone: string;
   front: uploadImg[];
   back: uploadImg[];
   status: number;
+  create_time: string;
+  update_time: string;
 }
 
 export interface CertItem {
@@ -36,6 +39,9 @@ export interface CertItem {
   front: string;
   back: string;
   status: number;
+  user_phone: string;
+  create_time: string;
+  update_time: string;
 }
 export interface UpdateCert {
   id: number;
@@ -72,10 +78,10 @@ export interface CertListResult {
 // 搜索配置
 export const searchList = (): BaseSearchList[] => [
   {
-    label: '用户名称',
-    name: 'name',
+    label: '用户电话',
+    name: 'user_phone',
     component: 'Input',
-    placeholder: '请输入用户名称',
+    placeholder: '请输入用户电话',
   },
   {
     label: '状态',
@@ -103,36 +109,25 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '用户身份证ID',
-    dataIndex: 'card_id',
-    key: 'card_id',
-    width: 100,
+    title: '用户电话',
+    dataIndex: 'user_phone',
+    key: 'user_phone',
+    width: 150,
+    ellipsis: true,
   },
   {
-    title: '身份证正面',
-    dataIndex: 'front',
-    key: 'front',
-    width: 100,
-    render: (url: string) => {
-      // 处理字符串URL，转换为ImagePreview期望的格式
-      const imageData = url ? [{ uid: '1', name: 'front', status: 'done', url }] : [];
-      return (
-        <ImagePreview imageUrl={imageData} alt="身份证正面" baseUrl="http://192.168.10.7:8082" />
-      );
-    },
+    title: '申请审批时间',
+    dataIndex: 'created_time',
+    key: 'created_time',
+    width: 150,
+    ellipsis: true,
   },
   {
-    title: '身份证反面',
-    dataIndex: 'back',
-    key: 'back',
-    width: 100,
-    render: (url: string) => {
-      // 处理字符串URL，转换为ImagePreview期望的格式
-      const imageData = url ? [{ uid: '1', name: 'back', status: 'done', url }] : [];
-      return (
-        <ImagePreview imageUrl={imageData} alt="身份证反面" baseUrl="http://192.168.10.7:8082" />
-      );
-    },
+    title: '最后审批时间',
+    dataIndex: 'updated_time',
+    key: 'updated_time',
+    width: 150,
+    ellipsis: true,
   },
   {
     title: '状态',

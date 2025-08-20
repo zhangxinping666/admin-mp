@@ -92,28 +92,28 @@ const CitiesPage = () => {
     const fetchAndGroupData = async () => {
       setIsLoadingOptions(true);
       try {
-        const provinceResponse = await getProvinceList();
+        const provinceResponse = await getProvinceList(0);
         console.log('省份接口返回数据:', provinceResponse);
 
         const provinces = provinceResponse.data || [];
         console.log('省份数据:', provinces);
 
         // 【修正】使用 province.province 来获取省份名称
-        const cityPromises = provinces.map((province: any) => getCityName(province.province));
+        const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
         const cityResponses = await Promise.all(cityPromises);
 
         console.log('城市接口返回数据:', cityResponses);
 
         const finalOptions = provinces.map((province: any, index: number) => {
           const cities = cityResponses[index].data || [];
-          console.log(`${province.province} 的城市数据:`, cities);
+          console.log(`${province.name} 的城市数据:`, cities);
 
           return {
             // 【修正】使用 province.province 来设置分组标题
-            label: province.province,
+            label: province.name,
             options: cities.map((city: any) => ({
-              label: city.city_name,
-              value: city.id,
+              label: city.name,
+              value: city.city_id,
             })),
           };
         });
