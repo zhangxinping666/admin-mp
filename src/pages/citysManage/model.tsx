@@ -184,21 +184,21 @@ export const tableColumns: TableColumn[] = [
     title: '名称',
     dataIndex: 'name',
     key: 'name',
-    width: 150,
+    width: 80,
     ellipsis: true,
   },
   {
     title: '账号',
     dataIndex: 'account_id',
     key: 'account_id',
-    width: 80,
+    width: 120,
   },
 
   {
     title: '电话',
     dataIndex: 'phone',
     key: 'phone',
-    width: 100,
+    width: 120,
   },
   {
     title: '省份',

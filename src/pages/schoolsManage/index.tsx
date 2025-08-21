@@ -32,9 +32,10 @@ interface GroupedOption {
   options: { label: string; value: number }[]; // 该省份下的城市列表
 }
 const SchoolsPage = () => {
-  const { permissions } = useUserStore();
+  const { permissions, userInfo } = useUserStore();
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [cityName, setCityName] = useState<string>('');
   const locationOptions = useLocationOptions();
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -62,6 +63,18 @@ const SchoolsPage = () => {
           };
         });
         setGroupedCityOptions(finalOptions);
+        
+        // 如果是城市运营商，获取其所属城市名称
+        if (userInfo?.role_id === 5 && userInfo?.city_id) {
+          // 从所有城市中找到对应的城市名称
+          for (const province of finalOptions) {
+            const city = province.options.find(c => c.value === userInfo.city_id);
+            if (city) {
+              setCityName(city.label);
+              break;
+            }
+          }
+        }
       } catch (error) {
         console.error('加载省市选项失败:', error);
       } finally {
@@ -69,7 +82,7 @@ const SchoolsPage = () => {
       }
     };
     fetchAndGroupData();
-  }, []);
+  }, [userInfo]);
 
   // 编辑时的数据转换
   const handleEditOpen = (record: School) => {
@@ -84,6 +97,12 @@ const SchoolsPage = () => {
       longitude: record.longitude,
       latitude: record.latitude,
     };
+    
+    // 如果是城市运营商编辑，确保使用其所属城市ID
+    if (userInfo?.role_id === 5 && userInfo?.city_id) {
+      editData.city_id = userInfo.city_id;
+    }
+    
     console.log('编辑表单初始数据:', editData);
     return editData;
   };
@@ -118,13 +137,17 @@ const SchoolsPage = () => {
   return (
     <CRUDPageTemplate
       title="学校管理"
-      searchConfig={searchList(locationOptions)}
+      searchConfig={searchList(locationOptions, userInfo || undefined)}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,
         isLoadingOptions,
+        userInfo: userInfo || undefined,
+        cityName,
       })}
-      initCreate={initCreate}
+      initCreate={userInfo?.role_id === 5 && userInfo?.city_id 
+        ? { ...initCreate, city_id: userInfo.city_id }
+        : initCreate}
       onEditOpen={handleEditOpen}
       handleFormValue={handleFormValue}
       isAddOpen={true}
@@ -140,10 +163,22 @@ const SchoolsPage = () => {
           }
           // 删除location字段，因为后端不需要
           delete submitData.location;
+          
+          // 城市运营商强制使用其所属城市ID
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            submitData.city_id = userInfo.city_id;
+          }
+          
           console.log('提交的学校数据:', submitData);
           return schoolApis.create(submitData);
         },
-        fetchApi: schoolApis.fetch,
+        fetchApi: (params: any) => {
+          // 为城市运营商自动添加city_id过滤
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            params.city_id = userInfo.city_id;
+          }
+          return schoolApis.fetch(params);
+        },
         updateApi: (data: any) => {
           console.log('===== 更新前的表单数据 =====');
           console.log('原始数据:', data);
@@ -163,6 +198,12 @@ const SchoolsPage = () => {
           } else {
             console.log('使用原有的longitude和latitude字段');
           }
+          
+          // 城市运营商强制使用其所属城市ID
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            submitData.city_id = userInfo.city_id;
+          }
+          
           // 删除location字段，因为后端不需要
           delete submitData.location;
           console.log('===== 最终提交的数据 =====');

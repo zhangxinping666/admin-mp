@@ -138,6 +138,7 @@ const CertPage = () => {
   // 查看审核信息详情
   const handleViewDetail = async (record: CertItem) => {
     setDetailData(record);
+    setDetailModalOpen(true);
 
     // 获取审批历史记录
     try {

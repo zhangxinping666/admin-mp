@@ -123,52 +123,73 @@ export const useLocationOptions = () => {
 };
 
 // 搜索配置
-export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
-  {
-    label: '学校名称',
-    name: 'school_name',
-    component: 'Input',
-    placeholder: '请输入学校名称',
-  },
-  {
-    label: '电话',
-    name: 'phone',
-    component: 'Input',
-    placeholder: '请输入团长名称',
-  },
-  {
-    label: '地区',
-    name: 'pid',
-    component: 'Select',
-    wrapperWidth: 180,
-    componentProps: (form) => ({
-      options: options.provinceOptions,
-      placeholder: '请选择省份',
-      allowClear: true,
-      onChange: async (value: string) => {
-        // 清空城市选择
-        form.setFieldsValue({ city: undefined });
-        await options.loadCities(value);
-        form.validateFields(['city']);
-      },
-    }),
-  },
-  {
-    label: '',
-    name: 'city_id',
-    component: 'Select',
-    wrapperWidth: 180,
-    componentProps: (form) => {
-      const provinceValue = form.getFieldValue('pid');
-      return {
-        placeholder: '请选择城市',
-        allowClear: true,
-        disabled: !provinceValue,
-        options: options.cityOptions,
-      };
+export const searchList = (
+  options: ReturnType<typeof useLocationOptions>,
+  userInfo?: { role_id: number; city_id: number },
+): BaseSearchList[] => {
+  // 获取用户角色ID
+  const roleId = userInfo?.role_id;
+
+  // 基础搜索字段（所有角色都有）
+  const baseSearchFields: BaseSearchList[] = [
+    {
+      label: '学校名称',
+      name: 'school_name',
+      component: 'Input',
+      placeholder: '请输入学校名称',
     },
-  },
-  {
+    {
+      label: '电话',
+      name: 'phone',
+      component: 'Input',
+      placeholder: '请输入团长电话',
+    },
+  ];
+
+  // 地区搜索字段（只有非城市运营商才显示）
+  const locationSearchFields: BaseSearchList[] = [];
+  
+  // 只有非城市运营商（role_id !== 5）才显示省市选择
+  if (roleId !== 5) {
+    locationSearchFields.push(
+      {
+        label: '地区',
+        name: 'pid',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => ({
+          options: options.provinceOptions,
+          placeholder: '请选择省份',
+          allowClear: true,
+          onChange: async (value: string) => {
+            // 清空城市选择
+            form.setFieldsValue({ city_id: undefined });
+            await options.loadCities(value);
+            form.validateFields(['city_id']);
+          },
+        }),
+      },
+      {
+        label: '',
+        name: 'city_id',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => {
+          const provinceValue = form.getFieldValue('pid');
+          return {
+            placeholder: '请选择城市',
+            allowClear: true,
+            disabled: !provinceValue,
+            options: options.cityOptions,
+          };
+        },
+      },
+    );
+  }
+  // 城市运营商（role_id === 5）不显示省市选择，会在fetchApi中自动过滤
+
+  // 状态字段（所有角色都有）
+  const statusField: BaseSearchList = {
     component: 'Select',
     name: 'status',
     label: '状态',
@@ -179,8 +200,10 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
         { label: '禁用', value: 2 },
       ],
     },
-  },
-];
+  };
+
+  return [...baseSearchFields, ...locationSearchFields, statusField];
+};
 
 // 表格列配置
 export const tableColumns: TableColumn[] = [
@@ -188,20 +211,20 @@ export const tableColumns: TableColumn[] = [
     title: '名称',
     dataIndex: 'name',
     key: 'name',
-    width: 150,
+    width: 80,
     ellipsis: true,
   },
   {
     title: '账号',
     dataIndex: 'account_id',
     key: 'account_id',
-    width: 80,
+    width: 120,
   },
   {
     title: '电话',
     dataIndex: 'phone',
     key: 'phone',
-    width: 100,
+    width: 120,
   },
   {
     title: '省份',
