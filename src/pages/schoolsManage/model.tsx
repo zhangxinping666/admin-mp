@@ -187,7 +187,6 @@ export const searchList = (
     // 不显示省市选择器
   }
   // role_id=4（团长）不添加任何地区字段
-
   // 状态字段（所有角色都有）
   const statusField: BaseSearchList = {
     component: 'Select',
@@ -352,34 +351,36 @@ export const formList = ({
     },
   },
   // 城市字段：根据角色显示不同形式
-  userInfo?.role_id === 5 ? {
-    // 城市运营商：显示只读的城市名称
-    name: 'city_id',
-    label: '城市',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      disabled: true,
-      value: userInfo.city_id,
-      options: [{ label: cityName || '所属城市', value: userInfo.city_id }],
-      style: { width: '100%' },
-    },
-  } : {
-    // 其他角色：显示可选择的城市下拉框
-    name: 'city_id',
-    label: '城市',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择城市',
-    componentProps: {
-      loading: isLoadingOptions,
-      showSearch: true,
-      optionFilterProp: 'label',
-      options: groupedCityOptions,
-      dropdownMatchSelectWidth: false,
-      style: { width: '100%' },
-    },
-  },
+  userInfo?.role_id === 5
+    ? {
+        // 城市运营商：显示只读的城市名称
+        name: 'city_id',
+        label: '城市',
+        component: 'Select',
+        rules: FORM_REQUIRED,
+        componentProps: {
+          disabled: true,
+          value: userInfo.city_id,
+          options: [{ label: cityName || '所属城市', value: userInfo.city_id }],
+          style: { width: '100%' },
+        },
+      }
+    : {
+        // 其他角色：显示可选择的城市下拉框
+        name: 'city_id',
+        label: '城市',
+        component: 'Select',
+        rules: FORM_REQUIRED,
+        placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择城市',
+        componentProps: {
+          loading: isLoadingOptions,
+          showSearch: true,
+          optionFilterProp: 'label',
+          options: groupedCityOptions,
+          dropdownMatchSelectWidth: false,
+          style: { width: '100%' },
+        },
+      },
   {
     label: '位置',
     name: 'location',

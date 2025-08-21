@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Space, Button } from 'antd';
+import { Space, Button, Modal } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
 import MapViewer from '@/components/MapViewer';
 import type { School } from '../model';
@@ -39,15 +39,41 @@ const AddressWithLocation: React.FC<AddressWithLocationProps> = ({ record }) => 
         )}
       </Space>
 
-      {hasValidLocation && (
-        <MapViewer
-          visible={mapVisible}
-          onClose={() => setMapVisible(false)}
-          position={[record.longitude, record.latitude]}
-          title={`${record.name} - 位置查看`}
-          address={record.address}
-        />
-      )}
+      {/* 地图弹窗 */}
+      <Modal
+        title={`${record.name} - 位置查看`}
+        open={mapVisible}
+        onCancel={() => setMapVisible(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        {mapVisible && hasValidLocation && (
+          <>
+            {record.address && (
+              <div style={{ marginBottom: 16 }}>
+                <strong>地址：</strong>
+                {record.address}
+              </div>
+            )}
+            <div style={{ marginBottom: 8 }}>
+              <strong>坐标：</strong>
+              经度 {record.longitude.toFixed(6)}，纬度 {record.latitude.toFixed(6)}
+            </div>
+            <div style={{ 
+              borderRadius: 8, 
+              overflow: 'hidden',
+              border: '1px solid #e8e8e8' 
+            }}>
+              <MapViewer 
+                center={[record.longitude, record.latitude]} 
+                zoom={15}
+                height={400}
+              />
+            </div>
+          </>
+        )}
+      </Modal>
     </>
   );
 };
