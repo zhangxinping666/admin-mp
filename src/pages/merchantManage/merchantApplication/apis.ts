@@ -5,6 +5,7 @@ const apis = {
   delete: '/approval/batchDelete',
   update: '/approval/batchUpdate',
   create: '/approval/addApproval',
+  getStoreApplyHistory: '/approval/getStoreApplyHistory',
 };
 
 // 获取列表请求查询参数接口
@@ -99,13 +100,13 @@ export interface DeleteResponse {
 // 更新商家请求接口
 export interface UpdateRequest {
   /**
-   * 状态:0待审批 ，1 通过，2未通过
+   * 状态:3待审批，1通过，2未通过
    */
   apply_status: number;
   /**
    * 更新商家id
    */
-  ids: number[];
+  id: number;
   [property: string]: any;
 }
 // 更新商家响应接口
@@ -228,4 +229,9 @@ export function updateApplication(data: UpdateRequest) {
 // 创建审批
 export function createApplication(data: CreateRequest) {
   return request.post<CreateResponse>(apis.create, data);
+}
+
+// 获取历史审批记录
+export function getStoreApplyHistory(params: any) {
+  return request.get(apis.getStoreApplyHistory, { params: params });
 }

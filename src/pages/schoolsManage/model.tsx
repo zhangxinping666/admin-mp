@@ -53,6 +53,7 @@ export interface Pagination {
 }
 
 export interface PaginationParams {
+  name?: string;
   page: number;
   page_size: number;
 }

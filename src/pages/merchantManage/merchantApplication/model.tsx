@@ -2,7 +2,9 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
+import LocationRenderer from '@/shared/components/LocationRenderer';
+import type { FieldConfig } from './UniversalDetail';
+import dayjs from 'dayjs';
 
 // 商家入驻申请数据接口
 export interface MerchantApplication {
@@ -40,297 +42,316 @@ export interface MerchantApplicationQuery {
   phone?: string;
 }
 
+export const merchantOrderConfig: FieldConfig[] = [
+  /* ===== 商户信息 ===== */
+  { key: 'merchantDetail.name', label: '商户名称', group: '商户信息' },
+  { key: 'merchantDetail.store_name', label: '门店名称', group: '商户信息' },
+  { key: 'merchantDetail.phone', label: '联系电话', group: '商户信息' },
+  { key: 'merchantDetail.province', label: '省份', group: '商户信息' },
+  { key: 'merchantDetail.city', label: '城市', group: '商户信息' },
+  { key: 'merchantDetail.school_name', label: '学校名称', group: '商户信息' },
+  { key: 'merchantDetail.type', label: '门店类型', group: '商户信息' },
+  { key: 'merchantDetail.category', label: '经营品类', group: '商户信息' },
+  { key: 'merchantDetail.start_time', label: '营业开始时间', group: '商户信息' },
+  { key: 'merchantDetail.end_time', label: '营业结束时间', group: '商户信息' },
+  { key: 'merchantDetail.is_dorm_store', label: '是否宿舍门店', group: '商户信息' },
+
+  // 位置
+  {
+    key: 'merchantDetail.location',
+    label: '位置',
+    render: (value: any) => {
+      return <LocationRenderer value={value} />;
+    },
+  },
+
+  // 图片（根据 is_dorm_store 过滤在配置里做）
+  {
+    key: 'merchantDetail.images.storefront_image',
+    label: '门店照片',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.images.business_license_image',
+    label: '营业执照',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.images.food_license_image',
+    label: '食品经营许可证',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.images.medical_certificate_image',
+    label: '健康证',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.images.student_id_card_image',
+    label: '学生证',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.images.identity_card_image',
+    label: '身份证',
+    group: '商户信息',
+    isImage: true,
+  },
+
+  /* ===== 订单信息 ===== */
+  { key: 'orderDetail.amount', label: '订单金额', group: '订单信息' },
+  { key: 'orderDetail.order_number', label: '订单号', group: '订单信息' },
+  { key: 'orderDetail.pay_channel', label: '支付渠道', group: '订单信息' },
+];
+
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
-  {
-    label: '商家名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入商家名称',
-  },
-  {
-    label: '手机号',
-    name: 'phone',
-    rules: PHONE_RULE(false, '请输入正确的手机号'),
-    component: 'Input',
-    placeholder: '请输入手机号',
-  },
-  {
-    component: 'Select',
-    name: 'status',
-    label: '状态',
-    componentProps: {
-      options: [
-        { label: '全部', value: 0 },
-        { label: '待审批', value: 1 },
-        { label: '审批通过', value: 2 },
-        { label: '审批失败', value: 3 },
-      ],
-    },
-  },
-];
+export const searchList = (userStore: any, options: any): BaseSearchList[] => {
+  let list: BaseSearchList[] = [];
 
+  if (userStore?.userInfo?.role_id === 2) {
+    list = [
+      {
+        label: '商家名称',
+        name: 'name',
+        component: 'Input',
+        placeholder: '请输入商家名称',
+      },
+      {
+        label: '地区',
+        name: 'province',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => ({
+          options: options.provinceOptions,
+          placeholder: '请选择省份',
+          allowClear: true,
+          onChange: async (value: string) => {
+            // 清空城市选择
+            form.setFieldsValue({ city: undefined });
+            await options.loadCities(value);
+            form.validateFields(['city']);
+          },
+        }),
+      },
+      {
+        label: '',
+        name: 'city',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => {
+          const provinceValue = form.getFieldValue('province');
+          return {
+            placeholder: '请选择城市',
+            allowClear: true,
+            disabled: !provinceValue,
+            options: options.cityOptions,
+            onChange: async (value: string) => {
+              // 清空学校选择
+              form.setFieldsValue({ school_id: undefined });
+              await options.loadSchools(value);
+              form.validateFields(['school_id']);
+            },
+          };
+        },
+      },
+      {
+        label: '',
+        name: 'school_id',
+        component: 'Select',
+        placeholder: '请输入学校名称',
+        componentProps: (form) => {
+          const cityValue = form.getFieldValue('city');
+          console.log('获取城市', cityValue);
+
+          return {
+            placeholder: '请选择学校',
+            allowClear: true,
+            disabled: !cityValue,
+            options: options.schoolOptions,
+          };
+        },
+      },
+      {
+        label: '手机号',
+        name: 'phone',
+        rules: PHONE_RULE(false, '请输入正确的手机号'),
+        component: 'Input',
+        placeholder: '请输入手机号',
+      },
+      {
+        label: '时间范围',
+        name: 'time_range',
+        component: 'RangePicker',
+        componentProps: {
+          format: 'YYYY-MM-DD ',
+        },
+      },
+      {
+        component: 'Select',
+        name: 'status',
+        label: '状态',
+        componentProps: {
+          placeholder: '请选择状态',
+          options: [
+            { label: '全部', value: 0 },
+            { label: '待审批', value: 1 },
+            { label: '审批通过', value: 2 },
+            { label: '审批失败', value: 3 },
+          ],
+        },
+      },
+    ];
+  } else if (userStore?.userInfo?.role_id === 4) {
+    list = [
+      {
+        label: '商家名称',
+        name: 'name',
+        component: 'Input',
+        placeholder: '请输入商家名称',
+      },
+      {
+        label: '手机号',
+        name: 'phone',
+        rules: PHONE_RULE(false, '请输入正确的手机号'),
+        component: 'Input',
+        placeholder: '请输入手机号',
+      },
+      {
+        label: '时间范围',
+        name: 'time_range',
+        component: 'RangePicker',
+        componentProps: {
+          format: 'YYYY-MM-DD ',
+        },
+      },
+      {
+        component: 'Select',
+        name: 'status',
+        label: '状态',
+        componentProps: {
+          placeholder: '请选择状态',
+          options: [
+            { label: '全部', value: 0 },
+            { label: '待审批', value: 1 },
+            { label: '审批通过', value: 2 },
+            { label: '审批失败', value: 3 },
+          ],
+        },
+      },
+    ];
+  } else if (userStore?.userInfo?.role_id === 5) {
+    list = [
+      {
+        label: '商家名称',
+        name: 'name',
+        component: 'Input',
+        placeholder: '请输入商家名称',
+      },
+      {
+        label: '手机号',
+        name: 'phone',
+        rules: PHONE_RULE(false, '请输入正确的手机号'),
+        component: 'Input',
+        placeholder: '请输入手机号',
+      },
+      {
+        label: '时间范围',
+        name: 'time_range',
+        component: 'RangePicker',
+        componentProps: {
+          format: 'YYYY-MM-DD ',
+        },
+      },
+      {
+        label: '学校',
+        name: 'school_id',
+        component: 'Select',
+        placeholder: '请输入学校名称',
+        componentProps: (form) => {
+          options.loadSchools(userStore?.userInfo?.city_id);
+          return {
+            placeholder: '请选择学校',
+            allowClear: true,
+            options: options.schoolOptions,
+          };
+        },
+      },
+      {
+        component: 'Select',
+        name: 'status',
+        label: '状态',
+        componentProps: {
+          placeholder: '请选择状态',
+          options: [
+            { label: '全部', value: 0 },
+            { label: '待审批', value: 3 },
+            { label: '审批通过', value: 1 },
+            { label: '审批失败', value: 2 },
+          ],
+        },
+      },
+    ];
+  }
+  return list;
+};
 // 表格列配置
-export const tableColumns: TableColumn[] = [
-  {
-    title: '商家名称',
-    dataIndex: 'name',
-    key: 'name',
-    width: 120,
-    ellipsis: true,
-    fixed: 'left',
-  },
-  {
-    title: '手机号',
-    dataIndex: 'phone',
-    key: 'phone',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '商家类型',
-    dataIndex: 'merchant_type',
-    key: 'merchant_type',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '店铺门头图片',
-    dataIndex: 'storefront_image',
-    key: 'storefront_image',
-    width: 220,
-    ellipsis: true,
-    render: (merchant_img: any) => {
-      const getFullImageUrl = (url: any) => {
-        if (!url) return '';
-        // 确保url是字符串类型
-        let urlStr = String(url);
-        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-          return urlStr;
-        }
-        urlStr = urlStr.replace(/\+/g, '%20'); // 取消注释这一行
-        urlStr = urlStr.replace(/\\/g, '/'); // 添加这一行
-        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
-      };
-      const displayUrl = getFullImageUrl(merchant_img);
-      return displayUrl ? (
-        <div>
-          <img
-            src={displayUrl}
-            alt="店铺门头图片"
-            className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
-          />
-        </div>
-      ) : (
-        <span style={{ color: '#999' }}>无图片</span>
-      );
+export const tableColumns = (): TableColumn[] => {
+  let list: TableColumn[] = [];
+  list = [
+    { title: '用户姓名', dataIndex: 'name', key: 'name' },
+    { title: '手机号', dataIndex: 'phone', key: 'phone' },
+    {
+      title: '校内/校外',
+      dataIndex: 'merchant_type',
+      key: 'type',
+      render: (value: string) => {
+        return value;
+      },
     },
-  },
-  {
-    title: '营业执照图片',
-    dataIndex: 'business_license_image',
-    key: 'business_license_image',
-    width: 220,
-    ellipsis: true,
-    render: (merchant_img: any) => {
-      const getFullImageUrl = (url: any) => {
-        if (!url) return '';
-        // 确保url是字符串类型
-        let urlStr = String(url);
-        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-          return urlStr;
-        }
-        urlStr = urlStr.replace(/\+/g, '%20'); // 取消注释这一行
-        urlStr = urlStr.replace(/\\/g, '/'); // 添加这一行
-        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
-      };
-      const displayUrl = getFullImageUrl(merchant_img);
-      return displayUrl ? (
-        <div>
-          <img
-            src={displayUrl}
-            alt="营业执照图片"
-            className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
-          />
-        </div>
-      ) : (
-        <span style={{ color: '#999' }}>无图片</span>
-      );
+    {
+      title: '申请时间',
+      dataIndex: 'create_time',
+      key: 'create_time',
+      render: (value: string) => {
+        return <span>{dayjs(value).format('YYYY-MM-DD HH:mm:ss')}</span>;
+      },
     },
-  },
-  {
-    title: '健康证明图片',
-    dataIndex: 'medical_certificate_image',
-    key: 'medical_certificate_image',
-    width: 220,
-    ellipsis: true,
-    render: (merchant_img: any) => {
-      const getFullImageUrl = (url: any) => {
-        if (!url) return '';
-        // 确保url是字符串类型
-        let urlStr = String(url);
-        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-          return urlStr;
-        }
-        urlStr = urlStr.replace(/\+/g, '%20'); // 取消注释这一行
-        urlStr = urlStr.replace(/\\/g, '/'); // 添加这一行
-        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
-      };
-      const displayUrl = getFullImageUrl(merchant_img);
-      return displayUrl ? (
-        <div>
-          <img
-            src={displayUrl}
-            alt="健康证明图片"
-            className="w-12 h-12 object-cover rounded-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 mr-2"
-          />
-        </div>
-      ) : (
-        <span style={{ color: '#999' }}>无图片</span>
-      );
+    {
+      title: '费用',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (value: number) => {
+        return <span>{value.toFixed(2)}</span>;
+      },
     },
-  },
-  {
-    title: '支付金额',
-    dataIndex: 'amount',
-    key: 'amount',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '费用说明',
-    dataIndex: 'fee_description',
-    key: 'fee_description',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '备注图片',
-    dataIndex: 'remark_image_path',
-    key: 'remark_image_path',
-    width: 120,
-    ellipsis: true,
-    render: (merchant_img: any) => {
-      const getFullImageUrl = (url: any) => {
-        if (!url) return '';
-        // 确保url是字符串类型
-        const urlStr = String(url);
-        if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-          return urlStr;
-        }
-        return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
-      };
-
-      const displayUrl = getFullImageUrl(merchant_img);
-
-      return displayUrl ? (
-        <img
-          src={displayUrl}
-          alt="备注图片"
-          style={{
-            width: '50px',
-            height: '50px',
-            objectFit: 'cover',
-            borderRadius: '4px',
-          }}
-        />
-      ) : (
-        <span style={{ color: '#999' }}>无图片</span>
-      );
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (value: number) => {
+        return value === 3 ? '待审批' : value === 1 ? '审批通过' : '审批失败';
+      },
     },
-  },
-  {
-    title: '类型',
-    dataIndex: 'type',
-    key: 'type',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '支付渠道',
-    dataIndex: 'pay_channel',
-    key: 'pay_channel',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '订单号',
-    dataIndex: 'order_number',
-    key: 'order_number',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '申请状态',
-    dataIndex: 'apply_status',
-    key: 'apply_status',
-    width: 120,
-    ellipsis: true,
-    render: (text: number) => {
-      if (text === 1) {
-        return <span style={{ color: 'orange' }}>待审核</span>;
-      } else if (text === 2) {
-        return <span style={{ color: 'green' }}>审核通过</span>;
-      } else if (text === 3) {
-        return <span style={{ color: 'red' }}>审核拒绝</span>;
-      }
+    {
+      title: '审核时间',
+      dataIndex: 'update_time',
+      key: 'update_time',
+      render: (value: string) => {
+        return value ? <span>{dayjs(value).format('YYYY-MM-DD HH:mm:ss')}</span> : '-';
+      },
     },
-  },
-  {
-    title: '支付状态',
-    dataIndex: 'pay_status',
-    key: 'pay_status',
-    width: 120,
-    ellipsis: true,
-    render: (text) => {
-      if (text === 0) {
-        return <span style={{ color: 'orange' }}>未支付</span>;
-      } else if (text === 1) {
-        return <span style={{ color: 'green' }}>已支付</span>;
-      }
-    },
-  },
-  {
-    title: '地址',
-    dataIndex: 'address',
-    key: 'address',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '店铺类别ID',
-    dataIndex: 'category_id',
-    key: 'category_id',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '开业时间',
-    dataIndex: 'open_hour',
-    key: 'open_hour',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '关闭时间',
-    dataIndex: 'close_hour',
-    key: 'close_hour',
-    width: 120,
-    ellipsis: true,
-  },
-  {
-    title: '操作',
-    dataIndex: 'action',
-    key: 'action',
-    width: 120,
-    ellipsis: true,
-  },
-];
-
+  ];
+  return list;
+};
 // 表单配置项
 export const formList = (): BaseFormList[] => [
   {
-    label: '商家ID',
+    label: '申请表ID',
     name: 'id',
     rules: FORM_REQUIRED,
     component: 'Input',
@@ -341,6 +362,15 @@ export const formList = (): BaseFormList[] => [
     },
   },
   {
+    label: '审核理由',
+    name: 'reason',
+    component: 'TextArea',
+    rules: FORM_REQUIRED,
+    componentProps: {
+      placeholder: '请输入审核理由',
+    },
+  },
+  {
     label: '申请状态',
     name: 'apply_status',
     rules: FORM_REQUIRED,
@@ -348,299 +378,9 @@ export const formList = (): BaseFormList[] => [
     componentProps: {
       placeholder: '请选择申请状态',
       options: [
-        { label: '待审核', value: 1 },
-        { label: '审核通过', value: 2 },
-        { label: '审核拒绝', value: 3 },
-      ],
-    },
-  },
-];
-
-// 新增表单配置项
-export const addFormList = (params: {
-  categoryOptions: any;
-  usersOptions: any;
-}): BaseFormList[] => [
-  {
-    name: 'user_id',
-    label: '用户ID',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择用户ID',
-      disabled: false,
-      options: params.usersOptions,
-      // 添加分页和虚拟滚动配置
-      showSearch: true,
-      filterOption: (input: any, option: any) => {
-        return (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
-      },
-      listHeight: 256, // 限制下拉框高度
-      virtual: true, // 启用虚拟滚动
-      dropdownMatchSelectWidth: false,
-      dropdownStyle: {
-        maxHeight: '400px',
-        overflow: 'auto',
-      },
-    },
-  },
-  {
-    name: 'name',
-    label: '店铺名称',
-    component: 'Input',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入店铺名称',
-    },
-  },
-  {
-    name: 'category',
-    label: '店铺类别',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择店铺类别',
-      options: params.categoryOptions,
-    },
-  },
-  {
-    name: 'merchant_type',
-    label: '商家类型',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择商家类型',
-      options: [
-        { label: '校内', value: '校内' },
-        { label: '校外', value: '校外' },
-      ],
-    },
-  },
-  {
-    name: 'address',
-    label: '地址',
-    component: 'Input',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入地址',
-    },
-  },
-  {
-    label: '位置',
-    name: 'location',
-    rules: FORM_REQUIRED,
-    component: 'customize',
-    componentProps: (form) => {
-      return {
-        zoom: 15,
-        onSave: (data: any) => {
-          console.log('value', data);
-          form.setFieldsValue({
-            location: [data.location.lng, data.location.lat],
-          });
-        },
-        initValue: () => {
-          return form.getFieldValue('location');
-        },
-      };
-    },
-    render: (props: any) => {
-      return <MapPicker {...props} />;
-    },
-  },
-  {
-    name: 'is_dorm_store',
-    label: '是否宿舍店',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: [
-        { label: '是', value: 1 },
-        { label: '否', value: 0 },
-      ],
-    },
-  },
-  {
-    name: 'status',
-    label: '营业状态',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择营业状态',
-      options: [
-        { label: '营业中', value: 1 },
-        { label: '休息中', value: 2 },
-      ],
-    },
-  },
-  {
-    label: '营业时间',
-    name: 'time_range',
-    rules: FORM_REQUIRED,
-    component: 'TimeRangePicker',
-    componentProps: {
-      placeholder: '请选择营业时间',
-      format: 'HH:mm',
-    },
-  },
-  {
-    name: 'phone',
-    label: '手机号',
-    component: 'Input',
-    rules: PHONE_RULE(true, '请输入手机号'),
-    componentProps: {
-      placeholder: '请输入手机号',
-    },
-  },
-  {
-    name: 'storefront_image',
-    label: '商家门头图片',
-
-    component: 'customize',
-    rules: FORM_REQUIRED,
-    render: (props: any) => {
-      const { value, onChange } = props;
-      return (
-        <EnhancedImageUploader
-          value={value}
-          onChange={onChange}
-          maxSize={2}
-          baseUrl="http://192.168.10.7:8082"
-        />
-      );
-    },
-  },
-  {
-    name: 'business_license_image',
-    label: '营业执照图片',
-
-    component: 'customize',
-    rules: FORM_REQUIRED,
-    render: (props: any) => {
-      const { value, onChange } = props;
-      return (
-        <EnhancedImageUploader
-          value={value}
-          onChange={onChange}
-          maxSize={2}
-          baseUrl="http://192.168.10.7:8082"
-        />
-      );
-    },
-  },
-  {
-    name: 'medical_certificate_image',
-    label: '健康证明图片',
-
-    component: 'customize',
-    rules: FORM_REQUIRED,
-    render: (props: any) => {
-      const { value, onChange } = props;
-      return (
-        <EnhancedImageUploader
-          value={value}
-          onChange={onChange}
-          maxSize={2}
-          baseUrl="http://192.168.10.7:8082"
-        />
-      );
-    },
-  },
-  {
-    name: 'apply_status',
-    label: '审批状态',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择审批状态',
-      options: [
-        { label: '待审核', value: 1 },
-        { label: '审核通过', value: 2 },
-        { label: '审核拒绝', value: 3 },
-      ],
-    },
-  },
-  {
-    name: 'pay_channel',
-    label: '支付渠道',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择支付渠道',
-      options: [
-        { label: '支付宝', value: '支付宝支付' },
-        { label: '微信', value: '微信支付' },
-      ],
-      defaultValue: '支付宝支付',
-    },
-  },
-  {
-    name: 'amount',
-    label: '金额',
-    component: 'Input',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入金额',
-    },
-  },
-  {
-    name: 'fee_description',
-    label: '费用说明',
-    component: 'Input',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入费用说明',
-    },
-  },
-  {
-    name: 'pay_type',
-    label: '支付类型',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择支付类型',
-      options: [
-        { label: '真实支付', value: '真实支付' },
-        { label: '手动录入', value: '手动录入' },
-      ],
-    },
-  },
-  {
-    name: 'remark_image',
-    label: '支付图像',
-    component: 'customize',
-    rules: FORM_REQUIRED,
-    render: (props: any) => {
-      const { value, onChange } = props;
-      return (
-        <EnhancedImageUploader
-          value={value}
-          onChange={onChange}
-          maxSize={2}
-          baseUrl="http://192.168.10.7:8082"
-        />
-      );
-    },
-  },
-  {
-    name: 'order_number',
-    label: '订单号',
-    component: 'Input',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请输入订单号',
-    },
-  },
-  {
-    name: 'pay_status',
-    label: '支付状态',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      placeholder: '请选择支付状态',
-      options: [
-        { label: '支付成功', value: 1 },
-        { label: '支付失败', value: 0 },
+        { label: '待审核', value: 3 },
+        { label: '审核通过', value: 1 },
+        { label: '审核拒绝', value: 2 },
       ],
     },
   },

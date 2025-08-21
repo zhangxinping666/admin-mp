@@ -1,49 +1,35 @@
 import { CRUDPageTemplate, TableActions } from '@/shared';
-import { searchList, tableColumns, formList, addFormList, type MerchantApplication } from './model';
+import {
+  searchList,
+  tableColumns,
+  formList,
+  merchantOrderConfig,
+  type MerchantApplication,
+} from './model';
 import { Key } from 'react';
 import * as apis from './apis';
 import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
-import useUsersOptions from '@/shared/hooks/useUsersOptions';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import dayjs from 'dayjs';
-
-// 获取数据
-async function getApplicationList(params?: any) {
-  try {
-    const res = await apis.getApplicationList(params);
-    // 正确处理返回的数据
-    const items = res.data.list.map((item: any) => ({
-      ...item,
-      // id: item.merchant_id, // 将merchant_id映射为id
-    }));
-    console.log('items', items);
-    return {
-      data: items,
-      total: res.data.total,
-    };
-  } catch (err) {
-    console.log(err);
-    return {
-      data: [],
-      total: 0,
-    };
-  }
-}
+import useGroupCitySchoolOptions from '@/shared/hooks/useGroupedCityOptions';
+import { Space } from 'antd';
+import { createBrotliCompress } from 'zlib';
 
 const MerchantApplicationPage = () => {
   // 获取用户信息
   const userStorage = useUserStore();
   const schoolId = userStorage?.userInfo?.school_id;
   const roleId = userStorage?.userInfo?.role_id;
-  const schoolName = userStorage?.userInfo?.school_name;
   const { permissions } = useUserStore();
   const [categoryOptions] = useCategoryOptions(schoolId);
-  const [usersOptions] = useUsersOptions(schoolName);
   console.log('categoryOptions', categoryOptions);
   console.log('schoolId', schoolId);
   console.log('usrStore', userStorage);
 
+  const [isDormStore, setIsDormStore] = useState(false);
+
+  const locationOptions = useGroupCitySchoolOptions();
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
@@ -69,7 +55,6 @@ const MerchantApplicationPage = () => {
   // 处理表单值
   const handleFormValue = (value: any) => {
     value.location = [value.longitude, value.latitude];
-
     /**
      * 将时间字符串转换为dayjs对象
      * @param timeStr 时间字符串，可以是HH:mm格式或时间戳
@@ -101,25 +86,98 @@ const MerchantApplicationPage = () => {
     return value;
   };
 
+  // 格式化历史审核记录数据
+  const formatHistoryData = (data: any) => {
+    const formattedData = data.map((item: any) => ({
+      operatorName: item.operator_name,
+      remark: item.remark,
+      status: item.to_status,
+      createTime: dayjs(item.create_time),
+      updateTime: dayjs(item.update_time),
+      ...item,
+    }));
+    delete formattedData['operator_name'];
+    delete formattedData['to_status'];
+    delete formattedData['create_time'];
+    delete formattedData['update_time'];
+    return formattedData;
+  };
+
   // 操作列渲染
   const optionRender = (
     record: MerchantApplication,
     actions: {
       handleEdit: (record: MerchantApplication) => void;
-      handleDelete: (id: Key[]) => void;
+      handleDelete?: (id: Key[]) => void;
+      handleDetail: (record: MerchantApplication) => void; // 新增：审批详情处理函数
+      handleHistory: (record: MerchantApplication) => void; // 新增：历史审核记录处理函数
     },
   ) => {
     const canEdit = hasPermission('mp:merchantApl:update');
     const canDelete = hasPermission('mp:merchantApl:delete');
 
     return (
-      <TableActions
-        record={record}
-        onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
-        disableEdit={!canEdit}
-        disableDelete={!canDelete}
-      />
+      <Space size="small">
+        {record.apply_status === 3 && (
+          <BaseBtn
+            type="primary"
+            size="small"
+            onClick={() => actions.handleEdit(record)}
+            disabled={!canEdit}
+          >
+            审核
+          </BaseBtn>
+        )}
+        <BaseBtn
+          type="default"
+          size="small"
+          onClick={() => {
+            const formatRecord = {
+              merchantDetail: {
+                name: record.name,
+                store_name: record.store_name,
+                phone: record.phone,
+                province: record.province,
+                city: record.city,
+                school_name: record.school_name,
+                type: record.type,
+                category: record.category,
+                location: {
+                  address: record.address,
+                  longitude: record.longitude,
+                  latitude: record.latitude,
+                },
+                images: {
+                  storefront_image: record.storefront_image,
+                  business_license_image: record.business_license_image,
+                  food_license_image: record.food_license_image,
+                  medical_certificate_image: record.medical_certificate_image,
+                  student_id_card_image: record.student_id_card_image,
+                  identity_card_image: record.identity_card_image,
+                },
+                start_time: record.start_time,
+                end_time: record.end_time,
+                is_dorm_store: record.is_dorm_store,
+              },
+              orderDetail: {
+                amount: record.amount,
+                order_number: record.order_number,
+                pay_channel: record.pay_channel,
+              },
+            };
+            actions.handleDetail(formatRecord as any);
+          }}
+        >
+          审批详情
+        </BaseBtn>
+        <BaseBtn
+          type="default"
+          size="small"
+          onClick={() => actions.handleHistory(record.merchant_id)}
+        >
+          历史审核记录
+        </BaseBtn>
+      </Space>
     );
   };
   return (
@@ -127,15 +185,14 @@ const MerchantApplicationPage = () => {
       disableBatchUpdate={false}
       // isAddOpen={roleId === 4}
       isDelete={true}
+      formatHistoryData={formatHistoryData}
+      detailConfig={merchantOrderConfig}
       handleFormValue={handleFormValue}
-      addFormConfig={addFormList({
-        categoryOptions,
-        usersOptions,
-      })}
       isApplication={true}
+      isAddOpen={false}
       title="商家申请"
-      searchConfig={searchList()}
-      columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
+      searchConfig={searchList(userStorage, locationOptions)}
+      columns={tableColumns(isDormStore).filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:merchantApl:add')}
@@ -147,7 +204,43 @@ const MerchantApplicationPage = () => {
         };
       }}
       apis={{
-        fetchApi: getApplicationList,
+        fetchHistoryApi: async (id: number) => {
+          const params = {
+            merchant_id: id,
+          };
+
+          return apis.getStoreApplyHistory(params);
+        },
+
+        fetchApi: async (params) => {
+          params.start_time = params.time_range?.[0];
+          params.end_time = params.time_range?.[1];
+          setIsDormStore(params.is_dorm_store);
+          delete params.time_range;
+          try {
+            const res = await apis.getApplicationList(params);
+            // 检查响应和数据是否存在
+            if (!res || !res.data || !Array.isArray(res.data.list)) {
+              console.error('API 返回格式不符合预期:', res);
+              return { data: { list: [], total: 0 } };
+            }
+
+            // 处理数据
+            res.data.list.forEach((item: any) => {
+              item.location = {
+                address: item.address,
+                longitude: item.longitude,
+                latitude: item.latitude,
+              };
+            });
+
+            return res;
+          } catch (error) {
+            console.error('获取数据失败:', error);
+            // 返回默认空数据，避免组件崩溃
+            return { data: { list: [], total: 0 } };
+          }
+        },
         createApi: async (data) => {
           data.is_dorm_store = data.is_dorm_store === 0 ? false : true;
           data.longitude = data.location?.[0];
@@ -159,10 +252,19 @@ const MerchantApplicationPage = () => {
           return res;
         },
         updateApi: (params: any) => {
+          if (params.apply_status === 3) {
+            throw new Error('待审核状态不能进行操作');
+          }
+
           console.log('updata', params);
-          const idList = Array.isArray(params.id) ? params.id : [params.id];
+          const idList = Array.isArray(params.id) ? params.id[0] : params.id;
           console.log('params', params);
-          return apis.updateApplication({ ids: idList, apply_status: params.apply_status });
+          return apis.updateApplication({
+            id: idList,
+            apply_status: params.apply_status,
+            admin_id: userStorage.userInfo?.id,
+            reason: params.reason,
+          });
         },
         deleteApi: (params: any) => {
           const idList = Array.isArray(params) ? params : [params];
@@ -170,7 +272,7 @@ const MerchantApplicationPage = () => {
           return apis.deleteApplication({ ids: idList });
         },
       }}
-      optionRender={optionRender}
+      optionRender={optionRender as any}
     />
   );
 };

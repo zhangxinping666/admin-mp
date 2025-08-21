@@ -1,7 +1,6 @@
 import { CRUDPageTemplate } from '@/shared';
 import { searchList, tableColumns, detailTableColumns, formList, type Balance } from './model';
 import * as apis from './apis';
-import { isNumber, isString } from 'lodash';
 import { message, Modal, Table, Card, Statistic, Row, Col, Divider } from 'antd';
 import { useState } from 'react';
 import styles from './index.module.less';

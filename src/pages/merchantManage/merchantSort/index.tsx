@@ -10,6 +10,7 @@ import {
 import type { MerchantSortListRequest, MerchantSortListResponse } from './api';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import useGroupCitySchoolOptions from '@/shared/hooks/useGroupedCityOptions';
 
 // 初始化新增数据
 const initCreate: Partial<MerchantSort> = {
@@ -34,7 +35,11 @@ const fetchList = async (params?: MerchantSortListRequest) => {
 };
 
 const MerchantSortPage = () => {
+  const { userInfo } = useUserStore();
+
   const { permissions } = useUserStore();
+
+  const locationOptions = useGroupCitySchoolOptions();
 
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -56,7 +61,9 @@ const MerchantSortPage = () => {
       <TableActions
         record={record}
         onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
+        onDelete={userInfo?.role_id === 2 ? actions.handleDelete : undefined}
+        editText="编辑"
+        deleteText="删除"
         disableEdit={!canEdit}
         disableDelete={!canDelete}
       />
@@ -66,17 +73,17 @@ const MerchantSortPage = () => {
   return (
     <CRUDPageTemplate
       isDelete={true}
-      isAddOpen={true}
+      isAddOpen={userInfo?.role_id === 4}
       disableBatchUpdate={true}
       title="商家分类"
-      searchConfig={searchList()}
+      searchConfig={searchList(locationOptions)}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
       addFormConfig={addFormList()}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:merchantSort:add')}
       disableBatchDelete={!hasPermission('mp:merchantSort:delete')}
-      optionRender={optionRender}
+      optionRender={optionRender as any}
       apis={{
         createApi: createMerchantSort,
         updateApi: updateMerchantSort,

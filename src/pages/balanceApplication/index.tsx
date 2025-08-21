@@ -2,8 +2,6 @@ import { CRUDPageTemplate, TableActions } from '@/shared/components';
 import { getBalanceApplication, updateBalanceApplication } from './apis';
 import { formList, tableColumns, searchList, type BalanceApplication } from './model';
 import { Key } from 'react';
-import { message } from 'antd';
-import { error } from 'console';
 
 const BalanceApplication = () => {
   const useStore = useUserStore();
@@ -38,8 +36,8 @@ const BalanceApplication = () => {
     return (
       <TableActions
         record={record}
-        onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
+        onEdit={record.status === 0 ? actions.handleEdit : undefined}
+        editText="审批"
         disableEdit={!canEdit}
         disableDelete={!canDelete}
       />
@@ -61,6 +59,10 @@ const BalanceApplication = () => {
       optionRender={optionRender}
       apis={{
         fetchApi: async (params) => {
+          params.start_time = params.time_range?.[0];
+          params.end_time = params.time_range?.[1];
+          delete params.time_range;
+
           const res = await getBalanceApplication(params);
           console.log('res', res);
           return {

@@ -158,7 +158,7 @@ const DictionaryManagePage = () => {
         }
       }
     } catch (error) {
-      message.error('获取字典数据失败');
+      message.error('获取字典数据失败:' + error);
     }
   };
   const onClick: MenuProps['onClick'] = (e) => {
@@ -189,8 +189,8 @@ const DictionaryManagePage = () => {
           items: res.data.list,
         }));
       })
-      .catch(() => {
-        message.error('加载字典项失败');
+      .catch((error) => {
+        message.error('加载字典项失败:' + error);
       });
   };
 
@@ -229,7 +229,7 @@ const DictionaryManagePage = () => {
       // 改为刷新字典列表
       fetchTableData();
     } catch (error) {
-      message.error('删除失败');
+      message.error('删除失败' + error);
     }
   };
 
@@ -247,8 +247,8 @@ const DictionaryManagePage = () => {
         dict_type_code: selectedDictionary?.code,
       });
       setSelectedDictionary((prev) => (prev ? { ...prev, items: itemRes.data.list } : prev));
-    } catch (error) {
-      message.error('删除失败');
+    } catch (error: any) {
+      message.error('删除失败:', error);
     }
   };
 
@@ -276,8 +276,8 @@ const DictionaryManagePage = () => {
         dict_type_code: selectedDictionary.code,
       });
       setSelectedDictionary((prev) => (prev ? { ...prev, items: itemRes.data.list } : prev));
-    } catch (error) {
-      message.error('删除失败');
+    } catch (error: any) {
+      message.error('删除失败:' + error);
     }
   };
 
@@ -325,7 +325,7 @@ const DictionaryManagePage = () => {
           }
           setItemModalVisible(false);
         } catch (error) {
-          message.error('操作失败');
+          message.error('操作失败' + error);
         }
       })
       .catch((error) => {
@@ -483,7 +483,7 @@ const DictionaryManagePage = () => {
           fetchTableData();
           setCreateModalVisible(false);
         } catch (error) {
-          message.error('操作失败');
+          message.error('操作失败:' + error);
         }
       })
       .catch((error) => {

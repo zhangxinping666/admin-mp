@@ -25,13 +25,24 @@ const MapPicker = React.memo(
     const markerRef = useRef<any>(null);
     const [currentPosition, setCurrentPosition] = React.useState<number[]>(() => {
       // 优先使用value属性
-      if (value && Array.isArray(value) && value.length === 2 && !isNaN(value[0]) && !isNaN(value[1])) {
+      if (
+        value &&
+        Array.isArray(value) &&
+        value.length === 2 &&
+        !isNaN(value[0]) &&
+        !isNaN(value[1])
+      ) {
         return value;
       }
       // 然后尝试从initValue函数获取坐标
       if (initValue) {
         const initVal = initValue();
-        if (Array.isArray(initVal) && initVal.length === 2 && !isNaN(initVal[0]) && !isNaN(initVal[1])) {
+        if (
+          Array.isArray(initVal) &&
+          initVal.length === 2 &&
+          !isNaN(initVal[0]) &&
+          !isNaN(initVal[1])
+        ) {
           return initVal;
         }
       }
@@ -42,7 +53,7 @@ const MapPicker = React.memo(
       // 使用默认坐标
       return [116.397428, 39.90923];
     });
-    
+
     console.log('当前位置坐标:', currentPosition);
     useEffect(() => {
       (window as any)._AMapSecurityConfig = {
@@ -60,7 +71,7 @@ const MapPicker = React.memo(
             center: new AMap.LngLat(currentPosition[0], currentPosition[1]),
           });
           mapRef.current = map;
-          
+
           //创建一个可拖拽的 Marker 实例：
           const marker = new AMap.Marker({
             position: new AMap.LngLat(currentPosition[0], currentPosition[1]), //经纬度对象
@@ -70,7 +81,7 @@ const MapPicker = React.memo(
             offset: new AMap.Pixel(-13, -30), // 调整偏移使标记点更精确
           });
           markerRef.current = marker;
-          
+
           //将创建的点标记添加到已有的地图实例：
           map.add(marker);
 
@@ -79,7 +90,7 @@ const MapPicker = React.memo(
             const position = marker.getPosition();
             console.log('标记拖拽结束:', position);
             const newPosition = [position.lng, position.lat];
-            
+
             // 更新内部状态
             setCurrentPosition(newPosition);
 
@@ -138,14 +149,14 @@ const MapPicker = React.memo(
           autocomplete.on('select', function (e: any) {
             console.log('搜索选择:', e);
             const newPosition = [e.poi.location.lng, e.poi.location.lat];
-            
+
             // 更新内部状态
             setCurrentPosition(newPosition);
-            
+
             // 更新地图和标记
             map.setCenter(e.poi.location);
             marker.setPosition(e.poi.location);
-            
+
             // 触发回调
             onSave?.(e.poi);
             if (onChange && e.poi.location) {
@@ -155,6 +166,17 @@ const MapPicker = React.memo(
 
           // 移除地图点击事件，只允许拖拽标记来选择位置
           // 用户只能通过拖拽标记或搜索来选择位置
+          map.on('click', function (e: any) {
+            // 点击地图时，将标记移动到点击位置
+            marker.setPosition(e.lnglat);
+            // 更新内部状态
+            setCurrentPosition([e.lnglat.lng, e.lnglat.lat]);
+            // 触发回调
+            onSave?.(e.poi);
+            if (onChange && e.lnglat) {
+              onChange([e.lnglat.lng, e.lnglat.lat]);
+            }
+          });
         })
         .catch((e: any) => {
           console.error('地图加载失败:', e);
@@ -166,13 +188,19 @@ const MapPicker = React.memo(
         markerRef.current = null;
       };
     }, []);
-    
+
     // 监听外部value变化，更新地图和标记位置
     useEffect(() => {
       if (!markerRef.current || !mapRef.current) return;
-      
+
       // 如果外部传入了新的value值
-      if (value && Array.isArray(value) && value.length === 2 && !isNaN(value[0]) && !isNaN(value[1])) {
+      if (
+        value &&
+        Array.isArray(value) &&
+        value.length === 2 &&
+        !isNaN(value[0]) &&
+        !isNaN(value[1])
+      ) {
         // 检查是否与当前位置不同
         if (value[0] !== currentPosition[0] || value[1] !== currentPosition[1]) {
           console.log('外部value变化，更新位置:', value);
