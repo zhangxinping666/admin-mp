@@ -248,6 +248,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             </Tooltip>
             <BaseTable
               isLoading={isLoading}
+              isAuthHeight={false}
               columns={(optionRender ? finalColumns : columns) as TableColumnsType}
               getPage={() => {
                 fetchTableData();

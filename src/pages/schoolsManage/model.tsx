@@ -124,49 +124,71 @@ export const useLocationOptions = () => {
   };
 };
 // 搜索配置
-export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
-  {
-    label: '学校名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入学校名称',
-  },
-  {
-    label: '地区',
-    name: 'pid',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => ({
-      options: options.provinceOptions,
-      placeholder: '请选择省份',
-      allowClear: true,
-      onChange: async (value: string) => {
-        // 清空城市和学校选择
-        form.setFieldsValue({ city: undefined, school: undefined });
-        await options.loadCities(value);
-        form.validateFields(['city', 'school']);
-      },
-    }),
-  },
-  {
-    label: '',
-    name: 'city_id',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => {
-      const provinceValue = form.getFieldValue('pid');
-      return {
-        placeholder: '请选择城市',
-        allowClear: true,
-        disabled: !provinceValue,
-        options: options.cityOptions,
-        onChange: async (value: string) => {
-          form.setFieldsValue({ school: undefined });
-        },
-      };
+export const searchList = (
+  options: ReturnType<typeof useLocationOptions>,
+  userInfo?: { role_id: number; city_id: number },
+): BaseSearchList[] => {
+  // 获取用户角色ID
+  const roleId = userInfo?.role_id;
+
+  // 基础搜索字段（所有角色都有）
+  const baseSearchFields: BaseSearchList[] = [
+    {
+      label: '学校名称',
+      name: 'name',
+      component: 'Input',
+      placeholder: '请输入学校名称',
     },
-  },
-  {
+  ];
+
+  // 地区搜索字段（超级管理员和城市运营商才有）
+  const locationSearchFields: BaseSearchList[] = [];
+
+  // role_id=2（超级管理员）或 role_id=5（城市运营商）显示省市选择
+  // role_id=4（团长）不显示省市选择
+  if (roleId === 2) {
+    // 超级管理员：显示完整的省市选择
+    locationSearchFields.push(
+      {
+        label: '地区',
+        name: 'pid',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => ({
+          options: options.provinceOptions,
+          placeholder: '请选择省份',
+          allowClear: true,
+          onChange: async (value: string) => {
+            form.setFieldsValue({ city_id: undefined });
+            await options.loadCities(value);
+            form.validateFields(['city_id']);
+          },
+        }),
+      },
+      {
+        label: '',
+        name: 'city_id',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => {
+          const provinceValue = form.getFieldValue('pid');
+          return {
+            placeholder: '请选择城市',
+            allowClear: true,
+            disabled: !provinceValue,
+            options: options.cityOptions,
+          };
+        },
+      },
+    );
+  } else if (roleId === 5) {
+    // 城市运营商：只显示其所属城市，不允许选择
+    // 这里暂时隐藏城市选择，在组件中自动设置city_id过滤
+    // 不显示省市选择器
+  }
+  // role_id=4（团长）不添加任何地区字段
+  // 状态字段（所有角色都有）
+  const statusField: BaseSearchList = {
     component: 'Select',
     name: 'status',
     label: '状态',
@@ -177,8 +199,10 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
         { label: '禁用', value: 2 },
       ],
     },
-  },
-];
+  };
+
+  return [...baseSearchFields, ...locationSearchFields, statusField];
+};
 
 // 表格列配置
 export const tableColumns: TableColumn[] = [
@@ -283,10 +307,14 @@ export const tableColumns: TableColumn[] = [
 export const formList = ({
   groupedCityOptions,
   isLoadingOptions,
+  userInfo,
+  cityName,
 }: {
   // 建议使用更具体的类型，但 any[] 也能工作
   groupedCityOptions: any[];
   isLoadingOptions: boolean;
+  userInfo?: { role_id: number; city_id: number };
+  cityName?: string;
 }): BaseFormList[] => [
   {
     label: '名称',
@@ -322,21 +350,37 @@ export const formList = ({
       placeholder: '请输入学校地址（选择地图位置时会自动更新）',
     },
   },
-  {
-    name: 'city_id', // 这个字段的键名，最终提交给后端
-    label: '城市',
-    component: 'Select',
-    rules: FORM_REQUIRED,
-    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择城市',
-    componentProps: {
-      loading: isLoadingOptions,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本进行搜索
-      options: groupedCityOptions, // 使用分组选项
-      dropdownMatchSelectWidth: false, // 下拉框宽度自适应
-      style: { width: '100%' },
-    },
-  },
+  // 城市字段：根据角色显示不同形式
+  userInfo?.role_id === 5
+    ? {
+        // 城市运营商：显示只读的城市名称
+        name: 'city_id',
+        label: '城市',
+        component: 'Select',
+        rules: FORM_REQUIRED,
+        componentProps: {
+          disabled: true,
+          value: userInfo.city_id,
+          options: [{ label: cityName || '所属城市', value: userInfo.city_id }],
+          style: { width: '100%' },
+        },
+      }
+    : {
+        // 其他角色：显示可选择的城市下拉框
+        name: 'city_id',
+        label: '城市',
+        component: 'Select',
+        rules: FORM_REQUIRED,
+        placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择城市',
+        componentProps: {
+          loading: isLoadingOptions,
+          showSearch: true,
+          optionFilterProp: 'label',
+          options: groupedCityOptions,
+          dropdownMatchSelectWidth: false,
+          style: { width: '100%' },
+        },
+      },
   {
     label: '位置',
     name: 'location',

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   searchList,
   tableColumns,
@@ -16,6 +17,8 @@ import { Key } from 'react';
 import { message, Modal, Table, Card, Statistic, Row, Col, Divider } from 'antd';
 import styles from './index.module.less';
 import * as apis from '@/servers/balance';
+import BaseCard from '@/components/Card/BaseCard';
+import BaseSearch from '@/components/Search/BaseSearch';
 
 // 初始化新增数据
 const initCreate: Partial<User> = {
@@ -45,9 +48,18 @@ const ColleaguesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  // 城市选项
 
+  const { permissions, userInfo } = useUserStore();
+
+  // 城市选项
   const locationOptions = useLocationOptions();
+
+  // 为城市运营商自动加载所属城市的学校
+  useEffect(() => {
+    if (userInfo?.role_id === 5 && userInfo?.city_id) {
+      locationOptions.loadSchools(userInfo.city_id);
+    }
+  }, [userInfo, locationOptions.loadSchools]);
 
   // 余额明细搜索
   const handleSearch = (values: any) => {
@@ -151,8 +163,6 @@ const ColleaguesPage = () => {
     return uniqueOptions;
   };
 
-  const { permissions } = useUserStore();
-
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
@@ -194,7 +204,7 @@ const ColleaguesPage = () => {
       <CRUDPageTemplate
         title="用户管理"
         isDelete={true}
-        searchConfig={searchList(locationOptions)}
+        searchConfig={searchList(locationOptions, userInfo || undefined)}
         columns={tableColumns(handleViewDetails).filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}
         initCreate={initCreate}
@@ -203,7 +213,9 @@ const ColleaguesPage = () => {
         disableCreate={true}
         disableBatchDelete={!hasPermission('mp:user:delete')}
         apis={{
-          fetchApi: userApis.fetch,
+          fetchApi: (params: any) => {
+            return userApis.fetch(params);
+          },
           updateApi: (data: any) => {
             return userApis.update(data);
           },

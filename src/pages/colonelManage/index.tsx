@@ -7,6 +7,7 @@ import { getUserListByPage } from '@/servers/user';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import { Tooltip } from 'antd';
+import { BaseBtn } from '@/components/Buttons';
 
 import {
   getColonelList,
@@ -58,7 +59,7 @@ function ColleaguesPage() {
   const [userOptions, setUserOptions] = useState<UserOption[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   // 检查权限的辅助函数
-  const { permissions } = useUserStore();
+  const { permissions, userInfo } = useUserStore();
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
   };
@@ -208,7 +209,7 @@ function ColleaguesPage() {
   return (
     <CRUDPageTemplate
       title="团长管理"
-      searchConfig={searchList(locationOptions)}
+      searchConfig={searchList(locationOptions, userInfo || undefined)}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,
@@ -222,7 +223,13 @@ function ColleaguesPage() {
       disableCreate={!hasPermission('mp:colonel:add')}
       disableBatchDelete={!hasPermission('mp:colonel:delete')}
       apis={{
-        fetchApi: colonelApis.fetch,
+        fetchApi: (params: any) => {
+          // 为城市运营商自动添加city_id过滤
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            params.city_id = userInfo.city_id;
+          }
+          return colonelApis.fetch(params);
+        },
         createApi: colonelApis.create,
         updateApi: (data: any) => {
           // useCRUD传递的格式是 { id, ...values }

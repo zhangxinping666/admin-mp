@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
@@ -113,6 +114,7 @@ const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部')
   label,
   value,
 });
+
 import {
   getProvinces,
   getSchoolsByCityId,
@@ -187,85 +189,118 @@ export const useLocationOptions = () => {
   };
 };
 // 搜索配置
-export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
-  {
-    label: '用户昵称',
-    name: 'nickname',
-    component: 'Input',
-    placeholder: '请输入团长昵称',
-  },
-  {
-    label: '电话',
-    name: 'phone',
-    component: 'Input',
-    placeholder: '请输入用户电话',
-  },
-  {
-    component: 'Select',
-    name: 'identity_id',
-    label: '身份',
-    componentProps: {
-      options: [
-        { label: '普通用户', value: 1 },
-        { label: '团长', value: 2 },
-        { label: '商户', value: 3 },
-        { label: '城市运营商', value: 4 },
-      ],
+export const searchList = (
+  options: ReturnType<typeof useLocationOptions>,
+  userInfo?: { role_id: number; city_id: number },
+): BaseSearchList[] => {
+  // 获取用户角色ID
+  const roleId = userInfo?.role_id;
+
+  // 基础搜索字段（所有角色都有）
+  const baseSearchFields: BaseSearchList[] = [
+    {
+      label: '用户昵称',
+      name: 'nickname',
+      component: 'Input',
+      placeholder: '请输入团长昵称',
     },
-  },
-  {
-    label: '地区',
-    name: 'pid',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => ({
-      options: options.provinceOptions,
-      placeholder: '请选择省份',
-      allowClear: true,
-      onChange: async (value: string) => {
-        // 清空城市和学校选择
-        form.setFieldsValue({ city: undefined, school: undefined });
-        await options.loadCities(value);
-        form.validateFields(['city', 'school']);
+    {
+      label: '电话',
+      name: 'phone',
+      component: 'Input',
+      placeholder: '请输入用户电话',
+    },
+    {
+      component: 'Select',
+      name: 'identity_id',
+      label: '身份',
+      componentProps: {
+        options: [
+          { label: '普通用户', value: 1 },
+          { label: '团长', value: 2 },
+          { label: '商户', value: 3 },
+          { label: '城市运营商', value: 4 },
+        ],
       },
-    }),
-  },
-  {
-    label: '',
-    name: 'city_id',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => {
-      const provinceValue = form.getFieldValue('pid');
-      return {
-        placeholder: '请选择城市',
-        allowClear: true,
-        disabled: !provinceValue,
-        options: options.cityOptions,
-        onChange: async (value: string) => {
-          form.setFieldsValue({ school: undefined });
-          await options.loadSchools(value);
-          form.validateFields(['school']);
-        },
-      };
     },
-  },
-  {
-    label: '',
-    name: 'school_id',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => {
-      const cityValue = form.getFieldValue('city_id');
-      return {
+  ];
+
+  // 地区搜索字段（根据角色显示）
+  const locationSearchFields: BaseSearchList[] = [];
+  
+  // role_id=2（超级管理员）显示完整的省市学校选择
+  if (roleId === 2) {
+    locationSearchFields.push(
+      {
+        label: '地区',
+        name: 'pid',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => ({
+          options: options.provinceOptions,
+          placeholder: '请选择省份',
+          allowClear: true,
+          onChange: async (value: string) => {
+            form.setFieldsValue({ city_id: undefined, school_id: undefined });
+            await options.loadCities(value);
+            form.validateFields(['city_id', 'school_id']);
+          },
+        }),
+      },
+      {
+        label: '',
+        name: 'city_id',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => {
+          const provinceValue = form.getFieldValue('pid');
+          return {
+            placeholder: '请选择城市',
+            allowClear: true,
+            disabled: !provinceValue,
+            options: options.cityOptions,
+            onChange: async (value: string) => {
+              form.setFieldsValue({ school_id: undefined });
+              await options.loadSchools(value);
+              form.validateFields(['school_id']);
+            },
+          };
+        },
+      },
+      {
+        label: '',
+        name: 'school_id',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => {
+          const cityValue = form.getFieldValue('city_id');
+          return {
+            placeholder: '请选择学校',
+            allowClear: true,
+            disabled: !cityValue || cityValue === '',
+            options: options.schoolOptions,
+          };
+        },
+      },
+    );
+  } else if (roleId === 5) {
+    // 城市运营商：只显示学校选择（自动过滤所属城市）
+    locationSearchFields.push({
+      label: '学校',
+      name: 'school_id',
+      component: 'Select',
+      wrapperWidth: 180,
+      componentProps: {
         placeholder: '请选择学校',
         allowClear: true,
-        disabled: !cityValue || cityValue === '',
         options: options.schoolOptions,
-      };
-    },
-  },
-  {
+      },
+    });
+  }
+  // role_id=4（团长）不显示任何地区字段
+
+  // 状态字段（所有角色都有）
+  const statusField: BaseSearchList = {
     component: 'Select',
     name: 'status',
     label: '状态',
@@ -276,8 +311,10 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
         { label: '禁用', value: 2 },
       ],
     },
-  },
-];
+  };
+
+  return [...baseSearchFields, ...locationSearchFields, statusField];
+};
 
 // 表格列配置
 export const tableColumns: (
@@ -543,30 +580,6 @@ export const formList = (): BaseFormList[] => [
       );
     },
   },
-  {
-    label: '电话',
-    name: 'phone',
-    component: 'Input',
-    placeholder: '请输入用户电话',
-    rules: [
-      { required: true, message: '请输入用户电话' },
-      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
-    ],
-    componentProps: {
-      maxLength: 11,
-    },
-  },
-  {
-    label: '密码',
-    name: 'password',
-    component: 'Input',
-    placeholder: '请输入用户密码',
-    componentProps: {
-      precision: 6,
-      style: { width: '100%' },
-    },
-  },
-
   {
     label: '状态',
     name: 'status',

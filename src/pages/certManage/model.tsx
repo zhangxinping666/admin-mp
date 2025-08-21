@@ -4,6 +4,7 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { message, Modal } from 'antd';
 import { useState } from 'react';
 import { ImagePreview } from '@/components/Upload';
+import { useUserStore } from '@/stores/user';
 // 身份证图片预览组件 - 使用新的ImagePreview组件
 const UserPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
   return <ImagePreview imageUrl={voucherUrl} alt="身份证图片" baseUrl="http://192.168.10.7:8082" />;

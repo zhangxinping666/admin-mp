@@ -130,7 +130,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '地区',
-    name: 'province',
+    name: 'pid',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => ({
@@ -147,11 +147,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'city',
+    name: 'city_id',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,
@@ -167,11 +167,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'school',
+    name: 'school_id',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
-      const cityValue = form.getFieldValue('city');
+      const cityValue = form.getFieldValue('city_id');
       return {
         placeholder: '请选择学校',
         allowClear: true,

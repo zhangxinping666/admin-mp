@@ -8,6 +8,7 @@ export const useCommonStore = () => {
   const routePages = useMenuStore((state) => state.routePages);
   const permissions = useUserStore((state) => state.permissions);
   const menuPermissions = useUserStore((state) => state.menuPermissions);
+
   // 用户ID
   const userId = useUserStore((state) => state.userInfo?.account_id || '');
   // 用户名

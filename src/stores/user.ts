@@ -18,12 +18,14 @@ interface UserState {
   saveLoginInfo: (account: string, password: string) => void;
   getLoginInfo: () => { account: string; password: string };
   clearLoginInfo: () => void;
+  // 获取角色ID
+  getRoleId: () => string;
 }
 
 export const useUserStore = create<UserState>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         permissions: [],
         menuPermissions: [],
         userInfo: null,
@@ -63,6 +65,17 @@ export const useUserStore = create<UserState>()(
             return { account: '', password: '' };
           }
         },
+        /** 获取角色ID */
+        getRoleId: () => {
+          try {
+            const state = get();
+            return state.userInfo?.role_id?.toString() || '';
+          } catch (error) {
+            console.error('获取角色id失败:', error);
+            return '';
+          }
+        },
+
         /** 清除本地存储的登录信息 */
         clearLoginInfo: () => {
           try {
