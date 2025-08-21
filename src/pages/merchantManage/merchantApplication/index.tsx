@@ -192,7 +192,7 @@ const MerchantApplicationPage = () => {
       isAddOpen={false}
       title="商家申请"
       searchConfig={searchList(userStorage, locationOptions)}
-      columns={tableColumns(isDormStore).filter((col) => col.dataIndex !== 'action')}
+      columns={tableColumns().filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:merchantApl:add')}

@@ -1,5 +1,5 @@
 import { CRUDPageTemplate, TableActions } from '@/shared';
-import { searchList, tableColumns, formList, type Merchant } from './model';
+import { searchList, tableColumns, merchantDetailConfig, formList, type Merchant } from './model';
 import * as apis from './apis';
 import { Key } from 'react';
 import useCategoryOptions from '@/shared/hooks/useCategoryOptions';
@@ -7,8 +7,7 @@ import useGroupCitySchoolOptions from '@/shared/hooks/useGroupedCityOptions';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import dayjs from 'dayjs';
-import { Col, Grid, Modal, Row, Space } from 'antd';
-import { wrap } from 'module';
+import { Modal, Space } from 'antd';
 
 // 初始化新增数据
 const initCreate: Partial<Merchant> = {
@@ -34,33 +33,10 @@ const MerchantsPage = () => {
   const locationOptions = useGroupCitySchoolOptions();
 
   const [categoryOptions] = useCategoryOptions(schoolId);
-  // 附件详情状态
-  const [detailVisible, setDetailVisible] = useState(false);
-  // 附件详情数据
-  const [detailData, setDetailData] = useState<string[]>([]);
 
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
-  };
-
-  // 附件信息
-  const handleAttachment = (record: Merchant) => {
-    setDetailVisible(true);
-    if (record) {
-      if (record.is_dormitory_store) {
-        setDetailData([record.identity_card_image, record.student_id_card_image]);
-      } else {
-        setDetailData([
-          record.storefront_image,
-          record.business_license_image,
-          record.food_license_image,
-          record.medical_certificate_image,
-        ]);
-      }
-    } else {
-      console.error('record is undefined');
-    }
   };
 
   // 操作列渲染
@@ -69,6 +45,7 @@ const MerchantsPage = () => {
     actions: {
       handleEdit: (record: Merchant) => void;
       handleDelete: (id: Key[]) => void;
+      handleDetail: (record: any) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:merchantDetail:update');
@@ -83,7 +60,22 @@ const MerchantsPage = () => {
             disableEdit={!canEdit}
             disableDelete={!canDelete}
           />
-          <BaseBtn type="primary" onClick={() => handleAttachment(record)}>
+          <BaseBtn
+            type="primary"
+            onClick={() => {
+              const detail = {
+                merchantDetail: {
+                  storefront_image: record.storefront_image,
+                  business_license_image: record.business_license_image,
+                  food_license_image: record.food_license_image,
+                  medical_certificate_image: record.medical_certificate_image,
+                  student_id_card_image: record.student_id_card_image,
+                  identity_card_image: record.identity_card_image,
+                },
+              };
+              actions.handleDetail(detail);
+            }}
+          >
             附件信息
           </BaseBtn>
         </Space>
@@ -180,21 +172,13 @@ const MerchantsPage = () => {
 
     return value;
   };
-  const getFullImageUrl = (url: any) => {
-    if (!url) return '';
-    // 确保url是字符串类型
-    const urlStr = String(url);
-    if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-      return urlStr;
-    }
-    return `http://192.168.10.7:8082${urlStr.startsWith('/') ? '' : '/'}${urlStr}`;
-  };
 
   return (
     <>
       <CRUDPageTemplate
         title="商家管理"
         isDelete={true}
+        detailConfig={merchantDetailConfig}
         handleFormValue={handleFormValue}
         searchConfig={searchList(locationOptions, categoryOptions)}
         disableBatchUpdate={true}
@@ -214,42 +198,6 @@ const MerchantsPage = () => {
         }}
         optionRender={optionRender as any}
       />
-      <Modal
-        title="商家详情"
-        open={detailVisible}
-        onCancel={() => setDetailVisible(false)}
-        width={1200}
-      >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%',
-            flexWrap: 'wrap',
-          }}
-        >
-          {detailData.map((item, index) => (
-            <div key={index} style={{ width: '50%' }}>
-              {item ? (
-                <img
-                  src={getFullImageUrl(item)}
-                  alt={`分类图标 ${index + 1}`}
-                  style={{
-                    width: '100%', // 增加图片宽度以适应垂直布局
-                    height: '50%',
-                    objectFit: 'cover',
-                    borderRadius: '4px',
-                  }}
-                />
-              ) : (
-                <span style={{ color: '#999', width: '150px', textAlign: 'center' }}>无图片</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </Modal>
     </>
   );
 };

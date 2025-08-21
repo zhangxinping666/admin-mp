@@ -7,6 +7,7 @@ import { useState } from 'react';
 import MapPicker from '@/components/MapPicker';
 import LocationRenderer from '@/shared/components/LocationRenderer';
 import dayjs from 'dayjs';
+import { FieldConfig } from '@/shared/components/DetailModal';
 
 // 添加图片预览组件
 
@@ -450,5 +451,45 @@ export const formList = ({
       placeholder: '请选择营业时间',
       format: 'HH:mm',
     },
+  },
+];
+
+export const merchantDetailConfig: FieldConfig[] = [
+  // 图片（根据 is_dorm_store 过滤在配置里做）
+  {
+    key: 'merchantDetail.storefront_image',
+    label: '门店照片',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.business_license_image',
+    label: '营业执照',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.food_license_image',
+    label: '食品经营许可证',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.medical_certificate_image',
+    label: '健康证',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.student_id_card_image',
+    label: '学生证',
+    group: '商户信息',
+    isImage: true,
+  },
+  {
+    key: 'merchantDetail.identity_card_image',
+    label: '身份证',
+    group: '商户信息',
+    isImage: true,
   },
 ];
