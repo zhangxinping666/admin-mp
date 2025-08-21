@@ -3,6 +3,7 @@ import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { useState, useEffect, useCallback } from 'react';
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
+import dayjs from 'dayjs';
 
 // 楼栋接口定义
 export interface City {
@@ -127,7 +128,7 @@ export const useLocationOptions = () => {
 export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
   {
     label: '地区',
-    name: 'province',
+    name: 'pid',
     component: 'Select',
     wrapperWidth: 180,
     componentProps: (form) => ({
@@ -144,11 +145,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'city',
+    name: 'city_id',
     component: 'Select',
     wrapperWidth: 180,
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,
@@ -216,6 +217,12 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'created_at',
     key: 'created_at',
     width: 180,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
   {
     title: '状态',
@@ -270,6 +277,7 @@ export const formList = ({
     label: '用户',
     component: 'Select',
     required: true,
+    rules: FORM_REQUIRED,
     placeholder: '请选择用户',
     componentProps: {
       loading: isLoadingUsers,
@@ -284,6 +292,7 @@ export const formList = ({
     label: '城市',
     component: 'Select',
     required: true,
+    rules: FORM_REQUIRED,
     placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
     componentProps: {
       loading: isLoadingOptions,

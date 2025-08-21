@@ -6,6 +6,8 @@ import { getProvinceList, getCityName } from '@/servers/city';
 import { getUserListByPage } from '@/servers/user';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import { Tooltip } from 'antd';
+
 import {
   getColonelList,
   addColonel,
@@ -96,51 +98,39 @@ function ColleaguesPage() {
       setIsLoadingUsers(false);
     }
   };
+  // 加载省市数据
   useEffect(() => {
     const fetchAndGroupData = async () => {
       setIsLoadingOptions(true);
       try {
-        const provinceResponse = await getProvinceList();
+        const provinceResponse = await getProvinceList(0);
+        console.log('省份接口返回数据:', provinceResponse);
+
         const provinces = provinceResponse.data || [];
+        console.log('省份数据:', provinces);
+
         // 【修正】使用 province.province 来获取省份名称
-        const cityPromises = provinces.map((province: any) => getCityName(province.province));
+        const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
         const cityResponses = await Promise.all(cityPromises);
+
+        console.log('城市接口返回数据:', cityResponses);
+
         const finalOptions = provinces.map((province: any, index: number) => {
           const cities = cityResponses[index].data || [];
+          console.log(`${province.name} 的城市数据:`, cities);
+
           return {
             // 【修正】使用 province.province 来设置分组标题
-            label: province.province,
+            label: province.name,
             options: cities.map((city: any) => ({
-              label: city.city_name,
-              value: city.id,
+              label: city.name,
+              value: city.city_id,
             })),
           };
         });
+
+        console.log('最终分组选项:', finalOptions);
         setGroupedCityOptions(finalOptions);
-
-        // 获取第一个城市的ID并加载其学校列表
-        if (finalOptions.length > 0 && finalOptions[0].options.length > 0) {
-          const firstCityId = finalOptions[0].options[0].value;
-          initCreate.city_id = firstCityId;
-
-          // 加载第一个城市的学校列表
-          try {
-            const schoolResponse = await getSchoolListByCityId(firstCityId.toString());
-            const schools = schoolResponse.data || [];
-            const schoolOptionsList = schools.map((school: any) => ({
-              label: school.name,
-              value: school.id,
-            }));
-            setSchoolOptions(schoolOptionsList);
-
-            // 设置第一个学校为默认值
-            if (schoolOptionsList.length > 0) {
-              initCreate.school_id = schoolOptionsList[0].value;
-            }
-          } catch (schoolError) {
-            console.error('加载默认学校列表失败:', schoolError);
-          }
-        }
       } catch (error) {
         console.error('加载省市选项失败:', error);
       } finally {
@@ -202,20 +192,16 @@ function ColleaguesPage() {
     record: Colonel,
     actions: {
       handleEdit: (record: Colonel) => void;
-      handleDelete: (id: number) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:colonel:update');
-    const canDelete = hasPermission('mp:colonel:delete');
 
     return (
-      <TableActions
-        record={record}
-        onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
-        disableEdit={!canEdit}
-        disableDelete={!canDelete}
-      />
+      <Tooltip title={!canEdit ? '无权限操作' : ''}>
+        <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
+          编辑
+        </BaseBtn>
+      </Tooltip>
     );
   };
 

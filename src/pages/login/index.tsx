@@ -333,7 +333,6 @@ function Login() {
               className="!mb-15px"
               rules={[
                 { required: true, message: t('public.pleaseEnter', { name: t('login.password') }) },
-                PASSWORD_RULE(t),
               ]}
             >
               <Input.Password

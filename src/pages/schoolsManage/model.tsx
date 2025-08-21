@@ -1,9 +1,11 @@
+import { useState, useEffect, useCallback } from 'react';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 import AddressWithLocation from './components/AddressWithLocation';
 import MapPicker from '@/components/MapPicker';
+import dayjs from 'dayjs';
 
 // 学校定义
 export interface School {
@@ -18,6 +20,7 @@ export interface School {
   latitude: number;
   longitude: number;
   store_numbers: number;
+  created_time: string;
   status: number;
 }
 
@@ -130,7 +133,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '地区',
-    name: 'province',
+    name: 'pid',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => ({
@@ -147,11 +150,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'city',
+    name: 'city_id',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,
@@ -247,6 +250,18 @@ export const tableColumns: TableColumn[] = [
     width: 100,
   },
   {
+    title: '创建时间',
+    dataIndex: 'created_time',
+    key: 'created_time',
+    width: 180,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
+  },
+  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
@@ -301,8 +316,11 @@ export const formList = ({
     label: '地址',
     name: 'address',
     component: 'Input',
-    placeholder: '请输入学校地址',
+    placeholder: '请输入学校地址（选择地图位置时会自动更新）',
     rules: FORM_REQUIRED,
+    componentProps: {
+      placeholder: '请输入学校地址（选择地图位置时会自动更新）',
+    },
   },
   {
     name: 'city_id', // 这个字段的键名，最终提交给后端
@@ -327,6 +345,7 @@ export const formList = ({
     componentProps: (form) => {
       // 获取当前表单的所有值
       const formValues = form.getFieldsValue();
+      const locationValue = form.getFieldValue('location');
 
       // 如果是编辑模式且有经纬度数据，使用学校的实际位置作为地图中心
       // 否则使用默认的北京坐标
@@ -342,17 +361,45 @@ export const formList = ({
       }
 
       return {
-        initCenter,
+        value: locationValue, // 传递当前的location值作为受控组件的value
+        center: initCenter,
         zoom: 15,
         style: {
           width: '100%',
           height: 400,
         },
+        // 处理地图搜索选择（包含地址信息）
+        onSave: (data: any) => {
+          console.log('===== 地图搜索选择 =====');
+          console.log('搜索数据:', data);
+          const newValues = {
+            location: [data.location.lng, data.location.lat],
+            // 如果选择了具体地点，自动更新地址字段
+            address: data.address || data.name || form.getFieldValue('address'),
+            longitude: data.location.lng,
+            latitude: data.location.lat,
+          };
+          console.log('即将设置的新值:', newValues);
+          form.setFieldsValue(newValues);
+          console.log(
+            '设置后的表单值:',
+            form.getFieldsValue(['location', 'longitude', 'latitude', 'address']),
+          );
+        },
+        // 处理地图拖拽选择（只有经纬度）
         onChange: (value: number[]) => {
-          console.log('位置更新:', value);
-          form.setFieldsValue({
+          console.log('新位置:', value);
+          const newValues = {
             location: value,
-          });
+            longitude: value[0],
+            latitude: value[1],
+          };
+          console.log('即将设置的新值:', newValues);
+          form.setFieldsValue(newValues);
+          console.log(
+            '设置后的表单值:',
+            form.getFieldsValue(['location', 'longitude', 'latitude']),
+          );
         },
         initValue: () => {
           return form.getFieldValue('location');
@@ -363,7 +410,31 @@ export const formList = ({
       return <MapPicker {...props} />;
     },
   },
-
+  // 隐藏的经纬度字段，用于存储实际的经纬度值
+  {
+    label: '',
+    name: 'longitude',
+    component: 'Input',
+    componentProps: {
+      type: 'hidden',
+    },
+    hidden: true,
+    wrapperProps: {
+      style: { display: 'none' },
+    },
+  },
+  {
+    label: '',
+    name: 'latitude',
+    component: 'Input',
+    componentProps: {
+      type: 'hidden',
+    },
+    hidden: true,
+    wrapperProps: {
+      style: { display: 'none' },
+    },
+  },
   {
     label: '状态',
     name: 'status',

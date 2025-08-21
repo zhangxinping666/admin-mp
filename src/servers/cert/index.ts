@@ -21,3 +21,7 @@ export function updateCert(data: UpdateCert) {
 export function deleteCert(id: Array<number>) {
   return request.delete(`/backAuth/delete`, { data: { id_list: id } });
 }
+
+export function getAuditRecord(user_id: number) {
+  return request.get<CertDetailResult>('/backAuth/getReview', { params: { user_id } });
+}

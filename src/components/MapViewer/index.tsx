@@ -48,7 +48,7 @@ const MapViewer = React.memo(
       };
     }, []);
 
-    return <div id="container" style={{ height: height || '400px' }}></div>;
+    return <div id="container" style={{ minWidth: '200px', height: height || '400px' }}></div>;
   },
 );
 

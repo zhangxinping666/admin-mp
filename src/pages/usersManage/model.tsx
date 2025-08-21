@@ -4,6 +4,7 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 import { Space, Tooltip } from 'antd';
 import { render } from 'nprogress';
+import dayjs from 'dayjs';
 
 // 楼栋接口定义
 export interface User {
@@ -201,11 +202,10 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     component: 'Select',
-    name: 'role_id',
+    name: 'identity_id',
     label: '身份',
     componentProps: {
       options: [
-        { label: '全部', value: 0 },
         { label: '普通用户', value: 1 },
         { label: '团长', value: 2 },
         { label: '商户', value: 3 },
@@ -215,7 +215,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '地区',
-    name: 'province',
+    name: 'pid',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => ({
@@ -232,11 +232,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'city',
+    name: 'city_id',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,
@@ -252,11 +252,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'school',
+    name: 'school_id',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
-      const cityValue = form.getFieldValue('city');
+      const cityValue = form.getFieldValue('city_id');
       return {
         placeholder: '请选择学校',
         allowClear: true,
@@ -338,12 +338,6 @@ export const tableColumns: (
     width: 100,
   },
   {
-    title: '学校',
-    dataIndex: 'school',
-    key: 'school',
-    width: 100,
-  },
-  {
     title: '城市',
     dataIndex: 'city',
     key: 'city',
@@ -405,12 +399,24 @@ export const tableColumns: (
     dataIndex: 'last_time',
     key: 'last_time',
     width: 100,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
   {
     title: '创建时间',
     dataIndex: 'created_at',
     key: 'created_at',
     width: 100,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
 
   {

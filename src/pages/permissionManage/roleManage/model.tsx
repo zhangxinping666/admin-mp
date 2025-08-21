@@ -4,6 +4,8 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { getMenuSelectList } from '@/servers/perms/menu';
 import { getDictionaryList } from '@/servers/dictionaryManage/index';
 import { getApiListByGroup } from '@/servers/perms/api';
+import dayjs from 'dayjs';
+
 import type { API } from '../apiManage/model';
 
 // 角色接口定义
@@ -12,6 +14,8 @@ export interface Role {
   name: string;
   code: string;
   status: number;
+  updated_at: string;
+
   permissions?: number[];
   dataPermissions?: number[];
 }
@@ -270,6 +274,7 @@ export const tableColumns: TableColumn[] = [
     width: 150,
     ellipsis: true,
   },
+
   {
     title: '状态',
     dataIndex: 'status',
@@ -278,6 +283,18 @@ export const tableColumns: TableColumn[] = [
     render: (value: number) => (
       <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
     ),
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    key: 'updated_at',
+    width: 180,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
   {
     title: '操作',
