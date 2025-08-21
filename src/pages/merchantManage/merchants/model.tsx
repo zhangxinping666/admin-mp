@@ -5,6 +5,8 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { Modal } from 'antd';
 import { useState } from 'react';
 import MapPicker from '@/components/MapPicker';
+import LocationRenderer from '@/shared/components/LocationRenderer';
+import dayjs from 'dayjs';
 
 // 添加图片预览组件
 
@@ -109,13 +111,7 @@ export interface MerchantsQuery {
 }
 
 // 搜索配置
-export const searchList = (
-  groupedCityOptions: {
-    label: string;
-    value: number;
-  }[],
-  isLoadingOptions: boolean,
-): BaseSearchList[] => [
+export const searchList = (options: any, categoryOptions: any): BaseSearchList[] => [
   {
     label: '店铺名称',
     name: 'store_name',
@@ -123,24 +119,78 @@ export const searchList = (
     placeholder: '请输入店铺名称',
   },
   {
-    name: 'city_id', // 这个字段的键名，最终提交给后端
-    label: '选择城市',
+    label: '地区',
+    name: 'province',
     component: 'Select',
-    style: { width: 200 },
-    required: true,
-    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
-    componentProps: {
-      loading: isLoadingOptions,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-      options: groupedCityOptions,
+    wrapperWidth: 180,
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: '请选择省份',
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市选择
+        form.setFieldsValue({ city: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city']);
+      },
+    }),
+  },
+  {
+    label: '',
+    name: 'city',
+    component: 'Select',
+    wrapperWidth: 180,
+    componentProps: (form) => {
+      const provinceValue = form.getFieldValue('province');
+      return {
+        placeholder: '请选择城市',
+        allowClear: true,
+        disabled: !provinceValue,
+        options: options.cityOptions,
+        onChange: async (value: string) => {
+          // 清空学校选择
+          form.setFieldsValue({ school_id: undefined });
+          await options.loadSchools(value);
+          form.validateFields(['school_id']);
+        },
+      };
     },
   },
   {
+    label: '',
+    name: 'school_id',
+    component: 'Select',
+    placeholder: '请输入学校名称',
+    componentProps: (form) => {
+      const cityValue = form.getFieldValue('city');
+      console.log('获取城市', cityValue);
+
+      return {
+        placeholder: '请选择学校',
+        allowClear: true,
+        disabled: !cityValue,
+        options: options.schoolOptions,
+      };
+    },
+  },
+  {
+    label: '类别',
+    name: 'category',
+    component: 'Select',
+    componentProps: {
+      placeholder: '请选择类别',
+      allowClear: true,
+
+      options: categoryOptions,
+    },
+  },
+  {
+    label: '状态',
     component: 'Select',
     name: 'status',
-    label: '状态',
     componentProps: {
+      placeholder: '请选择状态',
+      allowClear: true,
       options: [
         { label: '全部', value: 0 },
         { label: '启用', value: 1 },
@@ -153,92 +203,64 @@ export const searchList = (
 // 表格列配置
 export const tableColumns: TableColumn[] = [
   {
-    title: 'ID',
-    dataIndex: 'id',
-    key: 'id',
-    width: 100,
-  },
-  {
     title: '店铺名称',
     dataIndex: 'store_name',
     key: 'store_name',
-    width: 150,
     ellipsis: true,
   },
   {
     title: '商家名称',
     dataIndex: 'merchant_name',
     key: 'merchant_name',
-    width: 150,
     ellipsis: true,
   },
 
   {
-    title: '学校ID',
-    dataIndex: 'school_id',
-    key: 'school_id',
-    width: 100,
+    title: '学校名称',
+    dataIndex: 'school_name',
+    key: 'school_name',
   },
   {
-    title: '城市ID',
-    dataIndex: 'city_id',
-    key: 'city_id',
-    width: 100,
+    title: '城市名称',
+    dataIndex: 'city_name',
+    key: 'city_name',
   },
   {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    width: 80,
-    render: (value: number) => (
-      <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
-    ),
+    title: '省份',
+    dataIndex: 'province',
+    key: 'province',
   },
   {
-    title: '商家类型',
+    title: '校内/校外',
     dataIndex: 'type',
     key: 'type',
-    width: 100,
   },
   {
     title: '地址',
-    dataIndex: 'site',
-    key: 'site',
-    width: 200,
+    dataIndex: 'location',
+    key: 'location',
     ellipsis: true,
+    render: (value: { address: string; longitude: number; latitude: number }) => {
+      return <LocationRenderer value={value} />;
+    },
   },
   {
-    title: '经度',
-    dataIndex: 'longitude',
-    key: 'longitude',
-    width: 100,
-  },
-  {
-    title: '纬度',
-    dataIndex: 'latitude',
-    key: 'latitude',
-    width: 100,
-  },
-  {
-    title: '宿舍商家',
+    title: '是否是宿舍小店',
     dataIndex: 'is_dormitory_store',
     key: 'is_dormitory_store',
-    width: 100,
     render: (value: boolean) => {
       return value ? '是' : '否';
     },
   },
   {
-    title: '商家分类',
+    title: '店铺类别',
     dataIndex: 'category',
     key: 'category',
-    width: 100,
   },
   {
     title: '推荐状态',
     dataIndex: 'recommend',
     key: 'recommend',
-    width: 100,
     render: (value: number) => {
       return value === 1 ? '推荐' : '不推荐';
     },
@@ -247,19 +269,31 @@ export const tableColumns: TableColumn[] = [
     title: '联系电话',
     dataIndex: 'phone',
     key: 'phone',
-    width: 150,
   },
   {
-    title: '营业开始时间',
-    dataIndex: 'open_hour',
-    key: 'open_hour',
-    width: 150,
+    title: '营业时间',
+    dataIndex: 'timer_range',
+    key: 'timer_range',
+    render: (value: string[]) => {
+      console.log('营业时间', value);
+      return value[0] + ' ~ ' + value[1];
+    },
   },
   {
-    title: '营业结束时间',
-    dataIndex: 'closed_hour',
-    key: 'closed_hour',
-    width: 150,
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    render: (value: number) => {
+      return value === 1 ? '启用' : '禁用';
+    },
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    render: (value: string) => {
+      return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+    },
   },
 ];
 
@@ -326,11 +360,9 @@ export const formList = ({
     componentProps: (form) => {
       // 获取当前表单的所有值
       const formValues = form.getFieldsValue();
-
       // 如果是编辑模式且有经纬度数据，使用商家的实际位置作为地图中心
       // 否则使用默认的北京坐标
       let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
-
       if (
         formValues.longitude &&
         formValues.latitude &&
@@ -353,7 +385,7 @@ export const formList = ({
           });
         },
         initValue: () => {
-          return form.getFieldValue('location');
+          return form.getFieldValue('location') || initCenter;
         },
       };
     },

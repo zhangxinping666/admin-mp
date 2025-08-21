@@ -82,11 +82,13 @@ export const searchDetailList = (): BaseSearchList[] => [
     name: 'category',
     component: 'Select',
     componentProps: {
+      placeholder: '请选择类别',
       options: [
         { label: '全部', value: '' },
         { label: '商户入驻', value: 'merchant_entrance' },
         { label: '提现', value: 'withdrawal' },
         { label: '返佣', value: 'rebate' },
+        { label: '提现申请中', value: 'withdraw_processing' },
       ],
     },
   },
@@ -95,6 +97,7 @@ export const searchDetailList = (): BaseSearchList[] => [
     name: 'transaction_type',
     component: 'Select',
     componentProps: {
+      placeholder: '请选择交易类型',
       options: [
         { label: '全部', value: 0 },
         { label: '收入', value: 1 },
@@ -351,6 +354,51 @@ export const tableColumns: (
     dataIndex: 'school',
     key: 'school',
     width: 100,
+  },
+  {
+    title: '可用余额',
+    dataIndex: 'total_amount',
+    key: 'total_amount',
+    width: 100,
+    render: (value: number, record: any) => {
+      return (
+        <>
+          <Space
+            className="blinking-eye"
+            style={{ cursor: 'pointer' }}
+            size={1}
+            onClick={(e) => {
+              handleViewDetails(record, e);
+            }}
+          >
+            <span>{value?.toFixed(2) || '0.00'}</span>
+            {/* 添加眼睛SVG图标，使用blink动画 */}
+            <span className="ml-1 mr-1 inline-block align-middle">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5Z"
+                  stroke="#1890FF"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+                  fill="#1890FF"
+                />
+              </svg>
+            </span>
+            <span>元</span>
+          </Space>
+        </>
+      );
+    },
   },
   {
     title: '最后登录时间',

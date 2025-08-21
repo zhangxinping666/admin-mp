@@ -30,3 +30,8 @@ export function getCityName(pid: number) {
 export function getProvinceList(pid: number) {
   return request.get('/citySchool/getCityByID', { params: { pid } });
 }
+
+//获取学校列表
+export function getSchoolList(pid: number) {
+  return request.get('/citySchool/getSchoolByID', { params: { pid } });
+}

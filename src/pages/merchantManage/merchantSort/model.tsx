@@ -32,11 +32,66 @@ export interface MerchantSortQuery {
 }
 
 // 搜索配置
-export const searchList = (): BaseSearchList[] => [
+export const searchList = (options: any): BaseSearchList[] => [
   {
     component: 'Input',
     name: 'name',
-    label: '分类名称',
+    label: '类别',
+  },
+  {
+    label: '地区',
+    name: 'province',
+    component: 'Select',
+    wrapperWidth: 180,
+    componentProps: (form) => ({
+      options: options.provinceOptions,
+      placeholder: '请选择省份',
+      allowClear: true,
+      onChange: async (value: string) => {
+        // 清空城市选择
+        form.setFieldsValue({ city: undefined });
+        await options.loadCities(value);
+        form.validateFields(['city']);
+      },
+    }),
+  },
+  {
+    label: '',
+    name: 'city',
+    component: 'Select',
+    wrapperWidth: 180,
+    componentProps: (form) => {
+      const provinceValue = form.getFieldValue('province');
+      return {
+        placeholder: '请选择城市',
+        allowClear: true,
+        disabled: !provinceValue,
+        options: options.cityOptions,
+        onChange: async (value: string) => {
+          // 清空学校选择
+          form.setFieldsValue({ school_id: undefined });
+          await options.loadSchools(value);
+          form.validateFields(['school_id']);
+        },
+      };
+    },
+  },
+  {
+    label: '',
+    name: 'school_id',
+    component: 'Select',
+    placeholder: '请输入学校名称',
+    componentProps: (form) => {
+      const cityValue = form.getFieldValue('city');
+      console.log('获取城市', cityValue);
+
+      return {
+        placeholder: '请选择学校',
+        allowClear: true,
+        disabled: !cityValue,
+        options: options.schoolOptions,
+      };
+    },
   },
   {
     component: 'Select',
@@ -58,7 +113,6 @@ export const tableColumns: TableColumn[] = [
     title: '分类名称',
     dataIndex: 'name',
     key: 'name',
-    width: 150,
     align: 'center',
     fixed: 'left',
   },
@@ -66,7 +120,6 @@ export const tableColumns: TableColumn[] = [
     title: '分类图标',
     dataIndex: 'icon',
     key: 'icon',
-    width: 100,
     render: (icon: any) => {
       const getFullImageUrl = (url: any) => {
         if (!url) return '';
@@ -97,10 +150,9 @@ export const tableColumns: TableColumn[] = [
     },
   },
   {
-    title: '学校',
-    dataIndex: 'school_name',
-    key: 'school_name',
-    width: 150,
+    title: '省份',
+    dataIndex: 'province',
+    key: 'province',
     align: 'center',
     fixed: 'left',
   },
@@ -108,7 +160,20 @@ export const tableColumns: TableColumn[] = [
     title: '城市',
     dataIndex: 'city_name',
     key: 'city_name',
-    width: 120,
+    align: 'center',
+    fixed: 'left',
+  },
+  {
+    title: '学校',
+    dataIndex: 'school_name',
+    key: 'school_name',
+    align: 'center',
+    fixed: 'left',
+  },
+  {
+    title: '返佣比例(%)',
+    dataIndex: 'drawback',
+    key: 'drawback',
     align: 'center',
     fixed: 'left',
   },
@@ -116,25 +181,14 @@ export const tableColumns: TableColumn[] = [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 80,
     render: (value: number) => (
       <span style={{ color: value === 1 ? 'green' : 'red' }}>{value === 1 ? '启用' : '禁用'}</span>
     ),
   },
   {
-    title: '返佣比例(%)',
-
-    dataIndex: 'drawback',
-    key: 'drawback',
-    width: 120,
-    align: 'center',
-    fixed: 'left',
-  },
-  {
-    title: '操作',
-    dataIndex: 'action',
-    key: 'action',
-    width: 120,
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
     align: 'center',
     fixed: 'left',
   },

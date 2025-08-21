@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { querySchool } from './apis';
-import type { School } from './model';
+import { getSchoolList } from '@/servers/school';
+import { School } from '@/pages/schoolsManage/model';
 
 interface SchoolOption {
   label: string;
@@ -18,21 +18,23 @@ const useSelectSchoolOptions = () => {
     const fetchSchoolOptions = async () => {
       try {
         setLoading(true);
-        const res = await querySchool();
-        const list: School[] = res.data.list;
-        
+        const res = await getSchoolList({
+          page: 1,
+          page_size: 1000,
+        });
+        console.log('getSchoolList', res);
+        const list: School[] = (res.data as any).list;
+
         // 处理学校数据，转换为下拉选项格式
         const options = list
           .filter((item: School) => item.status === 1) // 只显示启用的学校
           .map((item: School) => ({
             label: `${item.name}${item.address ? ` (${item.address})` : ''}`,
             value: item.id,
-            address: item.address,
-            province: item.province,
-            city_name: item.city_name,
           }))
           .sort((a, b) => a.label.localeCompare(b.label)); // 按名称排序
-        
+        console.log('options', options);
+
         setSchoolOptions(options);
       } catch (error) {
         console.error('获取学校列表失败:', error);

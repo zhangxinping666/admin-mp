@@ -13,6 +13,9 @@ import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { useCRUD } from '../hooks/useCRUD';
 import { RightOutlined } from '@ant-design/icons';
+import HistoryModal, { AuditRecord } from './HistoryModal';
+import DetailModal, { FieldConfig } from './DetailModal';
+import { merchantOrderConfig } from '@/pages/merchantManage/merchantApplication/model';
 
 interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
@@ -20,6 +23,9 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   isDelete: boolean;
   isApplication?: boolean;
   addFormConfig?: BaseFormList[];
+  detailConfig?: FieldConfig[];
+  formatHistoryData?: (data: any) => any;
+
   pagination?: boolean;
   hideCreate?: boolean;
   disableCreate?: boolean;
@@ -38,12 +44,15 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
     createApi?: (params: any) => Promise<any>;
     updateApi?: (params: any) => Promise<any>;
     deleteApi?: (params: any) => Promise<any>;
+    fetchHistoryApi?: (params: any) => Promise<any>;
   };
   optionRender?: (
     record: T,
     actions: {
       handleEdit: (record: T) => void;
       handleDelete?: (id: Key[]) => void;
+      handleHistory?: (id: number) => void;
+      handleDetail?: (id: number) => void;
     },
   ) => React.ReactNode;
   onCreateClick?: () => void; // 新增按钮点击时的自定义处理函数
@@ -63,10 +72,12 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   addFormConfig,
   title,
   searchConfig,
+  detailConfig,
   isApplication,
   columns,
   formConfig,
   initCreate,
+  formatHistoryData,
   mockData,
   onEditOpen,
   handleFormValue,
@@ -93,7 +104,9 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     createApi: apis?.createApi,
     updateApi: apis?.updateApi,
     deleteApi: apis?.deleteApi,
+    fetchHistoryApi: apis?.fetchHistoryApi,
     handleFormValue,
+    formatHistoryData,
   };
   // 添加选中行的状态
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -105,6 +118,12 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     setFetch,
     isLoading,
     isCreateLoading,
+    isDetailOpen,
+    setDetailOpen,
+    detailData,
+    isHistoryOpen,
+    setHistoryOpen,
+    historyData,
     isCreateOpen,
     setCreateOpen,
     createTitle,
@@ -120,6 +139,8 @@ export const CRUDPageTemplate = <T extends { id: number }>({
     handleDelete,
     handleModalSubmit,
     fetchTableData,
+    handleHistory,
+    handleDetail,
   } = useCRUD(crudOptions);
   useEffect(() => {
     setFetch(true);
@@ -159,7 +180,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       title: '操作',
       dataIndex: 'action',
       key: 'action',
-      width: 150,
       fixed: 'right' as const,
       render: (_: any, record: T) =>
         optionRender
@@ -174,6 +194,12 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                 Array.isArray(id) ? handleDelete(id) : handleDelete([id]);
                 // 更新选中状态，移除已删除的项
                 setSelectedRowKeys((prev) => prev.filter((key) => !id.includes(key)));
+              },
+              handleHistory: (id: number) => {
+                handleHistory(id);
+              },
+              handleDetail: (record: any) => {
+                handleDetail(record);
               },
             })
           : null,
@@ -308,7 +334,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           </BaseCard>
         </Space>
       </BaseContent>
-
       {/* 新增/编辑模态框 */}
       <BaseModal
         title={createTitle}
@@ -329,6 +354,24 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           onValuesChange={onFormValuesChange}
         />
       </BaseModal>
+      {/* 弹窗渲染 */}
+      {detailData && detailConfig && (
+        <DetailModal
+          open={isDetailOpen}
+          data={detailData as any}
+          config={detailConfig}
+          onClose={() => setDetailOpen(false)}
+          title={'详情'}
+        />
+      )}
+      {historyData && (
+        <HistoryModal
+          open={isHistoryOpen}
+          data={historyData as AuditRecord[]}
+          onClose={() => setHistoryOpen(false)}
+          title="历史记录"
+        />
+      )}
     </>
   );
 };

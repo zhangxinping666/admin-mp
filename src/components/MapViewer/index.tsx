@@ -1,60 +1,55 @@
-import React from 'react';
-import { Modal } from 'antd';
-import { Amap, Marker } from '@amap/amap-react';
+import React, { useEffect } from 'react';
+import './style.css';
+import AMapLoader from '@amap/amap-jsapi-loader';
 
-interface MapViewerProps {
-  /** 是否显示弹窗 */
-  visible: boolean;
-  /** 关闭弹窗回调 */
-  onClose: () => void;
-  /** 位置坐标 [经度, 纬度] */
-  position: [number, number];
-  /** 弹窗标题 */
-  title?: string;
-  /** 地址文本 */
-  address?: string;
-  /** 缩放级别 */
-  zoom?: number;
-}
+const MapViewer = React.memo(
+  ({ center, zoom, height }: { center?: number[]; zoom?: number; height?: number }) => {
+    // 计算默认中心点坐标，并确保坐标有效
+    const getDefaultCenter = () => {
+      // 尝试使用center属性
+      if (Array.isArray(center) && center.length === 2 && !isNaN(center[0]) && !isNaN(center[1])) {
+        return center;
+      }
 
-/**
- * 只读地图查看器组件
- * 用于在弹窗中展示位置信息，不支持编辑
- */
-const MapViewer: React.FC<MapViewerProps> = ({
-  visible,
-  onClose,
-  position,
-  title = '位置查看',
-  address,
-  zoom = 15,
-}) => {
-  return (
-    <Modal
-      title={title}
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      width={800}
-      destroyOnClose
-    >
-      {address && (
-        <div style={{ marginBottom: 16 }}>
-          <strong>地址：</strong>
-          {address}
-        </div>
-      )}
-      <div style={{ marginBottom: 8 }}>
-        <strong>坐标：</strong>
-        经度 {position[0].toFixed(6)}，纬度 {position[1].toFixed(6)}
-      </div>
-      <div style={{ height: '400px', borderRadius: 8, overflow: 'hidden' }}>
-        <Amap center={position} zoom={zoom}>
-          <Marker position={position} />
-        </Amap>
-      </div>
-    </Modal>
-  );
-};
+      // 使用默认坐标
+      return [116.397428, 39.90923];
+    };
+    const defaultCenter = getDefaultCenter();
+    console.log('地图中心点坐标:', defaultCenter);
+    useEffect(() => {
+      let map: any = null;
+      (window as any)._AMapSecurityConfig = {
+        securityJsCode: import.meta.env.VITE_AMAP_SECURITY_CODE,
+      };
+      AMapLoader.load({
+        key: import.meta.env.VITE_AMAP_KEY + '',
+        version: '2.0',
+        plugins: ['AMap.Scale', 'AMap.AutoComplete', 'AMap.Geolocation'],
+      })
+        .then((AMap) => {
+          map = new AMap.Map('container', {
+            viewMode: '3D',
+            zoom: zoom || 11,
+            center: new AMap.LngLat(defaultCenter[0], defaultCenter[1]),
+          });
+          //创建一个 Marker 实例：
+          const marker = new AMap.Marker({
+            position: new AMap.LngLat(defaultCenter[0], defaultCenter[1]), //经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
+          });
+          //将创建的点标记添加到已有的地图实例：
+          map.add(marker);
+        })
+        .catch((e) => {
+          console.error('地图加载失败:', e);
+        });
+
+      return () => {
+        map?.destroy();
+      };
+    }, []);
+
+    return <div id="container" style={{ height: height || '400px' }}></div>;
+  },
+);
 
 export default MapViewer;

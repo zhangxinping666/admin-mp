@@ -10,13 +10,26 @@ interface UseCRUDOptions<T> {
   createApi?: (data: any) => Promise<any>;
   updateApi?: (params: any) => Promise<any>;
   deleteApi?: (id: Key | Key[]) => Promise<any>;
+  // 【新增】历史审核记录API
+  fetchHistoryApi?: (id: number) => Promise<any>;
   pagination?: boolean;
   isApplication?: boolean;
   handleFormValue?: (value: any) => any;
+  // 【新增】格式化历史审核记录数据
+  formatHistoryData?: (data: any) => any;
 }
 
 export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) => {
-  const { initCreate, fetchApi, createApi, updateApi, deleteApi, handleFormValue } = options;
+  const {
+    initCreate,
+    fetchApi,
+    createApi,
+    updateApi,
+    deleteApi,
+    handleFormValue,
+    fetchHistoryApi,
+    formatHistoryData,
+  } = options;
 
   // 表单引用
   const createFormRef = useRef<FormInstance>(null);
@@ -38,7 +51,17 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   const [pageSize, setPageSize] = useState(INIT_PAGINATION.pageSize);
   const [total, setTotal] = useState(0);
   const [tableData, setTableData] = useState<T[]>([]);
+  // 【新增】审批详情弹窗状态
+  const [isDetailOpen, setDetailOpen] = useState(false);
+  // 【新增】审批详情数据
+  const [detailData, setDetailData] = useState<T>({} as T);
 
+  // 【新增】历史审核记录弹窗状态
+  const [isHistoryOpen, setHistoryOpen] = useState(false);
+  // 【新增】当前查看的历史记录ID
+  const [historyId, setHistoryId] = useState(-1);
+  // 【新增】历史审核记录数据
+  const [historyData, setHistoryData] = useState<Record<string, any>[]>([]);
   // 获取下一个可用的 ID
   const getNextId = useCallback(() => {
     if (tableData.length === 0) return 1;
@@ -99,6 +122,50 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     // 【新增】在设置完所有状态后，如果传入了回调函数，就执行它
     if (onOpen) {
       onOpen(record);
+    }
+  };
+  // 【新增】打开审批详情
+  const handleDetail = async (record: any) => {
+    try {
+      setLoading(true);
+      setDetailOpen(true);
+      setDetailData(record);
+    } catch (error) {
+      messageApi.error({ content: '获取审批详情失败', duration: 3 });
+      console.error('[CRUD] 获取审批详情失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // 【新增】打开历史审核记录
+  const handleHistory = async (id: number) => {
+    if (!fetchHistoryApi) {
+      console.warn('[CRUD] 未提供 fetchHistoryApi，无法查看历史审核记录。');
+      messageApi.error({ content: '无法查看历史审核记录：未配置API', duration: 3 });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setHistoryId(id as number);
+      console.log('历史记录ID', id);
+      const result = await fetchHistoryApi(id);
+      console.log('历史记录原始数据', result);
+
+      // 【新增】格式化历史数据
+      if (formatHistoryData) {
+        setHistoryData(formatHistoryData(result.data?.list || result.data || []));
+      } else {
+        setHistoryData(result.data?.list || result.data || []);
+      }
+      console.log('历史记录', historyData);
+
+      setHistoryOpen(true);
+    } catch (error) {
+      messageApi.error({ content: '获取历史审核记录失败', duration: 3 });
+      console.error('[CRUD] 获取历史审核记录失败:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -192,6 +259,8 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
             params.page_size = pageSize;
           }
           const { data } = await fetchApi(params);
+          console.log('Fetchdata', data);
+
           setTableData(data.list || data.data || data || []);
           setTotal(data.total || 0);
         } else if (mockData) {
@@ -200,7 +269,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           setTotal(mockData.length);
         }
       } catch (error) {
-        messageApi.error({ content: '获取数据失败', duration: 3 });
+        messageApi.error({ content: '获取数据失败:' + error, duration: 3 });
       } finally {
         setLoading(false);
         setFetch(false);
@@ -219,6 +288,15 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     isCreateLoading,
     isCreateOpen,
     setCreateOpen,
+    // 【新增】审批详情相关状态
+    isDetailOpen,
+    setDetailOpen,
+    detailData,
+    // 【新增】历史审核记录相关状态
+    isHistoryOpen,
+    setHistoryOpen,
+    historyId,
+    historyData,
     createTitle,
     createId,
     createData,
@@ -235,6 +313,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     handleCreate,
     handleEdit,
     handleDelete,
+    // 【新增】审批详情和历史记录方法
+    handleDetail,
+    handleHistory,
     handleModalSubmit,
     fetchTableData,
     getNextId,
