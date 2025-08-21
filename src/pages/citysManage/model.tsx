@@ -149,7 +149,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
     component: 'Select',
     wrapperWidth: 180,
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,
@@ -277,6 +277,7 @@ export const formList = ({
     label: '用户',
     component: 'Select',
     required: true,
+    rules: FORM_REQUIRED,
     placeholder: '请选择用户',
     componentProps: {
       loading: isLoadingUsers,
@@ -291,6 +292,7 @@ export const formList = ({
     label: '城市',
     component: 'Select',
     required: true,
+    rules: FORM_REQUIRED,
     placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
     componentProps: {
       loading: isLoadingOptions,

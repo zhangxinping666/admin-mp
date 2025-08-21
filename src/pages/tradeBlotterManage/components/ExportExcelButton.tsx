@@ -8,6 +8,7 @@ import {
   createExportTaskServe,
   getExportTaskStatusServe,
   downloadExportFileServe,
+  exportExcelDirectServe,
 } from '@/servers/trade-blotter';
 import type { ExportTaskStatus } from '#/trade-blotter';
 
@@ -88,13 +89,15 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           return;
         }
 
+        console.log('开始下载文件，原始路径:', filePath);
+
         // 设置下载状态为true，防止重复下载
         isDownloadingRef.current = true;
 
         const fileResponse = await downloadExportFileServe(filePath);
 
         // 创建Blob对象并下载
-        const blob = new Blob([fileResponse]);
+        const blob = fileResponse instanceof Blob ? fileResponse : new Blob([fileResponse]);
 
         // 检查blob是否为空或非预期格式（可能是错误响应）
         if (blob.size === 0) {
@@ -131,7 +134,8 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           handleCloseExportModal();
         }, 2000);
       } catch (error) {
-        console.error('File download error:', error);
+        console.error('文件下载失败:', error);
+        console.error('文件路径:', filePath);
 
         // 根据错误类型显示不同的错误消息
         if (error instanceof Error && error.message === 'Invalid file format') {
@@ -213,6 +217,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
               // 重置导出状态
               setIsExporting(false);
 
+              console.log('导出任务完成，文件路径:', file);
               // 触发文件下载
               handleFileDownload(file);
               return;
@@ -263,6 +268,58 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
     [t, messageApi, clearPollingTimer, handleFileDownload, handleCloseExportModal],
   );
 
+  // 判断是否有筛选条件
+  const hasSearchParams = () => {
+    // 检查searchData是否有实际的筛选条件
+    const keys = Object.keys(searchData);
+    if (keys.length === 0) return false;
+
+    // 检查是否有非空的值
+    return keys.some((key) => {
+      const value = searchData[key];
+      return value !== undefined && value !== null && value !== '' && value !== 0;
+    });
+  };
+
+  // 处理直接导出的文件
+  const handleDirectExport = async (blob: Blob) => {
+    try {
+      // 检查blob是否为空
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty');
+      }
+
+      // 创建下载链接
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const timestamp = new Date().getTime();
+      link.download = `交易流水_${timestamp}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+
+      // 更新状态为成功
+      setExportStatus('success');
+      setExportProgress(100);
+
+      // 延迟2秒后关闭弹窗
+      setTimeout(() => {
+        handleCloseExportModal();
+      }, 2000);
+    } catch (error) {
+      console.error('Direct export error:', error);
+      setExportStatus('failed');
+      messageApi.error(t('tradeBlotter.exportDownloadFailed'));
+
+      // 延迟2秒后关闭弹窗
+      setTimeout(() => {
+        handleCloseExportModal();
+      }, 2000);
+    }
+  };
+
   // 处理导出 Excel 逻辑
   const handleExportExcel = async () => {
     // 如果正在导出，直接返回
@@ -272,27 +329,84 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
     }
 
     const params = { ...searchData };
+    setIsExporting(true);
+
     try {
-      setIsExporting(true);
       // 重置状态
       isHandledRef.current = false;
       isDownloadingRef.current = false;
       isCancelledRef.current = false;
 
-      const res = await createExportTaskServe(params);
+      // 判断是否有筛选条件
+      if (hasSearchParams()) {
+        // 有筛选条件：同步导出（直接返回文件）
+        console.log('同步导出模式：有筛选条件', params);
 
-      // 检查响应类型
-      if (res.code === 2000 && res.data && res.data.task_id) {
-        // 异步任务，需要轮询状态
-        setExportTaskId(res.data.task_id);
+        // 显示导出进度弹窗
         setExportModalVisible(true);
-        setExportStatus('pending');
+        setExportStatus('processing');
         setExportProgress(0);
-        pollTaskStatus(res.data.task_id);
+
+        // 模拟进度增长
+        let progressRef = 0;
+        const progressTimer = setInterval(() => {
+          progressRef += 15;
+          if (progressRef >= 90) {
+            progressRef = 90;
+            clearInterval(progressTimer);
+          }
+          setExportProgress(progressRef);
+        }, 300);
+
+        try {
+          const blob = await exportExcelDirectServe(params);
+
+          // 清除进度定时器
+          clearInterval(progressTimer);
+          setExportProgress(100);
+
+          // 检查是否是Blob对象
+          if (blob instanceof Blob) {
+            await handleDirectExport(blob);
+          } else {
+            // 如果不是Blob，可能返回了JSON错误
+            console.error('Unexpected response type:', blob);
+            setExportStatus('failed');
+            messageApi.error(t('tradeBlotter.exportExcelFailed'));
+            setTimeout(() => {
+              handleCloseExportModal();
+            }, 2000);
+          }
+        } catch (error) {
+          console.error('Sync export error:', error);
+          clearInterval(progressTimer);
+          setExportStatus('failed');
+          messageApi.error(t('tradeBlotter.exportExcelFailed'));
+          setTimeout(() => {
+            handleCloseExportModal();
+          }, 2000);
+        } finally {
+          setIsExporting(false);
+        }
       } else {
-        // 没有返回task_id的情况，重置导出状态
-        setIsExporting(false);
-        messageApi.error(t('tradeBlotter.exportExcelFailed'));
+        // 无筛选条件：异步导出（创建任务、轮询状态）
+        console.log('异步导出模式：无筛选条件，需要轮询');
+
+        const res = await createExportTaskServe(params);
+
+        // 检查响应类型
+        if (res.code === 2000 && res.data && res.data.task_id) {
+          // 异步任务，需要轮询状态
+          setExportTaskId(res.data.task_id);
+          setExportModalVisible(true);
+          setExportStatus('pending');
+          setExportProgress(0);
+          pollTaskStatus(res.data.task_id);
+        } else {
+          // 没有返回task_id的情况，重置导出状态
+          setIsExporting(false);
+          messageApi.error(t('tradeBlotter.exportExcelFailed'));
+        }
       }
     } catch (err) {
       console.error('Export error:', err);

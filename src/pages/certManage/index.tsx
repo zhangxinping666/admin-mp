@@ -501,9 +501,7 @@ const CertPage = () => {
                         }}
                       >
                         <span style={{ fontWeight: 500 }}>审核人：{record.reviewer || '系统'}</span>
-                        <span style={{ color: '#666', fontSize: '12px' }}>
-                          {record.review_time || record.reviewTime}
-                        </span>
+                        <span style={{ color: '#666', fontSize: '12px' }}>{record.reviewTime}</span>
                       </div>
                       <div style={{ marginBottom: '4px' }}>
                         <span>状态：</span>

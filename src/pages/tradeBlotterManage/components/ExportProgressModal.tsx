@@ -110,13 +110,15 @@ const ExportProgressModal: React.FC<ExportProgressModalProps> = ({
               />
             </div>
             <Text className="text-gray-600">
-              {progress < 30
-                ? '正在收集数据...'
-                : progress < 60
-                  ? '正在生成文件...'
-                  : progress < 90
-                    ? '即将完成...'
-                    : '正在完成最后处理...'}
+              {progress === 0
+                ? '正在准备导出...'
+                : progress < 30
+                  ? '正在收集数据...'
+                  : progress < 60
+                    ? '正在生成文件...'
+                    : progress < 90
+                      ? '即将完成...'
+                      : '正在完成最后处理...'}
             </Text>
           </div>
         );

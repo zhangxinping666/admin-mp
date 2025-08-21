@@ -138,7 +138,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '地区',
-    name: 'province',
+    name: 'pid',
     component: 'Select',
     wrapperWidth: 180,
     componentProps: (form) => ({
@@ -155,11 +155,11 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'city',
+    name: 'city_id',
     component: 'Select',
     wrapperWidth: 180,
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,
@@ -290,6 +290,7 @@ export const formList = ({
     label: '选择城市',
     component: 'Select',
     required: true,
+    rules: FORM_REQUIRED,
     placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
     componentProps: {
       loading: isLoadingOptions,
@@ -303,6 +304,7 @@ export const formList = ({
     label: '选择学校',
     component: 'Select',
     required: true,
+    rules: FORM_REQUIRED,
     placeholder: isSchoolLoading ? '正在加载学校数据...' : '请选择或搜索学校',
     componentProps: {
       loading: isSchoolLoading,
@@ -318,6 +320,7 @@ export const formList = ({
     component: 'Select',
     placeholder: isLoadingUsers ? '正在加载用户数据...' : '请选择或搜索用户',
     required: true,
+    rules: FORM_REQUIRED,
     componentProps: {
       loading: isLoadingUsers,
       showSearch: true,

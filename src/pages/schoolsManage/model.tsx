@@ -153,7 +153,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
+      const provinceValue = form.getFieldValue('pid');
       return {
         placeholder: '请选择城市',
         allowClear: true,

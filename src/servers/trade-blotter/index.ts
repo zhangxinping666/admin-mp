@@ -6,9 +6,16 @@ export function getTradeBlotterListServe(params: FlowListParams) {
   return request.get<FlowListResponse>('/tradeBlotter/list', { params });
 }
 
-// 创建导出任务
+// 创建导出任务（支持同步和异步两种模式）
 export function createExportTaskServe(params: FlowQueryParams) {
   return request.post<any, ApiResponse<ExportTaskData>>('/tradeBlotter/export', params);
+}
+
+// 直接导出文件（同步导出）
+export function exportExcelDirectServe(params: FlowQueryParams) {
+  return request.post('/tradeBlotter/export', params, {
+    responseType: 'blob',
+  });
 }
 
 // 查询导出任务状态
@@ -20,10 +27,10 @@ export function getExportTaskStatusServe(taskId: number | string) {
 
 // 下载导出文件
 export function downloadExportFileServe(filePath: string) {
-  // 处理文件路径，去掉开头的 ./ 避免路径问题
-  const cleanFilePath = filePath.startsWith('./') ? filePath.substring(2) : filePath;
+  console.log('文件下载路径:', filePath);
+  
   return request.get<any, Blob>('/tradeBlotter/export/task/download', {
-    params: { file: cleanFilePath },
+    params: { file: filePath },
     responseType: 'blob',
   });
 }
