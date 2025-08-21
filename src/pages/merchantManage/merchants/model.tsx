@@ -381,7 +381,7 @@ export const formList = ({
         onSave: (data: any) => {
           console.log('value', data);
           form.setFieldsValue({
-            location: [data.location.lng, data.location.lat],
+            location: data,
           });
         },
         initValue: () => {

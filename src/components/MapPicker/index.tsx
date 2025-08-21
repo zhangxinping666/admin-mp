@@ -77,37 +77,12 @@ const MapPicker = React.memo(
             position: new AMap.LngLat(currentPosition[0], currentPosition[1]), //经纬度对象
             draggable: true, // 设置标记可拖拽
             cursor: 'move', // 鼠标悬停时显示移动光标
-            // 自定义图标样式，使其更明显
-            offset: new AMap.Pixel(-13, -30), // 调整偏移使标记点更精确
           });
           markerRef.current = marker;
 
           //将创建的点标记添加到已有的地图实例：
           map.add(marker);
 
-          // 监听标记拖拽结束事件
-          marker.on('dragend', function (e: any) {
-            const position = marker.getPosition();
-            console.log('标记拖拽结束:', position);
-            const newPosition = [position.lng, position.lat];
-
-            // 更新内部状态
-            setCurrentPosition(newPosition);
-
-            // 触发onChange回调，更新表单位置数据
-            if (onChange) {
-              onChange(newPosition);
-            }
-
-            // 如果有onSave回调，也触发它（兼容旧代码）
-            if (onSave) {
-              onSave({
-                location: { lng: position.lng, lat: position.lat },
-                name: '地图选点',
-                address: '地图选点位置',
-              });
-            }
-          });
           // 添加比例尺插件
           const scale = new AMap.Scale();
           map.addControl(scale);
@@ -158,7 +133,8 @@ const MapPicker = React.memo(
             marker.setPosition(e.poi.location);
 
             // 触发回调
-            onSave?.(e.poi);
+            onSave!([e.poi.location.lng, e.poi.location.lat]);
+
             if (onChange && e.poi.location) {
               onChange(newPosition);
             }
@@ -167,12 +143,15 @@ const MapPicker = React.memo(
           // 移除地图点击事件，只允许拖拽标记来选择位置
           // 用户只能通过拖拽标记或搜索来选择位置
           map.on('click', function (e: any) {
+            console.log('点击地图', e);
+
             // 点击地图时，将标记移动到点击位置
             marker.setPosition(e.lnglat);
             // 更新内部状态
             setCurrentPosition([e.lnglat.lng, e.lnglat.lat]);
             // 触发回调
-            onSave?.(e.poi);
+            onSave?.([e.lnglat.lng, e.lnglat.lat]);
+
             if (onChange && e.lnglat) {
               onChange([e.lnglat.lng, e.lnglat.lat]);
             }
@@ -188,30 +167,6 @@ const MapPicker = React.memo(
         markerRef.current = null;
       };
     }, []);
-
-    // 监听外部value变化，更新地图和标记位置
-    useEffect(() => {
-      if (!markerRef.current || !mapRef.current) return;
-
-      // 如果外部传入了新的value值
-      if (
-        value &&
-        Array.isArray(value) &&
-        value.length === 2 &&
-        !isNaN(value[0]) &&
-        !isNaN(value[1])
-      ) {
-        // 检查是否与当前位置不同
-        if (value[0] !== currentPosition[0] || value[1] !== currentPosition[1]) {
-          console.log('外部value变化，更新位置:', value);
-          setCurrentPosition(value);
-          // 更新标记位置
-          markerRef.current.setPosition([value[0], value[1]]);
-          // 更新地图中心
-          mapRef.current.setCenter([value[0], value[1]]);
-        }
-      }
-    }, [value]);
 
     return (
       <div>

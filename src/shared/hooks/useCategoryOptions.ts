@@ -21,7 +21,7 @@ function useCategoryOptions(params: any) {
       setCategoryOptions(
         list.map((item: any) => ({
           label: item.name,
-          value: item.name,
+          value: item.id,
         })),
       );
     });

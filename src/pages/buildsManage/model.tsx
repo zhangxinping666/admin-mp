@@ -169,7 +169,7 @@ export const formList = (): BaseFormList[] => [
         onSave: (data: any) => {
           console.log('value', data);
           form.setFieldsValue({
-            location: [data.location.lng, data.location.lat],
+            location: data,
           });
         },
         initValue: () => {
@@ -241,7 +241,7 @@ export const addFormList = (
             onSave: (data: any) => {
               console.log('value', data);
               form.setFieldsValue({
-                location: [data.location.lng, data.location.lat],
+                location: data,
               });
             },
             initValue: () => {
@@ -321,12 +321,7 @@ export const addFormList = (
             onSave: (data: any) => {
               console.log('value', data);
               form.setFieldsValue({
-                location: {
-                  address: data.address,
-
-                  longitude: data.location.lng,
-                  latitude: data.location.lat,
-                },
+                location: data,
               });
             },
             initValue: () => {

@@ -103,17 +103,10 @@ const BuildingsPage = () => {
         optionRender={optionRender}
         apis={{
           createApi: (params) => {
-            params.longitude = params.location.longitude;
-            params.latitude = params.location.latitude;
+            params.longitude = params.location[0];
+            params.latitude = params.location[1];
             params.address = params.address || params.location.address;
             delete params.location;
-            for (let i = 0; i < params.layer_nums; i++) {
-              apis.addFloorItem({
-                school_building_id: params.id,
-                layer: i + 1,
-                status: 1,
-              });
-            }
             return apis.addBuilding(params);
           },
           fetchApi: async (params) => {
