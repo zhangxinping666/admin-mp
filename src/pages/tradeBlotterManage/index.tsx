@@ -2,7 +2,6 @@ import type { BaseFormData } from '#/form';
 import type { PagePermission } from '#/public';
 import { useCallback, useEffect, useState } from 'react';
 import { message } from 'antd';
-import { useTranslation } from 'react-i18next';
 import { searchList, tableColumns, useLocationOptions } from './model';
 import { getTradeBlotterListServe } from '@/servers/trade-blotter';
 import { INIT_PAGINATION } from '@/utils/config';
@@ -16,8 +15,7 @@ import { useUserStore } from '@/stores';
 import { checkPermission } from '@/utils/permissions';
 
 function Page() {
-  const { t } = useTranslation();
-  const columns = tableColumns(t);
+  const columns = tableColumns();
   const locationOptions = useLocationOptions(); // 在组件顶层调用hook
   const { permissions } = useUserStore();
 
@@ -266,7 +264,7 @@ function Page() {
       {contextHolder}
       <BaseCard>
         <BaseSearch
-          list={searchList(t, locationOptions)}
+          list={searchList(locationOptions)}
           data={searchData}
           isLoading={isLoading}
           handleFinish={onSearch}

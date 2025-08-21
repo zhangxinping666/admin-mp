@@ -5,6 +5,7 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 import AddressWithLocation from './components/AddressWithLocation';
 import MapPicker from '@/components/MapPicker';
+import dayjs from 'dayjs';
 
 // 学校定义
 export interface School {
@@ -19,6 +20,7 @@ export interface School {
   latitude: number;
   longitude: number;
   store_numbers: number;
+  created_time: string;
   status: number;
 }
 
@@ -130,7 +132,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '地区',
-    name: 'province',
+    name: 'pid',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => ({
@@ -147,7 +149,7 @@ export const searchList = (options: ReturnType<typeof useLocationOptions>): Base
   },
   {
     label: '',
-    name: 'city',
+    name: 'city_id',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
@@ -245,6 +247,18 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'store_numbers',
     key: 'store_numbers',
     width: 100,
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'created_time',
+    key: 'created_time',
+    width: 180,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
   {
     title: '状态',

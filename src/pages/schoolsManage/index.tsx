@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type School } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
-import { TableActions } from '@/shared/components/TableActions';
-import { getSchoolList, addSchool, updateSchool, deleteSchool } from '@/servers/school';
+import { BaseBtn } from '@/components/Buttons';
+import { Tooltip } from 'antd';
+import { getSchoolList, addSchool, updateSchool } from '@/servers/school';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import { getProvinceList, getCityName } from '@/servers/city';
@@ -25,7 +26,6 @@ const schoolApis = {
   fetch: getSchoolList,
   create: addSchool,
   update: updateSchool,
-  delete: deleteSchool,
 };
 interface GroupedOption {
   label: string; // 省份名（作为分组标题）
@@ -97,25 +97,21 @@ const SchoolsPage = () => {
     return value;
   };
 
-  // 操作列渲染
+  // 操作列渲染 - 只显示编辑按钮
   const optionRender = (
     record: School,
     actions: {
       handleEdit: (record: School) => void;
-      handleDelete: (id: number) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:school:update');
-    const canDelete = hasPermission('mp:school:delete');
 
     return (
-      <TableActions
-        record={record}
-        onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
-        disableEdit={!canEdit}
-        disableDelete={!canDelete}
-      />
+      <Tooltip title={!canEdit ? '无权限操作' : ''}>
+        <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
+          编辑
+        </BaseBtn>
+      </Tooltip>
     );
   };
 
@@ -133,7 +129,7 @@ const SchoolsPage = () => {
       handleFormValue={handleFormValue}
       isAddOpen={true}
       disableCreate={!hasPermission('mp:school:add')}
-      disableBatchDelete={!hasPermission('mp:school:delete')}
+      disableBatchDelete={true}
       apis={{
         createApi: (data: any) => {
           const submitData = { ...data };
@@ -154,7 +150,7 @@ const SchoolsPage = () => {
           console.log('location字段:', data.location);
           console.log('longitude字段:', data.longitude);
           console.log('latitude字段:', data.latitude);
-          
+
           const submitData = { ...data };
           // 从location数组提取经纬度
           if (data.location && Array.isArray(data.location)) {
@@ -162,7 +158,7 @@ const SchoolsPage = () => {
             submitData.latitude = data.location[1];
             console.log('从location提取经纬度:', {
               longitude: submitData.longitude,
-              latitude: submitData.latitude
+              latitude: submitData.latitude,
             });
           } else {
             console.log('使用原有的longitude和latitude字段');
@@ -173,7 +169,6 @@ const SchoolsPage = () => {
           console.log('提交数据:', submitData);
           return schoolApis.update(submitData);
         },
-        deleteApi: (id: number[]) => schoolApis.delete(id),
       }}
       optionRender={optionRender}
     />

@@ -2,17 +2,7 @@ import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
-
-// // 图片类型定义
-// interface UploadImg {
-//   uid: string;
-//   name: string;
-//   status: string;
-//   url: string;
-//   response?: {
-//     url: string;
-//   };
-// }
+import dayjs from 'dayjs';
 
 // 字典项接口
 export interface DictionaryItem {
@@ -149,12 +139,24 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 180,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
   {
     title: '更新时间',
     dataIndex: 'updatedAt',
     key: 'updatedAt',
     width: 180,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
 ];
 

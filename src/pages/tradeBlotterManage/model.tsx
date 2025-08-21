@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TFunction } from 'i18next';
 import { valueToLabel } from '@/utils/helper';
 import {
   getProvinces,
   getSchoolsByCityId,
   getCitiesByProvince,
 } from '@/servers/trade-blotter/location';
-import { TIME_FORMAT } from '@/utils/config';
+import { TIME_FORMAT, EMPTY_VALUE } from '@/utils/config';
+import dayjs from 'dayjs';
 type OptionType = { label: string; value: string | number };
+
 /**
  * 支付类型、交易状态、分组选项
  */
@@ -108,57 +109,33 @@ export const useLocationOptions = () => {
 /**
  * 搜索配置
  */
-export const searchList = (
-  t: TFunction,
-  options: ReturnType<typeof useLocationOptions>,
-): BaseSearchList[] => [
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
   {
-    label: t('tradeBlotter.flowNo'),
-    name: 'flow_no',
-    component: 'Input',
-    componentProps: {
-      placeholder: t('tradeBlotter.flowNoPlaceholder'),
-    },
-    wrapperWidth: 180, // 添加固定宽度
-  },
-  {
-    label: t('tradeBlotter.orderNo'),
-    name: 'order_no',
-    component: 'Input',
-    componentProps: {
-      placeholder: t('tradeBlotter.orderNoPlaceholder'),
-    },
-    wrapperWidth: 180, // 添加固定宽度
-  },
-  {
-    label: t('tradeBlotter.userName'),
+    label: '用户名',
     name: 'user_name',
     component: 'Input',
     componentProps: {
-      placeholder: t('tradeBlotter.userNamePlaceholder'),
+      placeholder: '请输入用户名',
     },
     wrapperWidth: 180, // 添加固定宽度
   },
   {
-    label: t('tradeBlotter.createTime'),
-    name: 'create_time_range',
-    component: 'RangePicker',
+    label: '支付方式',
+    name: 'pay_type',
+    wrapperWidth: 120,
+    component: 'Select',
     componentProps: {
-      placeholder: [t('tradeBlotter.startTime'), t('tradeBlotter.endTime')],
-      allowClear: true,
-      showTime: true,
-      format: TIME_FORMAT,
+      options: PAY_TYPE_OPTIONS,
     },
-    wrapperWidth: 220, // 已有固定宽度
   },
   {
-    label: t('tradeBlotter.province'),
+    label: '地区',
     name: 'province',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => ({
       options: options.provinceOptions,
-      placeholder: t('tradeBlotter.selectProvince'),
+      placeholder: '请选择省份',
       allowClear: true,
       onChange: async (value: string) => {
         // 清空城市和学校选择
@@ -169,14 +146,14 @@ export const searchList = (
     }),
   },
   {
-    label: t(''),
+    label: '',
     name: 'city',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
       const provinceValue = form.getFieldValue('province');
       return {
-        placeholder: t('tradeBlotter.selectCity'),
+        placeholder: '请选择城市',
         allowClear: true,
         disabled: !provinceValue,
         options: options.cityOptions,
@@ -189,167 +166,86 @@ export const searchList = (
     },
   },
   {
-    label: t(''),
+    label: '',
     name: 'school',
     component: 'Select',
     wrapperWidth: 180, // 添加固定宽度
     componentProps: (form) => {
       const cityValue = form.getFieldValue('city');
       return {
-        placeholder: t('tradeBlotter.selectSchool'),
+        placeholder: '请选择学校',
         allowClear: true,
         disabled: !cityValue || cityValue === '',
         options: options.schoolOptions,
       };
     },
   },
-  // 以下表单项已有固定宽度，保持不变
-  {
-    label: t('tradeBlotter.payType'),
-    name: 'pay_type',
-    wrapperWidth: 120,
-    component: 'Select',
-    componentProps: {
-      options: PAY_TYPE_OPTIONS,
-    },
-  },
-  {
-    label: t('tradeBlotter.status'),
-    name: 'status',
-    wrapperWidth: 100,
-    component: 'Select',
-    componentProps: {
-      options: TRADE_STATUS_OPTIONS,
-    },
-  },
-  {
-    label: t('tradeBlotter.category'),
-    name: 'category',
-    wrapperWidth: 120,
-    component: 'Select',
-    componentProps: {
-      options: CATEGORY_OPTIONS,
-    },
-  },
-  {
-    label: t('tradeBlotter.amountRange'),
-    name: 'amount_range',
-    component: 'AmountRangeInput',
-    componentProps: (form) => ({
-      placeholder: [t('tradeBlotter.minAmount'), t('tradeBlotter.maxAmount')],
-      min: 0,
-      precision: 2,
-      style: { width: '100%' },
-      onErrorChange: (error: string) => {
-        // 如果有错误，设置表单项的错误状态
-        if (error) {
-          form.setFields([
-            {
-              name: 'amount_range',
-              errors: [error],
-            },
-          ]);
-        } else {
-          // 清除错误状态
-          form.setFields([
-            {
-              name: 'amount_range',
-              errors: [],
-            },
-          ]);
-        }
-      },
-    }),
-    wrapperWidth: 300,
-  },
 ];
 
 /**
  * 表格列配置
  */
-export const tableColumns = (t: TFunction): TableColumn[] => [
+export const tableColumns = (): TableColumn[] => [
   {
-    title: 'ID',
-    dataIndex: 'id',
-    width: 80,
-    fixed: 'left',
+    title: '用户名',
+    dataIndex: 'user_name',
+    width: 100,
   },
   {
-    title: t('tradeBlotter.flowNo'),
+    title: '流水号',
     dataIndex: 'flow_no',
     width: 160,
     fixed: 'left',
   },
   {
-    title: t('tradeBlotter.thirdFlowNo'),
+    title: '第三方流水号',
     dataIndex: 'third_flow_no',
     width: 160,
   },
   {
-    title: t('tradeBlotter.orderNo'),
-    dataIndex: 'order_no',
-    width: 160,
-  },
-  {
-    title: t('tradeBlotter.userName'),
-    dataIndex: 'user_name',
+    title: '类别',
+    dataIndex: 'category',
     width: 100,
   },
   {
-    title: t('tradeBlotter.city'),
-    dataIndex: 'city',
-    width: 100,
-  },
-  {
-    title: t('tradeBlotter.school'),
-    dataIndex: 'school',
-    width: 120,
-  },
-  {
-    title: t('tradeBlotter.amount'),
+    title: '金额',
     dataIndex: 'amount',
     width: 100,
     render: (value: number) => <span>¥{value?.toFixed(2)}</span>,
   },
   {
-    title: t('tradeBlotter.payType'),
+    title: '订单号',
+    dataIndex: 'order_no',
+    width: 160,
+  },
+  {
+    title: '省份',
+    dataIndex: 'province',
+    width: 100,
+  },
+  {
+    title: '城市',
+    dataIndex: 'city',
+    width: 100,
+  },
+  {
+    title: '学校',
+    dataIndex: 'school',
+    width: 120,
+  },
+
+  {
+    title: '支付类型',
     dataIndex: 'pay_type',
     width: 100,
     render: (value: number) => <span>{valueToLabel(value, PAY_TYPE_OPTIONS)}</span>,
   },
   {
-    title: t('tradeBlotter.status'),
-    dataIndex: 'status',
-    width: 80,
-    render: (value: number) => {
-      const statusMap = {
-        1: { text: t('tradeBlotter.failed'), color: '#ff4d4f' },
-        2: { text: t('tradeBlotter.success'), color: '#52c41a' },
-      };
-      const status = statusMap[value as keyof typeof statusMap];
-      return status ? (
-        <span style={{ color: status.color }}>{status.text}</span>
-      ) : (
-        <span>{value}</span>
-      );
-    },
-  },
-  {
-    title: t('tradeBlotter.category'),
-    dataIndex: 'category',
-    width: 100,
-    render: (value: number) => <span>{valueToLabel(value, CATEGORY_OPTIONS)}</span>,
-  },
-  {
-    title: t('tradeBlotter.detail'),
-    dataIndex: 'detail',
-    width: 150,
-    ellipsis: true,
-  },
-  {
-    title: t('tradeBlotter.createTime'),
+    title: '创建时间',
     dataIndex: 'create_time',
     width: 150,
-    render: (value: string) => <span>{value || EMPTY_VALUE}</span>,
+    render: (value: string) => (
+      <span>{value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : EMPTY_VALUE}</span>
+    ),
   },
 ];

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type City, useLocationOptions } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
-import { TableActions } from '@/shared/components/TableActions';
+import { Tooltip } from 'antd';
 import {
   getCityList,
   addCity,
@@ -134,20 +134,16 @@ const CitiesPage = () => {
     record: City,
     actions: {
       handleEdit: (record: City) => void;
-      handleDelete: (id: number) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:city:update');
-    const canDelete = hasPermission('mp:city:delete');
 
     return (
-      <TableActions
-        record={record}
-        onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
-        disableEdit={!canEdit}
-        disableDelete={!canDelete}
-      />
+      <Tooltip title={!canEdit ? '无权限操作' : ''}>
+        <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
+          编辑
+        </BaseBtn>
+      </Tooltip>
     );
   };
 

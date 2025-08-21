@@ -14,15 +14,16 @@ export function createExportTaskServe(params: FlowQueryParams) {
 // 查询导出任务状态
 export function getExportTaskStatusServe(taskId: number | string) {
   return request.get<any, ApiResponse<ExportTaskStatusData>>('/tradeBlotter/export/task/status', {
-    params: { task_id: taskId }
+    params: { task_id: taskId },
   });
 }
 
 // 下载导出文件
 export function downloadExportFileServe(filePath: string) {
-  return request.get<any, Blob>(`/tradeBlotter/export/task/download?file=${filePath}`, {
-    // params: { file: filePath },
-    responseType: 'blob'
+  // 处理文件路径，去掉开头的 ./ 避免路径问题
+  const cleanFilePath = filePath.startsWith('./') ? filePath.substring(2) : filePath;
+  return request.get<any, Blob>('/tradeBlotter/export/task/download', {
+    params: { file: cleanFilePath },
+    responseType: 'blob',
   });
 }
-

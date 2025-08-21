@@ -23,13 +23,14 @@ type uploadImg = {
 export interface Cert {
   id: number;
   name: string;
+  user_name: string;
   card_id: number;
   user_phone: string;
   front: uploadImg[];
   back: uploadImg[];
   status: number;
-  create_time: string;
-  update_time: string;
+  created_time: string;
+  updated_time: string;
 }
 
 export interface CertItem {
@@ -42,10 +43,14 @@ export interface CertItem {
   user_phone: string;
   create_time: string;
   update_time: string;
+  reject_reason?: string; // 拒绝原因
+  audit_user?: string; // 审核人
+  audit_time?: string; // 审核时间
 }
 export interface UpdateCert {
   id: number;
   status: number;
+  reason?: string; // 拒绝原因
 }
 export interface CertDetailResult {
   code: number;
@@ -91,9 +96,9 @@ export const searchList = (): BaseSearchList[] => [
     componentProps: {
       options: [
         { label: '全部', value: 0 },
+        { label: '审核中', value: 1 },
         { label: '审核成功', value: 2 },
         { label: '审核失败', value: 3 },
-        { label: '审核中', value: 1 },
       ],
     },
   },
@@ -103,8 +108,8 @@ export const searchList = (): BaseSearchList[] => [
 export const tableColumns: TableColumn[] = [
   {
     title: '用户名称',
-    dataIndex: 'name',
-    key: 'name',
+    dataIndex: 'user_name',
+    key: 'user_name',
     width: 150,
     ellipsis: true,
   },

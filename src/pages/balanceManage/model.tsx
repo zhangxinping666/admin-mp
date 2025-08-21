@@ -3,6 +3,7 @@ import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { ImagePreview } from '@/components/Upload';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
+import dayjs from 'dayjs';
 
 // 获取完整图片URL的函数
 const getFullImageUrl = (url: any): string => {
@@ -302,12 +303,24 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'created_at',
     key: 'created_at',
     width: 80,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
   {
     title: '更新时间',
     dataIndex: 'updated_at',
     key: 'updated_at',
     width: 80,
+    render: (value: string) => {
+      if (value) {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+      }
+      return '-';
+    },
   },
 ];
 

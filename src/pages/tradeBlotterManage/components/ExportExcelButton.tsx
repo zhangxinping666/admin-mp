@@ -39,6 +39,8 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
   const isCancelledRef = useRef(false);
   // 添加是否已经处理过状态的标志（不管成功还是失败）
   const isHandledRef = useRef(false);
+  // 添加正在导出的标志，避免重复点击
+  const [isExporting, setIsExporting] = useState(false);
 
   // 清除轮询定时器
   const clearPollingTimer = useCallback(() => {
@@ -48,19 +50,14 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
     }
   }, []);
 
-  // 组件初始化时清除定时器
-  useEffect(() => {
-    clearPollingTimer();
-    // 重置所有状态引用
-    isDownloadingRef.current = false;
-    isCancelledRef.current = false;
-    isHandledRef.current = false;
-  }, [clearPollingTimer]);
-
   // 组件卸载时清除定时器
   useEffect(() => {
     return () => {
       clearPollingTimer();
+      // 重置所有状态引用
+      isDownloadingRef.current = false;
+      isCancelledRef.current = false;
+      isHandledRef.current = false;
     };
   }, [clearPollingTimer]);
 
@@ -73,6 +70,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
     setExportTaskId(null);
     setExportProgress(0);
     setExportStatus('pending');
+    setIsExporting(false);
     // 重置下载状态
     isDownloadingRef.current = false;
     // 重置取消状态
@@ -174,9 +172,10 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
 
       // 设置最大轮询次数，避免无限轮询
       let pollCount = 0;
-      const MAX_POLL_COUNT = 300; // 最多轮询10分钟 (300 * 2秒)
+      const MAX_POLL_COUNT = 600; // 最多轮询10分钟 (600 * 1秒)
 
-      const timer = setInterval(async () => {
+      // 立即执行一次查询，不用等待1秒
+      const checkStatus = async () => {
         // 如果已取消或已处理状态，立即停止轮询
         if (isCancelledRef.current || isHandledRef.current) {
           clearPollingTimer();
@@ -187,6 +186,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           // 超过最大轮询次数，停止轮询
           if (pollCount >= MAX_POLL_COUNT) {
             clearPollingTimer();
+            setIsExporting(false);
             messageApi.warning(t('tradeBlotter.exportTimeout'));
             handleCloseExportModal();
             return;
@@ -199,9 +199,10 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           if (res.code === 2000 && res.data) {
             const { status, progress = 0, file } = res.data;
 
-            // 更新状态和进度
+            // 更新状态和进度（确保进度值在0-100之间）
+            const validProgress = Math.min(100, Math.max(0, progress));
             setExportStatus(status);
-            setExportProgress(progress);
+            setExportProgress(validProgress);
 
             // 处理成功状态
             if (status === 'success' && file && !isHandledRef.current) {
@@ -209,6 +210,8 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
               isHandledRef.current = true;
               // 立即清除轮询定时器
               clearPollingTimer();
+              // 重置导出状态
+              setIsExporting(false);
 
               // 触发文件下载
               handleFileDownload(file);
@@ -220,6 +223,8 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
               isHandledRef.current = true;
               // 立即清除轮询定时器
               clearPollingTimer();
+              // 重置导出状态
+              setIsExporting(false);
 
               // 显示错误消息
               messageApi.error(t('tradeBlotter.exportFailed'));
@@ -235,19 +240,40 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           console.error('Poll task status error:', error);
           // 发生错误时也增加计数
           pollCount++;
+
+          // 如果轮询出错次数过多，停止轮询并重置状态
+          if (pollCount > 5) {
+            clearPollingTimer();
+            setIsExporting(false);
+            messageApi.error(t('tradeBlotter.exportFailed'));
+            handleCloseExportModal();
+          }
         }
-      }, 2000); // 每2秒轮询一次
+      };
+
+      // 立即执行一次
+      checkStatus();
+
+      // 然后设置定时器
+      const timer = setInterval(checkStatus, 100); // 每1秒轮询一次，更频繁地更新进度
 
       // 保存定时器引用到ref中
       pollingTimerRef.current = timer;
     },
-    [t, messageApi, clearPollingTimer, handleFileDownload],
+    [t, messageApi, clearPollingTimer, handleFileDownload, handleCloseExportModal],
   );
 
   // 处理导出 Excel 逻辑
   const handleExportExcel = async () => {
+    // 如果正在导出，直接返回
+    if (isExporting) {
+      messageApi.warning(t('tradeBlotter.exportInProgress'));
+      return;
+    }
+
     const params = { ...searchData };
     try {
+      setIsExporting(true);
       // 重置状态
       isHandledRef.current = false;
       isDownloadingRef.current = false;
@@ -264,12 +290,14 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
         setExportProgress(0);
         pollTaskStatus(res.data.task_id);
       } else {
-        // 直接下载（这种情况一般不会出现，因为已经改为异步任务）
-        messageApi.success(t('tradeBlotter.exportExcelSuccess'));
+        // 没有返回task_id的情况，重置导出状态
+        setIsExporting(false);
+        messageApi.error(t('tradeBlotter.exportExcelFailed'));
       }
     } catch (err) {
       console.error('Export error:', err);
       messageApi.error(t('tradeBlotter.exportExcelFailed'));
+      setIsExporting(false);
     }
   };
 
@@ -278,10 +306,10 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
       {contextHolder}
       <div className="flex items-center">
         <BaseBtn
-          isLoading={isLoading}
+          isLoading={isLoading || isExporting}
           onClick={handleExportExcel}
           icon={<FileExcelOutlined />}
-          disabled={!hasExportPermission}
+          disabled={!hasExportPermission || isExporting}
         >
           {t('tradeBlotter.exportExcel')}
         </BaseBtn>

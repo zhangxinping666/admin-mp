@@ -7,18 +7,19 @@ import {
   Space,
   Modal,
   Descriptions,
+  Input,
+  Form,
+  Tag,
 } from 'antd';
 import BaseContent from '@/components/Content/BaseContent';
 import BaseCard from '@/components/Card/BaseCard';
 import BaseSearch from '@/components/Search/BaseSearch';
 import BaseTable from '@/components/Table/BaseTable';
-import BaseModal from '@/components/Modal/BaseModal';
-import BaseForm from '@/components/Form/BaseForm';
 import BasePagination from '@/components/Pagination/BasePagination';
 import TableNavigation from '@/components/Navigation/TableNavigation';
 import { ImagePreview } from '@/components/Upload';
-import { searchList, tableColumns, formList, type Cert, type CertItem } from './model';
-import { getCertList, updateCert } from '@/servers/cert';
+import { searchList, tableColumns, type Cert, type CertItem } from './model';
+import { getCertList, updateCert, getAuditRecord } from '@/servers/cert';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import { INIT_PAGINATION } from '@/utils/config';
@@ -35,11 +36,16 @@ const initCreate: Partial<Cert> = {
   status: 0, // 默认状态
 };
 
+//审批历史记录
+interface record {
+  reviewer: string;
+  reviewTime: string;
+  status: number;
+  reason: string;
+}
+
 const CertPage = () => {
   const { permissions } = useUserStore();
-
-  // 表单引用
-  const createFormRef = useRef<FormInstance>(null);
 
   // 状态管理
   const [isFetch, setFetch] = useState(false);
@@ -50,10 +56,17 @@ const CertPage = () => {
   const [createId, setCreateId] = useState(-1);
   const [createData, setCreateData] = useState<Partial<Cert>>(initCreate);
   const [searchData, setSearchData] = useState<BaseFormData>({});
-  
+
   // 审核信息弹窗状态
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [detailData, setDetailData] = useState<CertItem | null>(null);
+  // 审批弹窗状态
+  const [auditModalOpen, setAuditModalOpen] = useState(false);
+  const [auditData, setAuditData] = useState<CertItem | null>(null);
+  // 拒绝原因
+  const [rejectReason, setRejectReason] = useState('');
+  // 审批历史记录
+  const [auditHistory, setAuditHistory] = useState<record[]>([]);
 
   // 分页状态
   const [page, setPage] = useState(INIT_PAGINATION.page);
@@ -107,27 +120,56 @@ const CertPage = () => {
   // 审核处理
   const handleAudit = (record: CertItem) => {
     setCreateTitle('审核实名认证');
+    console.log(record.id);
     setCreateId(record.id);
     setCreateData(record);
+    setRejectReason(''); // 清空拒绝原因
     setCreateOpen(true);
   };
-  
+
+  // 审批处理
+  const handleAuditAction = (record: CertItem) => {
+    setAuditData(record);
+    setCreateId(record.id); // 设置当前审核ID
+    setRejectReason(''); // 清空拒绝原因
+    setAuditModalOpen(true);
+  };
+
   // 查看审核信息详情
-  const handleViewDetail = (record: CertItem) => {
+  const handleViewDetail = async (record: CertItem) => {
     setDetailData(record);
+
+    // 获取审批历史记录
+    try {
+      const response = await getAuditRecord(record.user_id);
+      if (response?.data?.list) {
+        setAuditHistory(response.data.list);
+      } else {
+        setAuditHistory([]);
+      }
+    } catch (error) {
+      console.error('获取审批历史失败:', error);
+      setAuditHistory([]);
+    }
+
     setDetailModalOpen(true);
   };
 
-
-  // 表单提交处理
-  const handleModalSubmit = async (values: BaseFormData) => {
+  // 审核通过处理
+  const handleApprove = async () => {
+    if (!createId || createId === -1) {
+      message.error('审核ID无效');
+      return;
+    }
     setCreateLoading(true);
     try {
-      // 实名认证只有审核功能
-      const { id, status } = values;
-      await updateCert({ id: createId, status });
-      message.success('审核成功');
+      await updateCert({ id: createId, status: 2 });
+      message.success('审核通过');
+      // 关闭审批弹窗
+      setAuditModalOpen(false);
       setCreateOpen(false);
+      setRejectReason('');
+      setCreateId(-1);
       setFetch(true);
     } catch (error) {
       message.error('审核失败');
@@ -137,32 +179,50 @@ const CertPage = () => {
     }
   };
 
+  // 审核拒绝处理
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      message.warning('请输入拒绝原因');
+      return;
+    }
+    if (!createId || createId === -1) {
+      message.error('审核ID无效');
+      return;
+    }
+    setCreateLoading(true);
+    try {
+      await updateCert({ id: createId, status: 3, reason: rejectReason });
+      message.success('审核拒绝');
+      // 关闭审批弹窗
+      setAuditModalOpen(false);
+      setCreateOpen(false);
+      setRejectReason('');
+      setCreateId(-1);
+      setFetch(true);
+    } catch (error) {
+      message.error('审核失败');
+      console.error('审核操作失败:', error);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   // 操作列渲染
   const optionRender = (record: CertItem) => {
     const canAudit = hasPermission('mp:cert:update');
-    // 只有审核中(status === 1)的记录才显示审核按钮
-    const showAuditButton = record.status === 1;
-    
+    // 只有审核中(status === 1)的记录才显示审批按钮
+    const showAuditButton = record.status === 1 && canAudit;
+
     return (
       <Space size="small">
-        <Button 
-          type="primary" 
-          size="small"
-          onClick={() => handleViewDetail(record)}
-        >
-          审核信息
-        </Button>
         {showAuditButton && (
-          <Button 
-            type="primary" 
-            size="small"
-            onClick={() => handleAudit(record)}
-            disabled={!canAudit}
-          >
-            审核
+          <Button type="primary" size="small" onClick={() => handleAuditAction(record)}>
+            审批
           </Button>
         )}
+        <Button type="primary" size="small" onClick={() => handleViewDetail(record)}>
+          查看详情
+        </Button>
       </Space>
     );
   };
@@ -205,7 +265,6 @@ const CertPage = () => {
 
           {/* 表格区域 */}
           <BaseCard>
-
             {/* 表格 */}
             <BaseTable
               isLoading={isLoading}
@@ -257,96 +316,228 @@ const CertPage = () => {
       </BaseContent>
 
       {/* 审核模态框 */}
-      <BaseModal
+      <Modal
         title={createTitle}
         open={isCreateOpen}
-        onCancel={() => setCreateOpen(false)}
-        onOk={() => {
-          createFormRef.current?.submit();
+        onCancel={() => {
+          setCreateOpen(false);
+          setRejectReason('');
         }}
-        confirmLoading={isCreateLoading}
-        okText="确认审核"
-        cancelText="取消"
+        width={600}
       >
-        <BaseForm
-          ref={createFormRef}
-          list={formList()}
-          data={createData}
-          handleFinish={(values) => handleModalSubmit(values)}
-        />
-      </BaseModal>
-      
-      {/* 审核信息详情弹窗 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* 用户信息 */}
+          <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="用户姓名">{createData?.name}</Descriptions.Item>
+            <Descriptions.Item label="身份证号">{createData?.card_id}</Descriptions.Item>
+            <Descriptions.Item label="用户电话">{createData?.user_phone}</Descriptions.Item>
+          </Descriptions>
+        </div>
+      </Modal>
+
+      {/* 审批弹窗 */}
       <Modal
-        title="审核信息详情"
-        open={detailModalOpen}
-        onCancel={() => setDetailModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalOpen(false)}>
-            关闭
-          </Button>
-        ]}
-        width={800}
+        title="审批实名认证"
+        open={auditModalOpen}
+        onCancel={() => {
+          setAuditModalOpen(false);
+          setRejectReason('');
+          setCreateId(-1);
+        }}
+        footer={null}
+        width={600}
       >
-        {detailData && (
-          <div>
-            {/* 基本信息 */}
-            <Descriptions bordered column={2} style={{ marginBottom: 20 }}>
-              <Descriptions.Item label="用户名称" span={1}>
-                {detailData.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="用户电话" span={1}>
-                {detailData.phone || '暂无'}
-              </Descriptions.Item>
-              <Descriptions.Item label="身份证号" span={1}>
-                {detailData.card_id}
-              </Descriptions.Item>
-              <Descriptions.Item label="审核状态" span={1}>
-                <span style={{ 
-                  color: detailData.status === 1 ? '#faad14' : 
-                         detailData.status === 2 ? '#1890ff' : '#ff4d4f' 
-                }}>
-                  {detailData.status === 1 ? '审核中' : 
-                   detailData.status === 2 ? '审核成功' : '审核失败'}
-                </span>
-              </Descriptions.Item>
-            </Descriptions>
-            
+        {auditData && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* 用户基本信息 */}
+            <div>
+              <div style={{ marginBottom: 12, fontSize: 16, fontWeight: 500 }}>用户基本信息</div>
+              <Descriptions bordered column={1} size="small">
+                <Descriptions.Item label="真实姓名">{auditData.name}</Descriptions.Item>
+                <Descriptions.Item label="身份证号">{auditData.card_id}</Descriptions.Item>
+                <Descriptions.Item label="用户电话">{auditData.user_phone}</Descriptions.Item>
+                <Descriptions.Item label="申请时间">{auditData.created_time}</Descriptions.Item>
+              </Descriptions>
+            </div>
             {/* 身份证图片 */}
             <div>
-              <h4 style={{ marginBottom: 15 }}>身份证照片</h4>
-              <Space size={20} align="start">
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ marginBottom: 8, fontWeight: 500 }}>身份证正面</div>
-                  <ImagePreview 
-                    imageUrl={detailData.front ? [{ 
-                      uid: '1', 
-                      name: 'front', 
-                      status: 'done', 
-                      url: detailData.front 
-                    }] : []}
-                    alt="身份证正面" 
+                  <div style={{ marginBottom: 8, fontSize: 14, color: '#666' }}>身份证正面</div>
+                  <ImagePreview
+                    imageUrl={
+                      auditData.front
+                        ? [
+                            {
+                              uid: '1',
+                              name: 'front',
+                              status: 'done',
+                              url: auditData.front,
+                            },
+                          ]
+                        : []
+                    }
+                    alt="身份证正面"
                     baseUrl="http://192.168.10.7:8082"
-                    width={300}
-                    height={200}
+                    width={280}
+                    height={180}
                   />
                 </div>
                 <div>
-                  <div style={{ marginBottom: 8, fontWeight: 500 }}>身份证反面</div>
-                  <ImagePreview 
-                    imageUrl={detailData.back ? [{ 
-                      uid: '2', 
-                      name: 'back', 
-                      status: 'done', 
-                      url: detailData.back 
-                    }] : []}
-                    alt="身份证反面" 
+                  <div style={{ marginBottom: 8, fontSize: 14, color: '#666' }}>身份证反面</div>
+                  <ImagePreview
+                    imageUrl={
+                      auditData.back
+                        ? [
+                            {
+                              uid: '2',
+                              name: 'back',
+                              status: 'done',
+                              url: auditData.back,
+                            },
+                          ]
+                        : []
+                    }
+                    alt="身份证反面"
                     baseUrl="http://192.168.10.7:8082"
-                    width={300}
-                    height={200}
+                    width={280}
+                    height={180}
                   />
                 </div>
-              </Space>
+              </div>
+            </div>
+            {/* 审批操作 */}
+            <div style={{ marginTop: 20, borderTop: '1px solid #f0f0f0', paddingTop: 20 }}>
+              <div>
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                  <span style={{ color: 'red' }}>*</span> 审批意见（拒绝时必填）
+                </div>
+                <Input.TextArea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="请输入拒绝原因，便于用户了解并重新提交"
+                  rows={4}
+                  maxLength={200}
+                  showCount
+                />
+              </div>
+              <div style={{ marginTop: 16, textAlign: 'right' }}>
+                <Button
+                  key="cancel"
+                  onClick={() => {
+                    setAuditModalOpen(false);
+                    setRejectReason('');
+                    setCreateId(-1);
+                  }}
+                  style={{ marginRight: 10 }}
+                >
+                  取消
+                </Button>
+                <Button
+                  key="reject"
+                  danger
+                  loading={isCreateLoading}
+                  onClick={handleReject}
+                  style={{ marginRight: 10 }}
+                >
+                  拒绝
+                </Button>
+                <Button
+                  key="approve"
+                  type="primary"
+                  loading={isCreateLoading}
+                  onClick={handleApprove}
+                >
+                  通过
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 审核信息详情弹窗 */}
+      <Modal
+        title="审核详情"
+        open={detailModalOpen}
+        onCancel={() => {
+          setDetailModalOpen(false);
+          setAuditHistory([]);
+        }}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => {
+              setDetailModalOpen(false);
+              setAuditHistory([]);
+            }}
+          >
+            关闭
+          </Button>,
+        ]}
+        width={700}
+      >
+        {detailData && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              {auditHistory.length > 0 ? (
+                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {auditHistory.map((record, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '12px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: '6px',
+                        marginBottom: '8px',
+                        backgroundColor: '#fafafa',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        <span style={{ fontWeight: 500 }}>审核人：{record.reviewer || '系统'}</span>
+                        <span style={{ color: '#666', fontSize: '12px' }}>
+                          {record.review_time || record.reviewTime}
+                        </span>
+                      </div>
+                      <div style={{ marginBottom: '4px' }}>
+                        <span>状态：</span>
+                        <span
+                          style={{
+                            color:
+                              record.status === 2
+                                ? '#52c41a'
+                                : record.status === 3
+                                  ? '#ff4d4f'
+                                  : '#1890ff',
+                          }}
+                        >
+                          {record.status === 1
+                            ? '审核中'
+                            : record.status === 2
+                              ? '审核成功'
+                              : '审核失败'}
+                        </span>
+                      </div>
+                      {record.reason && (
+                        <div style={{ color: '#666' }}>
+                          <span>原因：</span>
+                          <span>{record.reason}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                  暂无审批记录
+                </div>
+              )}
             </div>
           </div>
         )}

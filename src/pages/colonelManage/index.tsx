@@ -6,6 +6,8 @@ import { getProvinceList, getCityName } from '@/servers/city';
 import { getUserListByPage } from '@/servers/user';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import { Tooltip } from 'antd';
+
 import {
   getColonelList,
   addColonel,
@@ -190,20 +192,16 @@ function ColleaguesPage() {
     record: Colonel,
     actions: {
       handleEdit: (record: Colonel) => void;
-      handleDelete: (id: number) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:colonel:update');
-    const canDelete = hasPermission('mp:colonel:delete');
 
     return (
-      <TableActions
-        record={record}
-        onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
-        disableEdit={!canEdit}
-        disableDelete={!canDelete}
-      />
+      <Tooltip title={!canEdit ? '无权限操作' : ''}>
+        <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
+          编辑
+        </BaseBtn>
+      </Tooltip>
     );
   };
 
