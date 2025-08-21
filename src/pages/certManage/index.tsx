@@ -356,7 +356,6 @@ const CertPage = () => {
               <Descriptions bordered column={1} size="small">
                 <Descriptions.Item label="真实姓名">{auditData.name}</Descriptions.Item>
                 <Descriptions.Item label="身份证号">{auditData.card_id}</Descriptions.Item>
-                <Descriptions.Item label="用户电话">{auditData.user_phone}</Descriptions.Item>
                 <Descriptions.Item label="申请时间">{auditData.created_time}</Descriptions.Item>
               </Descriptions>
             </div>

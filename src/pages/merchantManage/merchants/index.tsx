@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { CRUDPageTemplate, TableActions } from '@/shared';
 import { searchList, tableColumns, formList, type Merchant } from './model';
 import * as apis from './apis';
@@ -9,6 +10,7 @@ import { checkPermission } from '@/utils/permissions';
 import dayjs from 'dayjs';
 import { Col, Grid, Modal, Row, Space } from 'antd';
 import { wrap } from 'module';
+import { BaseBtn } from '@/components/Buttons';
 
 // 初始化新增数据
 const initCreate: Partial<Merchant> = {
@@ -27,11 +29,17 @@ const initCreate: Partial<Merchant> = {
 };
 
 const MerchantsPage = () => {
-  const userStorage = useUserStore();
-  const schoolId = userStorage?.userInfo?.school_id;
-  const { permissions } = useUserStore();
+  const { permissions, userInfo } = useUserStore();
+  const schoolId = userInfo?.school_id;
   // 替换原来的状态定义和useEffect
   const locationOptions = useGroupCitySchoolOptions();
+  
+  // 为城市运营商自动加载所属城市的学校
+  useEffect(() => {
+    if (userInfo?.role_id === 5 && userInfo?.city_id) {
+      locationOptions.loadSchools(userInfo.city_id);
+    }
+  }, [userInfo, locationOptions.loadSchools]);
 
   const [categoryOptions] = useCategoryOptions(schoolId);
   // 附件详情状态
@@ -93,6 +101,10 @@ const MerchantsPage = () => {
 
   // 定义API调用函数
   const fetchApi = async (params?: any) => {
+    // 为城市运营商自动添加city_id过滤
+    if (userInfo?.role_id === 5 && userInfo?.city_id) {
+      params = { ...params, city_id: userInfo.city_id };
+    }
     const response = await apis.getMerchantsList(params);
     response.data.list.forEach((item: Merchant) => {
       item.location = {
@@ -196,7 +208,7 @@ const MerchantsPage = () => {
         title="商家管理"
         isDelete={true}
         handleFormValue={handleFormValue}
-        searchConfig={searchList(locationOptions, categoryOptions)}
+        searchConfig={searchList(locationOptions, categoryOptions, userInfo || undefined)}
         disableBatchUpdate={true}
         columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
         formConfig={formList({
