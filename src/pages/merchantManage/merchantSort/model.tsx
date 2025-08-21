@@ -32,68 +32,98 @@ export interface MerchantSortQuery {
 }
 
 // 搜索配置
-export const searchList = (options: any): BaseSearchList[] => [
-  {
-    component: 'Input',
-    name: 'name',
-    label: '类别',
-  },
-  {
-    label: '地区',
-    name: 'province',
-    component: 'Select',
-    wrapperWidth: 180,
-    componentProps: (form) => ({
-      options: options.provinceOptions,
-      placeholder: '请选择省份',
-      allowClear: true,
-      onChange: async (value: string) => {
-        // 清空城市选择
-        form.setFieldsValue({ city: undefined });
-        await options.loadCities(value);
-        form.validateFields(['city']);
-      },
-    }),
-  },
-  {
-    label: '',
-    name: 'city',
-    component: 'Select',
-    wrapperWidth: 180,
-    componentProps: (form) => {
-      const provinceValue = form.getFieldValue('province');
-      return {
-        placeholder: '请选择城市',
-        allowClear: true,
-        disabled: !provinceValue,
-        options: options.cityOptions,
-        onChange: async (value: string) => {
-          // 清空学校选择
-          form.setFieldsValue({ school_id: undefined });
-          await options.loadSchools(value);
-          form.validateFields(['school_id']);
-        },
-      };
-    },
-  },
-  {
-    label: '',
-    name: 'school_id',
-    component: 'Select',
-    placeholder: '请输入学校名称',
-    componentProps: (form) => {
-      const cityValue = form.getFieldValue('city');
-      console.log('获取城市', cityValue);
+export const searchList = (
+  options: any,
+  userInfo?: { role_id: number; city_id: number },
+): BaseSearchList[] => {
+  // 获取用户角色ID
+  const roleId = userInfo?.role_id;
 
-      return {
+  // 基础搜索字段（所有角色都有）
+  const baseSearchFields: BaseSearchList[] = [
+    {
+      component: 'Input',
+      name: 'name',
+      label: '类别',
+    },
+  ];
+
+  // 地区搜索字段（根据角色显示）
+  const locationSearchFields: BaseSearchList[] = [];
+
+  if (roleId === 2) {
+    // 超级管理员：显示完整的省市学校选择
+    locationSearchFields.push(
+      {
+        label: '地区',
+        name: 'pid',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => ({
+          options: options.provinceOptions,
+          placeholder: '请选择省份',
+          allowClear: true,
+          onChange: async (value: string) => {
+            form.setFieldsValue({ city: undefined, school_id: undefined });
+            await options.loadCities(value);
+            form.validateFields(['city', 'school_id']);
+          },
+        }),
+      },
+      {
+        label: '',
+        name: 'city_id',
+        component: 'Select',
+        wrapperWidth: 180,
+        componentProps: (form) => {
+          const provinceValue = form.getFieldValue('pid');
+          return {
+            placeholder: '请选择城市',
+            allowClear: true,
+            disabled: !provinceValue,
+            options: options.cityOptions,
+            onChange: async (value: string) => {
+              form.setFieldsValue({ school_id: undefined });
+              await options.loadSchools(value);
+              form.validateFields(['school_id']);
+            },
+          };
+        },
+      },
+      {
+        label: '',
+        name: 'school_id',
+        component: 'Select',
+        placeholder: '请选择学校',
+        componentProps: (form) => {
+          const cityValue = form.getFieldValue('city_id');
+          return {
+            placeholder: '请选择学校',
+            allowClear: true,
+            disabled: !cityValue,
+            options: options.schoolOptions,
+          };
+        },
+      },
+    );
+  } else if (roleId === 5) {
+    // 城市运营商：只显示学校选择（会自动加载所属城市的学校）
+    locationSearchFields.push({
+      label: '学校',
+      name: 'school_id',
+      component: 'Select',
+      wrapperWidth: 180,
+      componentProps: {
         placeholder: '请选择学校',
         allowClear: true,
-        disabled: !cityValue,
         options: options.schoolOptions,
-      };
-    },
-  },
-  {
+      },
+    });
+  }
+  // role_id=4（团长）不显示任何地区字段
+
+  // 状态字段（所有角色都有）
+  const statusField: BaseSearchList = {
     component: 'Select',
     name: 'status',
     label: '状态',
@@ -104,8 +134,10 @@ export const searchList = (options: any): BaseSearchList[] => [
         { label: '禁用', value: 2 },
       ],
     },
-  },
-];
+  };
+
+  return [...baseSearchFields, ...locationSearchFields, statusField];
+};
 
 // 表格列配置
 export const tableColumns: TableColumn[] = [

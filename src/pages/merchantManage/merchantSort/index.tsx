@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { CRUDPageTemplate, TableActions } from '@/shared';
 import { searchList, tableColumns, formList, type MerchantSort, addFormList } from './model';
 import { Key } from 'react';
@@ -25,7 +26,11 @@ const initCreate: Partial<MerchantSort> = {
 };
 
 // 获取分类列表
-const fetchList = async (params?: MerchantSortListRequest) => {
+const fetchList = async (params?: MerchantSortListRequest, userInfo?: any) => {
+  // 为城市运营商自动添加city_id过滤
+  if (userInfo?.role_id === 5 && userInfo?.city_id) {
+    params = { ...params, city_id: userInfo.city_id };
+  }
   const res = await getMerchantSortList(params);
   console.log('获取分类列表:', res);
   return {
@@ -35,11 +40,15 @@ const fetchList = async (params?: MerchantSortListRequest) => {
 };
 
 const MerchantSortPage = () => {
-  const { userInfo } = useUserStore();
-
-  const { permissions } = useUserStore();
-
+  const { userInfo, permissions } = useUserStore();
   const locationOptions = useGroupCitySchoolOptions();
+  
+  // 为城市运营商自动加载所属城市的学校
+  useEffect(() => {
+    if (userInfo?.role_id === 5 && userInfo?.city_id) {
+      locationOptions.loadSchools(userInfo.city_id);
+    }
+  }, [userInfo, locationOptions.loadSchools]);
 
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -76,7 +85,7 @@ const MerchantSortPage = () => {
       isAddOpen={userInfo?.role_id === 4}
       disableBatchUpdate={true}
       title="商家分类"
-      searchConfig={searchList(locationOptions)}
+      searchConfig={searchList(locationOptions, userInfo || undefined)}
       columns={tableColumns.filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
       addFormConfig={addFormList()}
@@ -88,7 +97,7 @@ const MerchantSortPage = () => {
         createApi: createMerchantSort,
         updateApi: updateMerchantSort,
         deleteApi: deleteMerchantSort,
-        fetchApi: fetchList,
+        fetchApi: (params?: any) => fetchList(params, userInfo),
       }}
     />
   );

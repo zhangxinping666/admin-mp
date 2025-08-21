@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
-import { FORM_REQUIRED } from '@/utils/config';
+import { FORM_REQUIRED, PHONE_RULE } from '@/utils/config';
 import LocationRenderer from '@/shared/components/LocationRenderer';
 import type { FieldConfig } from './UniversalDetail';
 import dayjs from 'dayjs';
@@ -110,10 +110,14 @@ export const merchantOrderConfig: FieldConfig[] = [
 ];
 
 // 搜索配置
-export const searchList = (userStore: any, options: any): BaseSearchList[] => {
+export const searchList = (
+  options: any,
+  userInfo?: { role_id: number; city_id: number },
+): BaseSearchList[] => {
   let list: BaseSearchList[] = [];
+  const roleId = userInfo?.role_id;
 
-  if (userStore?.userInfo?.role_id === 2) {
+  if (roleId === 2) {
     list = [
       {
         label: '商家名称',
@@ -123,7 +127,7 @@ export const searchList = (userStore: any, options: any): BaseSearchList[] => {
       },
       {
         label: '地区',
-        name: 'province',
+        name: 'pid',
         component: 'Select',
         wrapperWidth: 180,
         componentProps: (form) => ({
@@ -140,11 +144,11 @@ export const searchList = (userStore: any, options: any): BaseSearchList[] => {
       },
       {
         label: '',
-        name: 'city',
+        name: 'city_id',
         component: 'Select',
         wrapperWidth: 180,
         componentProps: (form) => {
-          const provinceValue = form.getFieldValue('province');
+          const provinceValue = form.getFieldValue('pid');
           return {
             placeholder: '请选择城市',
             allowClear: true,
@@ -165,7 +169,7 @@ export const searchList = (userStore: any, options: any): BaseSearchList[] => {
         component: 'Select',
         placeholder: '请输入学校名称',
         componentProps: (form) => {
-          const cityValue = form.getFieldValue('city');
+          const cityValue = form.getFieldValue('city_id');
           console.log('获取城市', cityValue);
 
           return {
@@ -206,7 +210,7 @@ export const searchList = (userStore: any, options: any): BaseSearchList[] => {
         },
       },
     ];
-  } else if (userStore?.userInfo?.role_id === 4) {
+  } else if (roleId === 4) {
     list = [
       {
         label: '商家名称',
@@ -244,7 +248,7 @@ export const searchList = (userStore: any, options: any): BaseSearchList[] => {
         },
       },
     ];
-  } else if (userStore?.userInfo?.role_id === 5) {
+  } else if (roleId === 5) {
     list = [
       {
         label: '商家名称',
@@ -272,13 +276,10 @@ export const searchList = (userStore: any, options: any): BaseSearchList[] => {
         name: 'school_id',
         component: 'Select',
         placeholder: '请输入学校名称',
-        componentProps: (form) => {
-          options.loadSchools(userStore?.userInfo?.city_id);
-          return {
-            placeholder: '请选择学校',
-            allowClear: true,
-            options: options.schoolOptions,
-          };
+        componentProps: {
+          placeholder: '请选择学校',
+          allowClear: true,
+          options: options.schoolOptions,
         },
       },
       {

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { CRUDPageTemplate, TableActions } from '@/shared';
 import {
   searchList,
@@ -15,21 +16,28 @@ import dayjs from 'dayjs';
 import useGroupCitySchoolOptions from '@/shared/hooks/useGroupedCityOptions';
 import { Space } from 'antd';
 import { createBrotliCompress } from 'zlib';
+import { BaseBtn } from '@/components/Buttons';
 
 const MerchantApplicationPage = () => {
   // 获取用户信息
-  const userStorage = useUserStore();
-  const schoolId = userStorage?.userInfo?.school_id;
-  const roleId = userStorage?.userInfo?.role_id;
-  const { permissions } = useUserStore();
+  const { permissions, userInfo } = useUserStore();
+  const schoolId = userInfo?.school_id;
+  const roleId = userInfo?.role_id;
   const [categoryOptions] = useCategoryOptions(schoolId);
   console.log('categoryOptions', categoryOptions);
   console.log('schoolId', schoolId);
-  console.log('usrStore', userStorage);
+  console.log('userInfo', userInfo);
 
   const [isDormStore, setIsDormStore] = useState(false);
 
   const locationOptions = useGroupCitySchoolOptions();
+  
+  // 为城市运营商自动加载所属城市的学校
+  useEffect(() => {
+    if (userInfo?.role_id === 5 && userInfo?.city_id) {
+      locationOptions.loadSchools(userInfo.city_id);
+    }
+  }, [userInfo, locationOptions.loadSchools]);
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
@@ -191,7 +199,7 @@ const MerchantApplicationPage = () => {
       isApplication={true}
       isAddOpen={false}
       title="商家申请"
-      searchConfig={searchList(userStorage, locationOptions)}
+      searchConfig={searchList(locationOptions, userInfo || undefined)}
       columns={tableColumns().filter((col) => col.dataIndex !== 'action')}
       formConfig={formList()}
       initCreate={initCreate}
@@ -213,6 +221,10 @@ const MerchantApplicationPage = () => {
         },
 
         fetchApi: async (params) => {
+          // 为城市运营商自动添加city_id过滤
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            params = { ...params, city_id: userInfo.city_id };
+          }
           params.start_time = params.time_range?.[0];
           params.end_time = params.time_range?.[1];
           setIsDormStore(params.is_dorm_store);
