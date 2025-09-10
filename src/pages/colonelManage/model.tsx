@@ -4,6 +4,11 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { useState, useEffect, useCallback } from 'react';
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
 import dayjs from 'dayjs';
+import { 
+  createProvinceCitySearch,
+  createStatusSearch,
+  createInputSearch,
+} from '@/utils/searchConfig';
 
 // 楼栋接口定义
 export interface Colonel {
@@ -132,18 +137,18 @@ export const searchList = (
 
   // 基础搜索字段（所有角色都有）
   const baseSearchFields: BaseSearchList[] = [
-    {
+    createInputSearch({
       label: '学校名称',
       name: 'school_name',
-      component: 'Input',
       placeholder: '请输入学校名称',
-    },
-    {
+      width: 150,
+    }),
+    createInputSearch({
       label: '电话',
       name: 'phone',
-      component: 'Input',
       placeholder: '请输入团长电话',
-    },
+      width: 150,
+    }),
   ];
 
   // 地区搜索字段（只有非城市运营商才显示）
@@ -152,55 +157,19 @@ export const searchList = (
   // 只有非城市运营商（role_id !== 5）才显示省市选择
   if (roleId !== 5) {
     locationSearchFields.push(
-      {
-        label: '地区',
-        name: 'pid',
-        component: 'Select',
-        wrapperWidth: 180,
-        componentProps: (form) => ({
-          options: options.provinceOptions,
-          placeholder: '请选择省份',
-          allowClear: true,
-          onChange: async (value: string) => {
-            // 清空城市选择
-            form.setFieldsValue({ city_id: undefined });
-            await options.loadCities(value);
-            form.validateFields(['city_id']);
-          },
-        }),
-      },
-      {
-        label: '',
-        name: 'city_id',
-        component: 'Select',
-        wrapperWidth: 180,
-        componentProps: (form) => {
-          const provinceValue = form.getFieldValue('pid');
-          return {
-            placeholder: '请选择城市',
-            allowClear: true,
-            disabled: !provinceValue,
-            options: options.cityOptions,
-          };
-        },
-      },
+      ...createProvinceCitySearch({
+        provinceOptions: options.provinceOptions,
+        cityOptions: options.cityOptions,
+        loadCities: options.loadCities,
+        showLabel: true,
+        compact: true,
+      })
     );
   }
   // 城市运营商（role_id === 5）不显示省市选择，会在fetchApi中自动过滤
 
   // 状态字段（所有角色都有）
-  const statusField: BaseSearchList = {
-    component: 'Select',
-    name: 'status',
-    label: '状态',
-    componentProps: {
-      options: [
-        { label: '全部', value: 0 },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
-    },
-  };
+  const statusField = createStatusSearch({ includeAll: true, width: 120 });
 
   return [...baseSearchFields, ...locationSearchFields, statusField];
 };
@@ -282,6 +251,8 @@ export const formList = ({
   isSchoolLoading,
   userOptions,
   isLoadingUsers,
+  userInfo,
+  cityName,
 }: {
   // 建议使用更具体的类型，但 any[] 也能工作
   groupedCityOptions: any[];
@@ -290,6 +261,8 @@ export const formList = ({
   isSchoolLoading: boolean;
   userOptions: any[];
   isLoadingUsers: boolean;
+  userInfo?: { role_id: number; city_id: number };
+  cityName?: string;
 }): BaseFormList[] => [
   {
     label: '团长名称',
@@ -308,20 +281,37 @@ export const formList = ({
       { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
     ],
   },
-  {
-    name: 'city_id', // 这个字段的键名，最终提交给后端
-    label: '选择城市',
-    component: 'Select',
-    required: true,
-    rules: FORM_REQUIRED,
-    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
-    componentProps: {
-      loading: isLoadingOptions,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-      options: groupedCityOptions,
+  // 城市字段：根据角色显示不同形式
+  userInfo?.role_id === 5
+    ? {
+      // 城市运营商：显示只读的城市名称
+      name: 'city_id',
+      label: '城市',
+      component: 'Select',
+      required: true,
+      rules: FORM_REQUIRED,
+      componentProps: {
+        disabled: true,
+        value: userInfo.city_id,
+        options: [{ label: cityName || '所属城市', value: userInfo.city_id }],
+        style: { width: '100%' },
+      },
+    }
+    : {
+      // 其他角色：显示可选择的城市下拉框
+      name: 'city_id',
+      label: '选择城市',
+      component: 'Select',
+      required: true,
+      rules: FORM_REQUIRED,
+      placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
+      componentProps: {
+        loading: isLoadingOptions,
+        showSearch: true,
+        optionFilterProp: 'label',
+        options: groupedCityOptions,
+      },
     },
-  },
   {
     name: 'school_id', // 这个字段的键名，最终提交给后端
     label: '选择学校',

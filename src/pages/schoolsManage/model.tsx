@@ -6,6 +6,13 @@ import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader
 import AddressWithLocation from './components/AddressWithLocation';
 import MapPicker from '@/components/MapPicker';
 import dayjs from 'dayjs';
+import { checkSchoolName } from '@/servers/school';
+import { debounce } from '@/utils/debounce';
+import { 
+  createInputSearch, 
+  createProvinceCitySearch, 
+  createStatusSearch 
+} from '@/utils/searchConfig';
 
 // 学校定义
 export interface School {
@@ -133,73 +140,33 @@ export const searchList = (
 
   // 基础搜索字段（所有角色都有）
   const baseSearchFields: BaseSearchList[] = [
-    {
+    createInputSearch({
       label: '学校名称',
       name: 'name',
-      component: 'Input',
       placeholder: '请输入学校名称',
-    },
+    }),
   ];
 
-  // 地区搜索字段（超级管理员和城市运营商才有）
+  // 地区搜索字段（超级管理员才有）
   const locationSearchFields: BaseSearchList[] = [];
 
-  // role_id=2（超级管理员）或 role_id=5（城市运营商）显示省市选择
-  // role_id=4（团长）不显示省市选择
+  // role_id=2（超级管理员）显示省市选择
+  // role_id=4（团长）和 role_id=5（城市运营商）不显示省市选择
   if (roleId === 2) {
     // 超级管理员：显示完整的省市选择
     locationSearchFields.push(
-      {
-        label: '地区',
-        name: 'pid',
-        component: 'Select',
-        wrapperWidth: 180,
-        componentProps: (form) => ({
-          options: options.provinceOptions,
-          placeholder: '请选择省份',
-          allowClear: true,
-          onChange: async (value: string) => {
-            form.setFieldsValue({ city_id: undefined });
-            await options.loadCities(value);
-            form.validateFields(['city_id']);
-          },
-        }),
-      },
-      {
-        label: '',
-        name: 'city_id',
-        component: 'Select',
-        wrapperWidth: 180,
-        componentProps: (form) => {
-          const provinceValue = form.getFieldValue('pid');
-          return {
-            placeholder: '请选择城市',
-            allowClear: true,
-            disabled: !provinceValue,
-            options: options.cityOptions,
-          };
-        },
-      },
+      ...createProvinceCitySearch({
+        provinceOptions: options.provinceOptions,
+        cityOptions: options.cityOptions,
+        loadCities: options.loadCities,
+        showLabel: true,
+        compact: true,  // 使用紧凑模式
+      })
     );
-  } else if (roleId === 5) {
-    // 城市运营商：只显示其所属城市，不允许选择
-    // 这里暂时隐藏城市选择，在组件中自动设置city_id过滤
-    // 不显示省市选择器
   }
-  // role_id=4（团长）不添加任何地区字段
+  
   // 状态字段（所有角色都有）
-  const statusField: BaseSearchList = {
-    component: 'Select',
-    name: 'status',
-    label: '状态',
-    componentProps: {
-      options: [
-        { label: '全部', value: 0 },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
-    },
-  };
+  const statusField = createStatusSearch({ includeAll: true });
 
   return [...baseSearchFields, ...locationSearchFields, statusField];
 };
@@ -309,50 +276,72 @@ export const formList = ({
   isLoadingOptions,
   userInfo,
   cityName,
+  editingId,
 }: {
   // 建议使用更具体的类型，但 any[] 也能工作
   groupedCityOptions: any[];
   isLoadingOptions: boolean;
   userInfo?: { role_id: number; city_id: number };
   cityName?: string;
+  editingId?: number; // 编辑时的学校ID
 }): BaseFormList[] => [
-  {
-    label: '名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入学校名称',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: 'logo',
-    name: 'school_logo',
-    component: 'customize',
-    rules: FORM_REQUIRED,
-    render: (props: any) => {
-      const { value, onChange } = props;
-      return (
-        <EnhancedImageUploader
-          value={value}
-          onChange={onChange}
-          maxSize={2}
-          baseUrl="http://192.168.10.7:8082"
-        />
-      );
+    {
+      label: '名称',
+      name: 'name',
+      component: 'Input',
+      placeholder: '请输入学校名称',
+      rules: [
+        ...FORM_REQUIRED,
+        {
+          validator: debounce(async (_: any, value: string) => {
+            if (!value) {
+              return Promise.resolve();
+            }
+            
+            try {
+              const response = await checkSchoolName(value, editingId);
+              if (response.data?.exists) {
+                return Promise.reject(new Error('学校名称已存在'));
+              }
+              return Promise.resolve();
+            } catch (error) {
+              console.error('检查学校名称失败:', error);
+              return Promise.resolve();
+            }
+          }, 500),
+        },
+      ],
     },
-  },
-  {
-    label: '地址',
-    name: 'address',
-    component: 'Input',
-    placeholder: '请输入学校地址（选择地图位置时会自动更新）',
-    rules: FORM_REQUIRED,
-    componentProps: {
+    {
+      label: 'logo',
+      name: 'school_logo',
+      component: 'customize',
+      rules: FORM_REQUIRED,
+      render: (props: any) => {
+        const { value, onChange } = props;
+        return (
+          <EnhancedImageUploader
+            value={value}
+            onChange={onChange}
+            maxSize={2}
+            baseUrl="http://192.168.10.7:8082"
+          />
+        );
+      },
+    },
+    {
+      label: '地址',
+      name: 'address',
+      component: 'Input',
       placeholder: '请输入学校地址（选择地图位置时会自动更新）',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        placeholder: '请输入学校地址（选择地图位置时会自动更新）',
+      },
     },
-  },
-  // 城市字段：根据角色显示不同形式
-  userInfo?.role_id === 5
-    ? {
+    // 城市字段：根据角色显示不同形式
+    userInfo?.role_id === 5
+      ? {
         // 城市运营商：显示只读的城市名称
         name: 'city_id',
         label: '城市',
@@ -365,7 +354,7 @@ export const formList = ({
           style: { width: '100%' },
         },
       }
-    : {
+      : {
         // 其他角色：显示可选择的城市下拉框
         name: 'city_id',
         label: '城市',
@@ -381,114 +370,114 @@ export const formList = ({
           style: { width: '100%' },
         },
       },
-  {
-    label: '位置',
-    name: 'location',
-    rules: FORM_REQUIRED,
-    component: 'customize',
-    componentProps: (form) => {
-      // 获取当前表单的所有值
-      const formValues = form.getFieldsValue();
-      const locationValue = form.getFieldValue('location');
+    {
+      label: '位置',
+      name: 'location',
+      rules: FORM_REQUIRED,
+      component: 'customize',
+      componentProps: (form) => {
+        // 获取当前表单的所有值
+        const formValues = form.getFieldsValue();
+        const locationValue = form.getFieldValue('location');
 
-      // 如果是编辑模式且有经纬度数据，使用学校的实际位置作为地图中心
-      // 否则使用默认的北京坐标
-      let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
+        // 如果是编辑模式且有经纬度数据，使用学校的实际位置作为地图中心
+        // 否则使用默认的北京坐标
+        let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
 
-      if (
-        formValues.longitude &&
-        formValues.latitude &&
-        typeof formValues.longitude === 'number' &&
-        typeof formValues.latitude === 'number'
-      ) {
-        initCenter = [formValues.longitude, formValues.latitude];
-      }
+        if (
+          formValues.longitude &&
+          formValues.latitude &&
+          typeof formValues.longitude === 'number' &&
+          typeof formValues.latitude === 'number'
+        ) {
+          initCenter = [formValues.longitude, formValues.latitude];
+        }
 
-      return {
-        value: locationValue, // 传递当前的location值作为受控组件的value
-        center: initCenter,
-        zoom: 15,
-        style: {
-          width: '100%',
-          height: 400,
-        },
-        // 处理地图搜索选择（包含地址信息）
-        onSave: (data: any) => {
-          console.log('===== 地图搜索选择 =====');
-          console.log('搜索数据:', data);
-          const newValues = {
-            location: [data.location.lng, data.location.lat],
-            // 如果选择了具体地点，自动更新地址字段
-            address: data.address || data.name || form.getFieldValue('address'),
-            longitude: data.location.lng,
-            latitude: data.location.lat,
-          };
-          console.log('即将设置的新值:', newValues);
-          form.setFieldsValue(newValues);
-          console.log(
-            '设置后的表单值:',
-            form.getFieldsValue(['location', 'longitude', 'latitude', 'address']),
-          );
-        },
-        // 处理地图拖拽选择（只有经纬度）
-        onChange: (value: number[]) => {
-          console.log('新位置:', value);
-          const newValues = {
-            location: value,
-            longitude: value[0],
-            latitude: value[1],
-          };
-          console.log('即将设置的新值:', newValues);
-          form.setFieldsValue(newValues);
-          console.log(
-            '设置后的表单值:',
-            form.getFieldsValue(['location', 'longitude', 'latitude']),
-          );
-        },
-        initValue: () => {
-          return form.getFieldValue('location');
-        },
-      };
+        return {
+          value: locationValue, // 传递当前的location值作为受控组件的value
+          center: initCenter,
+          zoom: 15,
+          style: {
+            width: '100%',
+            height: 400,
+          },
+          // 处理地图搜索选择（包含地址信息）
+          onSave: (data: any) => {
+            console.log('===== 地图搜索选择 =====');
+            console.log('搜索数据:', data);
+            const newValues = {
+              location: [data.location.lng, data.location.lat],
+              // 如果选择了具体地点，自动更新地址字段
+              address: data.address || data.name || form.getFieldValue('address'),
+              longitude: data.location.lng,
+              latitude: data.location.lat,
+            };
+            console.log('即将设置的新值:', newValues);
+            form.setFieldsValue(newValues);
+            console.log(
+              '设置后的表单值:',
+              form.getFieldsValue(['location', 'longitude', 'latitude', 'address']),
+            );
+          },
+          // 处理地图拖拽选择（只有经纬度）
+          onChange: (value: number[]) => {
+            console.log('新位置:', value);
+            const newValues = {
+              location: value,
+              longitude: value[0],
+              latitude: value[1],
+            };
+            console.log('即将设置的新值:', newValues);
+            form.setFieldsValue(newValues);
+            console.log(
+              '设置后的表单值:',
+              form.getFieldsValue(['location', 'longitude', 'latitude']),
+            );
+          },
+          initValue: () => {
+            return form.getFieldValue('location');
+          },
+        };
+      },
+      render: (props: any) => {
+        return <MapPicker {...props} />;
+      },
     },
-    render: (props: any) => {
-      return <MapPicker {...props} />;
+    // 隐藏的经纬度字段，用于存储实际的经纬度值
+    {
+      label: '',
+      name: 'longitude',
+      component: 'Input',
+      componentProps: {
+        type: 'hidden',
+      },
+      hidden: true,
+      wrapperProps: {
+        style: { display: 'none' },
+      },
     },
-  },
-  // 隐藏的经纬度字段，用于存储实际的经纬度值
-  {
-    label: '',
-    name: 'longitude',
-    component: 'Input',
-    componentProps: {
-      type: 'hidden',
+    {
+      label: '',
+      name: 'latitude',
+      component: 'Input',
+      componentProps: {
+        type: 'hidden',
+      },
+      hidden: true,
+      wrapperProps: {
+        style: { display: 'none' },
+      },
     },
-    hidden: true,
-    wrapperProps: {
-      style: { display: 'none' },
+    {
+      label: '状态',
+      name: 'status',
+      component: 'Select',
+      placeholder: '请选择状态',
+      componentProps: {
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 2 },
+        ],
+      },
     },
-  },
-  {
-    label: '',
-    name: 'latitude',
-    component: 'Input',
-    componentProps: {
-      type: 'hidden',
-    },
-    hidden: true,
-    wrapperProps: {
-      style: { display: 'none' },
-    },
-  },
-  {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    placeholder: '请选择状态',
-    componentProps: {
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
-    },
-  },
-];
+  ];

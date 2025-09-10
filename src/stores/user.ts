@@ -17,6 +17,7 @@ interface UserState {
   // 账号密码本地存储方法
   saveLoginInfo: (account: string, password: string) => void;
   getLoginInfo: () => { account: string; password: string };
+  //清空用户相关角色和权限
   clearLoginInfo: () => void;
   // 获取角色ID
   getRoleId: () => string;

@@ -60,5 +60,8 @@
     "zustand",
     "wechat",
     "unplugin"
-  ]
+  ],
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }

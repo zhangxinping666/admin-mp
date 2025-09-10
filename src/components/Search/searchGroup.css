@@ -1,0 +1,147 @@
+/* 搜索分组容器 - 确保不换行 */
+.search-group-wrapper {
+  display: inline-flex !important;
+  align-items: center;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  margin-right: 12px;
+  margin-bottom: 4px;
+  vertical-align: middle;
+}
+
+.search-group-item {
+  flex: 0 0 120px !important; 
+  display: inline-block !important;
+  margin: 0 !important;
+  position: relative; 
+  vertical-align: middle;
+  width: 120px !important; 
+  min-width: 120px !important;
+  max-width: 120px !important;
+}
+
+.search-group-item .ant-form-item {
+  margin-bottom: 0 !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  display: flex;
+  align-items: center;
+}
+
+.search-group-label {
+  display: inline-block;
+  padding-right: 8px;
+  line-height: 32px;
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 14px;
+}
+
+.search-group-items {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.search-group-item .ant-form-item-control {
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+}
+
+.search-group-item .ant-form-item-control-input {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+}
+
+.search-group-item .ant-select {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  box-sizing: border-box !important;
+}
+
+.search-group-item .ant-select-selector {
+  min-width: 100% !important;
+  width: 100% !important;
+  height: 32px !important;
+  line-height: 30px !important;
+  padding-left: 11px !important;
+  padding-right: 30px !important; 
+  box-sizing: border-box !important;
+}
+
+.search-group-item .ant-select-selection-item {
+  line-height: 30px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.search-group-item .ant-select-selection-placeholder {
+  line-height: 30px !important;
+  padding: 0 !important;
+  padding-right: 20px !important;  
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.search-group-item .ant-select-single .ant-select-selector {
+  overflow: hidden !important;
+}
+
+.search-group-item .ant-select-selection-search {
+  max-width: 100% !important;
+}
+
+.search-group-item .ant-select-selection-search-input {
+  max-width: 100% !important;
+}
+
+.ant-form.ant-form-inline .search-group-wrapper {
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+/* 响应式调整 - 不使用zoom避免定位问题 */
+@media (min-resolution: 120dpi), (min-zoom: 1.25) {
+  .search-group-item .ant-select-selector {
+    padding: 0 8px !important;
+    font-size: 13px;
+  }
+}
+
+@media (min-resolution: 150dpi), (min-zoom: 1.5) {
+  .search-group-item .ant-select-selector {
+    padding: 0 6px !important;
+    font-size: 12px;
+  }
+}
+
+@media (min-resolution: 200dpi), (min-zoom: 2) {
+  .search-group-item .ant-select-selector {
+    padding: 0 4px !important;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-group-items {
+    gap: 1px;
+  }
+}
+
+.search-group-item .ant-select-arrow {
+  right: 11px !important;  
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.search-group-item .ant-select-selection-search-input {
+  padding-right: 20px !important;  
+} 
+

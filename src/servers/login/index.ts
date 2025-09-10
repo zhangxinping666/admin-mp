@@ -3,6 +3,7 @@ import type {
   LoginResult,
   UserInfoResponse,
   PermissionsResponse,
+  CaptchaApiResponse
 } from '@/pages/login/model';
 import request from '@/utils/request';
 
@@ -49,5 +50,5 @@ export function refreshToken(refresh_token: string) {
 
 //获取验证码
 export function getCode() {
-  return request.get('/backstage/captcha');
+  return request.get<CaptchaApiResponse>('/backstage/captcha');
 }

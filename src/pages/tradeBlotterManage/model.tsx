@@ -7,6 +7,11 @@ import {
 } from '@/servers/trade-blotter/location';
 import { TIME_FORMAT, EMPTY_VALUE } from '@/utils/config';
 import dayjs from 'dayjs';
+import {
+  createInputSearch,
+  createSelectSearch,
+  createProvinceCitySchoolSearch,
+} from '@/utils/searchConfig';
 type OptionType = { label: string; value: string | number };
 
 /**
@@ -109,78 +114,40 @@ export const useLocationOptions = () => {
 /**
  * 搜索配置
  */
-export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
-  {
-    label: '用户名',
-    name: 'user_name',
-    component: 'Input',
-    componentProps: {
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => {
+  // 省市学校三级联动字段
+  const locationFields = createProvinceCitySchoolSearch({
+    provinceOptions: options.provinceOptions,
+    cityOptions: options.cityOptions,
+    schoolOptions: options.schoolOptions,
+    loadCities: async (provinceId: string) => {
+      await options.loadCities(provinceId);
+    },
+    loadSchools: async (cityId: string) => {
+      await options.loadSchools(cityId);
+    },
+  });
+
+  // 其他搜索字段
+  const otherFields: BaseSearchList[] = [
+    createInputSearch({
+      label: '用户名',
+      name: 'user_name',
       placeholder: '请输入用户名',
-    },
-    wrapperWidth: 180, // 添加固定宽度
-  },
-  {
-    label: '支付方式',
-    name: 'pay_type',
-    wrapperWidth: 120,
-    component: 'Select',
-    componentProps: {
-      options: PAY_TYPE_OPTIONS,
-    },
-  },
-  {
-    label: '地区',
-    name: 'pid',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => ({
-      options: options.provinceOptions,
-      placeholder: '请选择省份',
-      allowClear: true,
-      onChange: async (value: string) => {
-        // 清空城市和学校选择
-        form.setFieldsValue({ city: undefined, school: undefined });
-        await options.loadCities(value);
-        form.validateFields(['city', 'school']);
-      },
+      width: 150,
     }),
-  },
-  {
-    label: '',
-    name: 'city_id',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => {
-      const provinceValue = form.getFieldValue('pid');
-      return {
-        placeholder: '请选择城市',
-        allowClear: true,
-        disabled: !provinceValue,
-        options: options.cityOptions,
-        onChange: async (value: string) => {
-          form.setFieldsValue({ school: undefined });
-          await options.loadSchools(value);
-          form.validateFields(['school']);
-        },
-      };
-    },
-  },
-  {
-    label: '',
-    name: 'school_id',
-    component: 'Select',
-    wrapperWidth: 180, // 添加固定宽度
-    componentProps: (form) => {
-      const cityValue = form.getFieldValue('city_id');
-      return {
-        placeholder: '请选择学校',
-        allowClear: true,
-        disabled: !cityValue || cityValue === '',
-        options: options.schoolOptions,
-      };
-    },
-  },
-];
+    createSelectSearch({
+      label: '支付方式',
+      name: 'pay_type',
+      options: PAY_TYPE_OPTIONS,
+      width: 120,
+      placeholder: '支付方式',
+    }),
+  ];
+
+  // 按照地区、用户名、支付方式的顺序排列
+  return [...locationFields, ...otherFields];
+};
 
 /**
  * 表格列配置
@@ -222,16 +189,29 @@ export const tableColumns = (): TableColumn[] => [
     title: '省份',
     dataIndex: 'province',
     width: 100,
+    render: (value: string) => value || '-',
   },
   {
     title: '城市',
     dataIndex: 'city',
     width: 100,
+    render: (value: string) => value || '-',
   },
   {
     title: '学校',
     dataIndex: 'school',
     width: 120,
+    render: (value: string) => {
+      // 处理空值、null、undefined、空字符串
+      if (!value || value === 'null' || value === 'undefined' || value.trim() === '') {
+        return '-';
+      }
+      // 处理"未知学校"等特殊值
+      if (value === '未知学校' || value.toLowerCase() === 'unknown') {
+        return '-';
+      }
+      return value;
+    },
   },
 
   {

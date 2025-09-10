@@ -9,7 +9,11 @@ export interface LoginData {
 // 登录接口返回数据
 export interface LoginResult {
   code: number;
-  data: {
+  data: LoginData;
+  messages: string;
+}
+
+export interface LoginData{
     id: number;
     account_id: string;
     name: string;
@@ -17,8 +21,6 @@ export interface LoginResult {
     refresh_token: string;
     status: number;
   };
-  messages: string;
-}
 
 /**
  * @description 用户基础信息结构
@@ -50,12 +52,14 @@ export interface UserInfoResponse {
  */
 export interface MenuItem {
   component_path: string;
-  icon?: string;
-  id: number;
-  name: string;
+  icon: string;
+  key: number;
+  label: string;
+  permission: string;
   pid: number;
   route_path: string;
   sort: number;
+  type: number;
 }
 
 /**
@@ -73,4 +77,15 @@ export interface PermissionsResponse {
   code: number;
   message: string;
   data: PermissionsData;
+}
+
+export interface CaptchaData {
+  captcha_id: string;
+  captcha_image: string;
+}
+
+export interface CaptchaApiResponse {
+  code: number;
+  data: CaptchaData;
+  messages: string;
 }

@@ -75,15 +75,33 @@ export const EnhancedImageUploader = ({
         }
 
         onChange?.(newUrls);
-        onSuccess(response, file);
+        // 安全调用 onSuccess
+        if (typeof onSuccess === 'function') {
+          onSuccess(response, file);
+        }
         message.success('图片上传成功');
       } else {
         throw new Error('未获取到图片URL');
       }
     } catch (error: any) {
       console.error('上传失败:', error);
-      onError(error);
-      message.error(error.message || '图片上传失败');
+      
+      // 检查是否是磁盘空间不足的错误
+      let errorMessage = '图片上传失败';
+      if (error.message && error.message.includes('no space left on device')) {
+        errorMessage = '服务器存储空间不足，请联系管理员清理磁盘空间';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // 安全调用 onError
+      if (typeof onError === 'function') {
+        onError(error);
+      }
+      
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -1,14 +1,11 @@
-import type { LoginData, LoginResult, UserInfoResponse, PermissionsResponse } from './model';
-import type { SideMenu } from '#/public';
+import type { LoginData, MenuItem, UserInfo, CaptchaData } from './model';
 import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
 import type { FormProps } from 'antd';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, message, Form, Button, Input } from 'antd';
+import { message, Form, Button, Input } from 'antd';
 import { getUserInfoServe, login, getCode } from '@/servers/login';
-import { setTitle } from '@/utils/helper';
-import { encryption, decryption } from '@manpao/utils';
 import { getFirstMenu } from '@/menus/utils/helper';
 import Logo from '@/assets/images/logo.png';
 import { setAccessToken, setRefreshToken } from '@/stores/token';
@@ -17,27 +14,25 @@ import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
 import { usePublicStore } from '@/stores/public';
 import { useUserStore } from '@/stores/user';
-import { THEME_KEY, PASSWORD_RULE } from '@/utils/config';
+import { THEME_KEY } from '@/utils/config';
 import { ThemeType } from '@/stores/public';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
-import { MENU_ACTIONS } from '@/utils/constants';
-const CHECK_REMEMBER = 'remember-me';
+import { PermissionsData } from './model'
 
 function Login() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [isLoading, setLoading] = useState(false);
-  const [isRemember, setRemember] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [captchaUrl, setCaptchaUrl] = useState<string>('');
   const [captchaId, setCaptchaId] = useState<string>('');
   const { search } = useLocation();
-  const { clearLoginInfo, saveLoginInfo } = useCommonStore();
+  const { saveLoginInfo } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
   const setThemeValue = usePublicStore((state) => state.setThemeValue);
-  const { setPermissions, setUserInfo, setMenuPermissions } = useUserStore((state) => state);
+  const { setPermissions, clearInfo, setUserInfo, setMenuPermissions } = useUserStore((state) => state);
   const themeCache = (localStorage.getItem(THEME_KEY) ?? 'light') as ThemeType;
 
   //主题色挂载
@@ -51,25 +46,15 @@ function Login() {
     setThemeValue(themeCache === 'dark' ? 'dark' : 'light');
   }, [themeCache]);
 
-  // 初始化记住我状态
+  //登录
   useEffect(() => {
-    const rememberStatus = localStorage.getItem(CHECK_REMEMBER);
-    if (rememberStatus !== null) {
-      setRemember(rememberStatus === 'true');
-    }
     // 清除可能存在的过期权限和菜单数据
     setPermissions([]);
     setMenuPermissions([]);
     setMenuList([]);
-    setUserInfo(null);
-    // 初始化时获取验证码
+    clearInfo();
     handleGetCaptcha();
   }, []);
-
-  // 语言切换修改title
-  useEffect(() => {
-    setTitle(t, t('login.login'));
-  }, [i18n.language]);
 
   /** 获取重定向路由 */
   const getRedirectUrl = () => {
@@ -81,12 +66,11 @@ function Login() {
   };
 
   /** 菜单跳转 */
-  const handleGoMenu = async (menus: SideMenu[], userPermissions: string[]) => {
+  const handleGoMenu = async (menus: MenuItem[], userPermissions: string[]) => {
     // 检查是否有重定向URL
     if (search?.includes('?redirect=')) {
       const redirectUrl = getRedirectUrl();
       if (redirectUrl) {
-        // 验证重定向URL是否有权限访问
         const hasRedirectPermission = userPermissions.includes(redirectUrl);
         if (hasRedirectPermission) {
           navigate(redirectUrl, { replace: true });
@@ -96,7 +80,7 @@ function Login() {
     }
 
     // 获取第一个有权限的菜单
-    const firstMenu = getFirstMenu(menus, userPermissions);
+    const firstMenu = getFirstMenu(menus);
     if (!firstMenu) {
       return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
     }
@@ -107,11 +91,11 @@ function Login() {
   const getUserInfo = async () => {
     try {
       setLoading(true);
-      // 获取用户信息 - data 字段直接是 UserInfo 对象
-      const { data: user } = await getUserInfoServe();
-      // 获取权限信息 - data 字段直接是 PermissionsData 对象
-      setUserInfo(user);
-      return { user };
+      const userInformation = await getUserInfoServe();
+      const Data = userInformation.data as unknown as UserInfo;
+      console.log('userdata', Data)
+      setUserInfo(Data);
+      return { Data };
     } finally {
       setLoading(false);
     }
@@ -121,34 +105,25 @@ function Login() {
   const getUserPermissions = async (user: any) => {
     try {
       setLoading(true);
-
-      // 获取权限信息 - data 字段直接是 PermissionsData 对象
       const permissionsResponse = await getPermissions({ role: user.name });
-      const { menus, perms } = permissionsResponse.data;
-      // 转换后端菜单数据格式
-
-      // 从菜单中提取route_path作为权限（因为权限系统基于路径匹配）
+      const Data = permissionsResponse.data as unknown as PermissionsData;
+      const { menus, perms } = Data;
       const routePermissions = extractRoutePathsFromMenus(menus);
-
-      // 合并路径权限和功能权限
-
-      const finalPermissions = [...routePermissions, ...(perms || [])];
-      console.log(finalPermissions);
+      //权限菜单路由
+      setMenuPermissions(routePermissions);
+      //权限按钮
+      setPermissions(perms);
       setMenuList(menus);
-      setPermissions(finalPermissions);
-      return { menus: menus, perms: finalPermissions };
+      return { menus, perms };
     } finally {
       setLoading(false);
     }
   };
-  /**
-   * 处理登录
-   * @param values - 表单数据
-   */
+
+  //登录
   const handleFinish: FormProps['onFinish'] = async (values: LoginData) => {
     try {
       setLoading(true);
-      // 添加验证码信息到登录数据
       const loginData = {
         ...values,
         captcha_id: captchaId,
@@ -156,21 +131,14 @@ function Login() {
       };
       const loginResponse = await login(loginData);
       saveLoginInfo(values.account, values.password);
-      const loginResult = loginResponse.data;
-      // 从 LoginResult 对象中，访问其内部的 data 属性，再获取 token
+      const loginResult = loginResponse.data as unknown as LoginData;
       const refresh_token = loginResult.refresh_token;
       const access_token = loginResult.access_token;
       setAccessToken(access_token);
       setRefreshToken(refresh_token);
 
-      // 获取用户信息 - data 字段直接是 UserInfo 对象
       const user = await getUserInfo();
-      // 获取权限信息 - data 字段直接是 PermissionsData 对象
       const { menus, perms } = await getUserPermissions(user);
-      setMenuPermissions(extractRoutePathsFromMenus(menus));
-      // 处理记住我逻辑 - 在登录成功后保存账号密码
-      const passwordObj = { value: values.password, expire: 0 };
-      handleRemember(values.account, encryption(passwordObj));
 
       if (!perms || !refresh_token) {
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
@@ -178,9 +146,7 @@ function Login() {
       await handleGoMenu(menus, perms);
     } catch (error) {
       console.error('登录失败:', error);
-      // 登录失败时自动刷新验证码
       handleGetCaptcha();
-      // 清空所有表单数据
       form.setFieldsValue({
         account: '',
         password: '',
@@ -200,52 +166,22 @@ function Login() {
     console.error('错误信息:', errors);
   };
 
-  /** 点击记住我 */
-  const onRemember = () => {
-    const newRememberState = !isRemember;
-    setRemember(newRememberState);
-    localStorage.setItem(CHECK_REMEMBER, newRememberState ? 'true' : 'false');
-  };
-
-  /**
-   * 记住我逻辑
-   */
-  const handleRemember = (account: string, password: string) => {
-    if (isRemember) {
-      saveLoginInfo(account, password);
-    } else {
-      clearLoginInfo();
-    }
-  };
-
   /** 获取验证码 */
   const handleGetCaptcha = async () => {
     try {
       const response = await getCode();
-
+      console.log("code", response)
+      const Data = response.data as unknown as CaptchaData
       // 检查不同的响应格式
       let captcha_image, captcha_id;
 
-      if (response.data) {
-        // 情况1: response.data.data 结构
-        if (response.data.data) {
-          captcha_image = response.data.data.captcha_image;
-          captcha_id = response.data.data.captcha_id;
-        }
-        // 情况2: 直接在 response.data 中
-        else if (response.data.captcha_image) {
-          captcha_image = response.data.captcha_image;
-          captcha_id = response.data.captcha_id;
-        }
-        // 情况3: response 直接包含数据
-        else if (response.captcha_image) {
-          captcha_image = response.captcha_image;
-          captcha_id = response.captcha_id;
+      if (Data) {
+        if (Data) {
+          captcha_image = Data.captcha_image;
+          captcha_id = Data.captcha_id;
         }
       }
-
       if (captcha_image) {
-        // 检查是否已经包含data:image前缀
         const imageUrl = captcha_image.startsWith('data:image')
           ? captcha_image
           : `data:image/png;base64,${captcha_image}`;
@@ -363,7 +299,7 @@ function Login() {
                       onError={(e) => {
                         console.error('验证码图片加载失败:', e);
                       }}
-                      onLoad={() => {}}
+                      onLoad={() => { }}
                     />
                   ) : (
                     <span className="text-xs text-gray-400">点击获取</span>
@@ -383,9 +319,7 @@ function Login() {
           </Form>
 
           <div className="flex justify-between items-center mb-5px px-1px">
-            <Checkbox name="remember" checked={isRemember} onChange={onRemember}>
-              {t('login.rememberMe')}
-            </Checkbox>
+
           </div>
         </div>
       </div>

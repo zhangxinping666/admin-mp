@@ -4,6 +4,11 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { useState, useEffect, useCallback } from 'react';
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
 import dayjs from 'dayjs';
+import { 
+  createProvinceCitySearch,
+  createStatusSearch,
+  createInputSearch,
+} from '@/utils/searchConfig';
 
 // 楼栋接口定义
 export interface City {
@@ -125,58 +130,26 @@ export const useLocationOptions = () => {
 };
 
 // 搜索配置
-export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => [
-  {
-    label: '地区',
-    name: 'pid',
-    component: 'Select',
-    wrapperWidth: 180,
-    componentProps: (form) => ({
-      options: options.provinceOptions,
-      placeholder: '请选择省份',
-      allowClear: true,
-      onChange: async (value: string) => {
-        // 清空城市选择
-        form.setFieldsValue({ city: undefined });
-        await options.loadCities(value);
-        form.validateFields(['city']);
-      },
-    }),
-  },
-  {
-    label: '',
-    name: 'city_id',
-    component: 'Select',
-    wrapperWidth: 180,
-    componentProps: (form) => {
-      const provinceValue = form.getFieldValue('pid');
-      return {
-        placeholder: '请选择城市',
-        allowClear: true,
-        disabled: !provinceValue,
-        options: options.cityOptions,
-      };
-    },
-  },
-  {
+export const searchList = (options: ReturnType<typeof useLocationOptions>): BaseSearchList[] => {
+  const locationFields = createProvinceCitySearch({
+    provinceOptions: options.provinceOptions,
+    cityOptions: options.cityOptions,
+    loadCities: options.loadCities,
+    showLabel: true,
+    compact: true,
+  });
+
+  const phoneField = createInputSearch({
     label: '电话',
     name: 'phone',
-    component: 'Input',
     placeholder: '请输入电话',
-  },
-  {
-    component: 'Select',
-    name: 'status',
-    label: '状态',
-    componentProps: {
-      options: [
-        { label: '全部', value: 0 },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
-    },
-  },
-];
+    width: 150,
+  });
+
+  const statusField = createStatusSearch({ includeAll: true, width: 120 });
+
+  return [...locationFields, phoneField, statusField];
+};
 
 // 表格列配置
 export const tableColumns: TableColumn[] = [

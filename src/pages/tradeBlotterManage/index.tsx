@@ -42,22 +42,19 @@ function Page() {
 
   // 权限 - 临时设置为true用于开发调试
   const pagePermission: PagePermission = {
-    page: true, // checkPermission(`${permissionPrefix}/index`, permissions),
-    create: false, // 交易流水管理页面不需要新增功能
-    update: false, // 交易流水管理页面不需要编辑功能
-    delete: false, // 交易流水管理页面不需要删除功能
+    page: true,
+    create: false,
+    update: false,
+    delete: false,
   };
 
   /** 获取表格数据 */
   const getPage = useCallback(async () => {
-    // 构建基础参数
     const params: any = { ...searchData };
 
-    // 只有第一次请求或重置时传入pageSize
     if (!direction) {
       params.page_size = pageSize;
     }
-    // 后续请求传入游标参数
     else {
       params.page_size = pageSize;
       if (direction === 'next' && nextCursor && nextCreatedAt) {
@@ -117,10 +114,7 @@ function Page() {
     if (isFetch) getPage();
   }, [getPage, isFetch]);
 
-  /**
-   * 点击搜索
-   * @param values - 表单返回数据
-   */
+
   const onSearch = (values: BaseFormData) => {
     // 处理金额区间
     const searchValues = { ...values };

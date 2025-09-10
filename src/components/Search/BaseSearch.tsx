@@ -20,6 +20,7 @@ import {
   filterFormItem,
   handleValuePropName,
 } from '@/components/Form/utils/helper';
+import { SearchGroup } from './SearchGroup';
 
 interface Props extends FormProps {
   list: BaseSearchList[];
@@ -146,10 +147,8 @@ const BaseSearch = forwardRef((props: Props, ref: Ref<FormInstance>) => {
     if (item?.labelWidth) {
       return { style: { width: item.labelWidth } };
     }
-
     if (item?.labelCol) return item.labelCol;
     if (labelCol) return labelCol;
-
     return type === 'grid' && !isPhone ? { span: 6 } : undefined;
   };
 
@@ -241,18 +240,59 @@ const BaseSearch = forwardRef((props: Props, ref: Ref<FormInstance>) => {
       >
         {type === 'default' && (
           <>
-            {list?.map((item) => (
-              <Form.Item
-                {...filterFormItem(item)}
-                key={`${item.name}`}
-                className={`${item?.className || ''} !mb-5px`}
-                labelCol={getLabelCol(item)}
-                wrapperCol={getWrapperCol(item)}
-                valuePropName={handleValuePropName(item.component)}
-              >
-                {getComponent(t, item, onPressEnter, form)}
-              </Form.Item>
-            ))}
+            {(() => {
+              // 分组处理逻辑
+              const groups: Map<string, any[]> = new Map();
+              const ungrouped: any[] = [];
+
+              // 将搜索项按groupId分组
+              list?.forEach((item: any) => {
+                if (item.groupId) {
+                  if (!groups.has(item.groupId)) {
+                    groups.set(item.groupId, []);
+                  }
+                  groups.get(item.groupId)?.push(item);
+                } else {
+                  ungrouped.push(item);
+                }
+              });
+
+              // 渲染分组和未分组的项
+              const rendered: any[] = [];
+              const processedGroups = new Set<string>();
+
+              list?.forEach((item: any, index) => {
+                if (item.groupId && !processedGroups.has(item.groupId)) {
+                  // 渲染整个分组
+                  processedGroups.add(item.groupId);
+                  const groupItems = groups.get(item.groupId) || [];
+                  rendered.push(
+                    <SearchGroup
+                      key={`group-${item.groupId}`}
+                      items={groupItems}
+                      form={form}
+                      onPressEnter={onPressEnter}
+                    />
+                  );
+                } else if (!item.groupId) {
+                  // 渲染未分组的项
+                  rendered.push(
+                    <Form.Item
+                      {...filterFormItem(item)}
+                      key={`${item.name}`}
+                      className={`${item?.className || ''} !mb-5px`}
+                      labelCol={getLabelCol(item)}
+                      wrapperCol={getWrapperCol(item)}
+                      valuePropName={handleValuePropName(item.component)}
+                    >
+                      {getComponent(t, item, onPressEnter, form)}
+                    </Form.Item>
+                  );
+                }
+              });
+
+              return rendered;
+            })()}
             {renderBtnList}
           </>
         )}

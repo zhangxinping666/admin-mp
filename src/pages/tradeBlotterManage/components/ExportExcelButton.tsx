@@ -275,10 +275,25 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
     if (keys.length === 0) return false;
 
     // 检查是否有非空的值
-    return keys.some((key) => {
+    // 注意：0 可能是有效的筛选值（比如状态为0表示全部），所以不应该排除
+    // 只排除 undefined, null 和空字符串
+    const hasValidParams = keys.some((key) => {
       const value = searchData[key];
-      return value !== undefined && value !== null && value !== '' && value !== 0;
+      // 排除分页参数，它们不算筛选条件
+      if (key === 'page' || key === 'page_size' || key === 'pageSize') {
+        return false;
+      }
+      // 值不为 undefined、null、空字符串即为有效
+      return value !== undefined && value !== null && value !== '';
     });
+    
+    console.log('筛选参数检查:', {
+      searchData,
+      hasValidParams,
+      keys: keys.filter(k => !['page', 'page_size', 'pageSize'].includes(k))
+    });
+    
+    return hasValidParams;
   };
 
   // 处理直接导出的文件
@@ -367,21 +382,48 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
 
           // 检查是否是Blob对象
           if (blob instanceof Blob) {
+            console.log('导出成功，收到Blob对象，大小:', blob.size, 'bytes');
             await handleDirectExport(blob);
           } else {
             // 如果不是Blob，可能返回了JSON错误
-            console.error('Unexpected response type:', blob);
+            console.error('导出失败：响应不是Blob类型');
+            console.error('响应类型:', typeof blob);
+            console.error('响应内容:', blob);
+            
+            // 尝试解析错误信息
+            let errorMsg = '导出失败';
+            if (blob && typeof blob === 'object') {
+              if (blob.message) errorMsg = blob.message;
+              else if (blob.error) errorMsg = blob.error;
+              else if (blob.msg) errorMsg = blob.msg;
+            }
+            
             setExportStatus('failed');
-            messageApi.error(t('tradeBlotter.exportExcelFailed'));
+            messageApi.error(errorMsg);
             setTimeout(() => {
               handleCloseExportModal();
             }, 2000);
           }
-        } catch (error) {
-          console.error('Sync export error:', error);
+        } catch (error: any) {
+          console.error('同步导出出错:', error);
+          console.error('错误详情:', {
+            message: error.message,
+            response: error.response,
+            stack: error.stack
+          });
+          
           clearInterval(progressTimer);
           setExportStatus('failed');
-          messageApi.error(t('tradeBlotter.exportExcelFailed'));
+          
+          // 显示具体的错误信息
+          let errorMsg = '导出失败';
+          if (error.response?.data?.message) {
+            errorMsg = error.response.data.message;
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
+          
+          messageApi.error(errorMsg);
           setTimeout(() => {
             handleCloseExportModal();
           }, 2000);
@@ -391,12 +433,15 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
       } else {
         // 无筛选条件：异步导出（创建任务、轮询状态）
         console.log('异步导出模式：无筛选条件，需要轮询');
+        console.log('导出参数:', params);
 
         const res = await createExportTaskServe(params);
+        console.log('创建导出任务响应:', res);
 
         // 检查响应类型
         if (res.code === 2000 && res.data && res.data.task_id) {
           // 异步任务，需要轮询状态
+          console.log('创建导出任务成功，task_id:', res.data.task_id);
           setExportTaskId(res.data.task_id);
           setExportModalVisible(true);
           setExportStatus('pending');
@@ -404,13 +449,34 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           pollTaskStatus(res.data.task_id);
         } else {
           // 没有返回task_id的情况，重置导出状态
+          console.error('创建导出任务失败，响应:', res);
           setIsExporting(false);
-          messageApi.error(t('tradeBlotter.exportExcelFailed'));
+          
+          // 显示具体错误信息
+          let errorMsg = '创建导出任务失败';
+          if (res.message) errorMsg = res.message;
+          else if (res.error) errorMsg = res.error;
+          
+          messageApi.error(errorMsg);
         }
       }
-    } catch (err) {
-      console.error('Export error:', err);
-      messageApi.error(t('tradeBlotter.exportExcelFailed'));
+    } catch (err: any) {
+      console.error('导出异常:', err);
+      console.error('异常详情:', {
+        message: err.message,
+        response: err.response,
+        stack: err.stack
+      });
+      
+      // 显示具体的错误信息
+      let errorMsg = '导出失败';
+      if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
+      messageApi.error(errorMsg);
       setIsExporting(false);
     }
   };

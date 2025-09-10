@@ -1,24 +1,21 @@
-import type { SideMenu } from '#/public';
+import { MenuItem } from '@/pages/login/model';
 
 /**
  * 从菜单数据中递归提取所有route_path作为权限数组
- * @param menus - 菜单数组
- * @returns 路径权限数组
+ * "/usersManage"  "/merchantManage/merchantSort" 
+ * @return menus - 菜单权限路由数组
  */
-export const extractRoutePathsFromMenus = (menus: SideMenu[]): string[] => {
+export const extractRoutePathsFromMenus = (menus: MenuItem[]): string[] => {
   const routePaths: string[] = [];
 
-  const extractRecursive = (menuList: SideMenu[]) => {
+  const extractRecursive = (menuList: MenuItem[]) => {
     for (const menu of menuList) {
       if (menu.route_path) {
         routePaths.push(menu.route_path);
       }
-      if (menu.children && menu.children.length > 0) {
-        extractRecursive(menu.children);
-      }
     }
   };
-
   extractRecursive(menus);
+  console.log('routePaths', routePaths);
   return routePaths;
 };

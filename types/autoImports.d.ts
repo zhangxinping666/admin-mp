@@ -64,6 +64,7 @@ declare global {
   const Route: typeof import('react-router-dom')['Route']
   const Routes: typeof import('react-router-dom')['Routes']
   const ScrollContext: typeof import('../src/components/Table/utils/state')['ScrollContext']
+  const SearchGroup: typeof import('../src/components/Search/SearchGroup')['default']
   const StrengthBar: typeof import('../src/components/PasswordStrength/components/StrengthBar')['default']
   const SubmitBottom: typeof import('../src/components/Bottom/SubmitBottom')['default']
   const THEME_KEY: typeof import('../src/utils/config')['THEME_KEY']

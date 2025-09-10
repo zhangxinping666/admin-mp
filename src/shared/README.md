@@ -1,379 +1,212 @@
-# Shared 模块说明文档
+# 项目协作文档 - 后台管理系统优化
 
-## 概述
+## 项目概述
 
-`shared` 是数据管理模块的共享代码库，提供了一套完整的 CRUD（增删改查）页面模板和相关工具，用于快速构建标准化的管理页面。该模块采用模块化设计，包含组件、Hooks、类型定义和工具函数。
+**技术栈**：TypeScript、Vite、Ant Design、Zustand  
+**架构模式**：pnpm workspaces monorepo  
+**项目类型**：后台管理系统优化与功能增强
 
-## 目录结构
+## 常用命令
 
-```
-shared/
-├── components/          # 共享组件
-│   ├── CRUDPageTemplate.tsx    # CRUD页面模板组件
-│   ├── TableActions.tsx        # 表格操作按钮组件
-│   └── index.ts                # 组件导出文件
-├── hooks/              # 自定义Hooks
-│   ├── useCRUD.ts             # CRUD操作Hook
-│   ├── useTableAction.ts      # 表格操作Hook（待实现）
-│   └── index.ts               # Hooks导出文件
-├── types/              # 类型定义
-│   ├── common.ts              # 通用类型定义
-│   └── index.ts               # 类型导出文件
-├── utils/              # 工具函数
-│   └── helpers.ts             # 辅助函数（待实现）
-└── index.ts            # 模块主入口文件
-```
+### 开发相关
+- `pnpm install -w` - 安装所有依赖（monorepo 工作区）
+- `pnpm dev` / `pnpm dev:localhost` - 启动开发服务器（端口 7000）
+- `pnpm dev:mock` - 使用 mock 数据启动
+- `pnpm dev:dev` - 开发模式启动
+- `pnpm preview` - 预览构建后的应用
 
-## 核心组件
+### 构建与质量检查
+- `pnpm build` - 生产环境构建
+- `pnpm build:dev` - 开发环境构建
+- `pnpm build:test` - 测试环境构建
+- `pnpm lint` - 修复 ESLint 问题
+- `pnpm lint:stylelint` - 修复样式问题
+- `pnpm prettier` - 格式化代码
 
-### 1. CRUDPageTemplate
+### Git 提交规范
+- `feat` - 新功能
+- `fix` - 修复问题  
+- `refactor` - 代码重构
+- `style` - 代码风格相关
+- `perf` - 性能优化
+- `docs` - 文档相关
+- `chore` - 依赖更新/配置修改
 
-**文件位置**: `components/CRUDPageTemplate.tsx`
+## 架构与核心模式
 
-**功能**: 提供标准化的 CRUD 页面模板，包含搜索、表格、分页、新增/编辑模态框等完整功能。
+### 路由系统
+- 基于 `src/pages/` 文件结构自动生成路由
+- 支持 KeepAlive 组件缓存
 
-**主要特性**:
-- 🔍 **搜索功能**: 支持自定义搜索配置
-- 📊 **数据表格**: 集成分页、加载状态、操作列
-- ➕ **新增/编辑**: 统一的模态框表单处理
-- 🗑️ **删除操作**: 内置删除确认和处理
-- 🔌 **API集成**: 支持真实API或Mock数据
-- 🎨 **自定义操作**: 支持自定义操作按钮渲染
+### 核心依赖包
+- `@manpao/request` - HTTP 请求工具
+- `@manpao/utils` - 通用工具集
+- `@manpao/status-codes` - 状态码管理
+- `@manpao/stylelint` - 样式检查配置
 
-**Props接口**:
-```typescript
-interface CRUDPageTemplateProps<T> {
-  title: string;                    // 页面标题
-  searchConfig: BaseSearchList[];   // 搜索配置
-  columns: TableColumn[];           // 表格列配置
-  formConfig: BaseFormList[];       // 表单配置
-  initCreate: Partial<T>;           // 新增时的初始数据
-  mockData?: T[];                   // Mock数据（可选）
-  apis?: {                          // API配置（可选）
-    fetch?: (params: any) => Promise<any>;
-    create?: (data: any) => Promise<any>;
-    update?: (id: number, data: any) => Promise<any>;
-    delete?: (id: number) => Promise<any>;
-  };
-  optionRender?: (               // 自定义操作列渲染
-    record: T,
-    actions: {
-      handleEdit: (record: T) => void;
-      handleDelete: (id: number) => void;
-    }
-  ) => React.ReactNode;
-}
-```
+### UI 框架
+- Ant Design v5 配合 CSS-in-JS
+- UnoCSS 用于工具类样式  
+- Less 用于组件样式
+- 自定义主题配置
 
-**使用示例**:
-```typescript
-<CRUDPageTemplate
-  title="用户管理"
-  searchConfig={searchConfig}
-  columns={columns}
-  formConfig={formConfig}
-  initCreate={{ name: '', email: '' }}
-  apis={{
-    fetch: fetchUsers,
-    create: createUser,
-    update: updateUser,
-    delete: deleteUser
-  }}
-  optionRender={(record, actions) => (
-    <TableActions
-      record={record}
-      onEdit={actions.handleEdit}
-      onDelete={actions.handleDelete}
-    />
-  )}
-/>
-```
+### 状态管理
+- `src/stores/menu.ts` - 菜单数据
+- `src/stores/tabs.ts` - 标签页状态
+- `src/stores/token.ts` - Token 管理
 
-### 2. TableActions
+### 通用模板
+- `src/shared/components/CRUDPageTemplate.tsx` - CRUD 页面模板
+- `src/shared/hooks/useCRUD.ts` - CRUD 操作 Hook
+- `src/components/Form/BaseForm.tsx` - 表单基础组件
+- `src/components/Table/BaseTable.tsx` - 表格基础组件（支持虚拟滚动）
 
-**文件位置**: `components/TableActions.tsx`
+## 待处理需求清单
 
-**功能**: 提供标准化的表格操作按钮组件，包含编辑和删除功能。
+### 1. UI 统一性优化模块
+#### 1.1 分页组件统一
+**问题描述**：后台右下角页码样式不统一，特别是交易流水页面  
+**影响范围**：交易流水
+**优先级**：中
 
-**主要特性**:
-- ✏️ **编辑按钮**: 链接样式的编辑按钮
-- 🗑️ **删除按钮**: 集成确认对话框的删除按钮
-- 🎨 **自定义文本**: 支持自定义按钮文本
+### 2. 学校管理模块
 
-**Props接口**:
-```typescript
-interface TableActionsProps<T extends BaseEntity> {
-  record: T;                        // 当前行数据
-  onEdit: (record: T) => void;      // 编辑回调
-  onDelete: (id: number) => void;   // 删除回调
-  editText?: string;                // 编辑按钮文本
-  deleteText?: string;              // 删除按钮文本
-}
-```
+#### 2.1 学校添加功能修复
+**问题描述**：无法添加学校  
+**影响范围**：学校管理页面
+**优先级**：紧急
 
-## 核心Hooks
 
-### useCRUD
+#### 2.2 学校地址转换功能
+**问题描述**：需要实现学校经纬度转地址功能  
+**影响范围**：学校信息展示
+**优先级**：中
 
-**文件位置**: `hooks/useCRUD.ts`
+### 3. 城市运营商模块
 
-**功能**: 提供完整的 CRUD 操作逻辑，包含状态管理、数据处理、API调用等。
+#### 3.1 新增城市运营商管理
+**问题描述**：需要修复新增城市运营商管理模块  
+**影响范围**：新增城市运营商管理
+**优先级**：高
 
-**主要特性**:
-- 📊 **状态管理**: 统一管理加载、分页、表单等状态
-- 🔄 **数据操作**: 封装增删改查操作逻辑
-- 📄 **分页处理**: 内置分页逻辑和状态管理
-- 🔍 **搜索功能**: 集成搜索参数处理
-- 💾 **本地/远程**: 支持本地Mock数据和远程API
-- ⚡ **性能优化**: 使用useCallback优化性能
+#### 3.2 团长管理优化
+**问题描述**：城市运营商新增团长时不能选择城市  
+**影响范围**：团长管理功能
+**优先级**：高
 
-**参数接口**:
-```typescript
-interface UseCRUDOptions<T> {
-  initCreate: Partial<T>;           // 新增时的初始数据
-  fetchApi?: (params: any) => Promise<any>;     // 获取数据API
-  createApi?: (data: any) => Promise<any>;      // 创建数据API
-  updateApi?: (id: number, data: any) => Promise<any>; // 更新数据API
-  deleteApi?: (id: number) => Promise<any>;     // 删除数据API
-}
-```
+#### 3.3 修复团长状态编辑
+**问题描述**：团长没法编辑状态  
+**影响范围**：团长管理功能
+**优先级**：中
 
-**返回值**:
-```typescript
-{
-  // 状态
-  contextHolder,        // 消息提示容器
-  createFormRef,        // 表单引用
-  isFetch,             // 是否需要获取数据
-  isLoading,           // 表格加载状态
-  isCreateLoading,     // 表单提交加载状态
-  isCreateOpen,        // 模态框开启状态
-  createTitle,         // 模态框标题
-  createData,          // 表单数据
-  page,                // 当前页码
-  pageSize,            // 每页条数
-  total,               // 总条数
-  tableData,           // 表格数据
-  
-  // 方法
-  handlePageChange,    // 分页处理
-  handleSearch,        // 搜索处理
-  handleCreate,        // 新增处理
-  handleEdit,          // 编辑处理
-  handleDelete,        // 删除处理
-  handleModalSubmit,   // 模态框提交处理
-  fetchTableData,      // 获取表格数据
-}
-```
+### 4. 交易流水模块
 
-## 类型定义
+#### 4.1 导出数据优化
+**问题描述**：导出数据需要用户能看懂的文字，不要数字代码（如状态码）  
+**影响范围**：数据导出功能
+**优先级**：高
 
-### BaseEntity
+#### 4.2 未知学校显示优化
+**问题描述**：未知学校需要显示为"-"  
+**影响范围**：交易流水显示
+**优先级**：低
 
-**文件位置**: `types/common.ts`
+#### 4.3 用户导出功能
+**问题描述**：实现用户导出可以不在当前页面的状态  
+**影响范围**：导出功能
+**优先级**：中
 
-**功能**: 定义基础实体接口，所有数据模型的基础类型。
+### 5. 实名认证模块
 
-```typescript
-export interface BaseEntity {
-  id: number;                    // 唯一标识
-  createdAt?: string;            // 创建时间
-  updatedAt?: string;            // 更新时间
-  action?: React.ReactNode;      // 操作列渲染内容
-}
-```
+#### 5.1 添加筛选功能
+**问题描述**：需要加省份、城市、学校筛选  
+**影响范围**：实名认证页面
+**优先级**：高
 
-### BaseListResponse
-
-**功能**: 定义列表接口响应格式。
-
-```typescript
-export interface BaseListResponse<T> {
-  items: T[];                    // 数据列表
-  total: number;                 // 总条数
-}
-```
-
-### BaseQuery
-
-**功能**: 定义查询参数接口。
-
-```typescript
-export interface BaseQuery {
-  page?: number;                 // 页码
-  pageSize?: number;             // 每页条数
-  [key: string]: any;            // 其他查询参数
-}
-```
-
-### CRUDApis
-
-**功能**: 定义 CRUD API 接口类型。
-
-```typescript
-export interface CRUDApis<T, CreateData = Partial<T>, UpdateData = Partial<T>> {
-  fetch?: (params: BaseQuery) => Promise<BaseListResponse<T>>;
-  create?: (data: CreateData) => Promise<T>;
-  update?: (id: number, data: UpdateData) => Promise<T>;
-  delete?: (id: number) => Promise<void>;
-}
-```
-
-## 使用指南
-
-### 1. 快速开始
-
-```typescript
-import { CRUDPageTemplate, TableActions } from '../shared';
-import type { BaseEntity } from '../shared';
-
-// 定义数据类型
-interface User extends BaseEntity {
-  name: string;
-  email: string;
-  phone: string;
-}
-
-// 使用模板
-const UserManagement = () => {
-  return (
-    <CRUDPageTemplate<User>
-      title="用户"
-      searchConfig={searchConfig}
-      columns={columns}
-      formConfig={formConfig}
-      initCreate={{ name: '', email: '', phone: '' }}
-      optionRender={(record, actions) => (
-        <TableActions
-          record={record}
-          onEdit={actions.handleEdit}
-          onDelete={actions.handleDelete}
-        />
-      )}
-    />
-  );
-};
-```
-
-### 2. 配置说明
-
-**搜索配置示例**:
-```typescript
-const searchConfig: BaseSearchList[] = [
-  {
-    label: '用户名',
-    name: 'name',
-    type: 'input',
-    placeholder: '请输入用户名'
-  },
-  {
-    label: '状态',
-    name: 'status',
-    type: 'select',
-    options: [
-      { label: '启用', value: 1 },
-      { label: '禁用', value: 0 }
-    ]
-  }
-];
-```
-
-**表格列配置示例**:
-```typescript
-const columns: TableColumn[] = [
-  {
-    title: 'ID',
-    dataIndex: 'id',
-    key: 'id',
-    width: 80
-  },
-  {
-    title: '用户名',
-    dataIndex: 'name',
-    key: 'name'
-  },
-  {
-    title: '邮箱',
-    dataIndex: 'email',
-    key: 'email'
-  }
-];
-```
-
-**表单配置示例**:
-```typescript
-const formConfig: BaseFormList[] = [
-  {
-    label: '用户名',
-    name: 'name',
-    type: 'input',
-    rules: [{ required: true, message: '请输入用户名' }]
-  },
-  {
-    label: '邮箱',
-    name: 'email',
-    type: 'input',
-    rules: [
-      { required: true, message: '请输入邮箱' },
-      { type: 'email', message: '请输入正确的邮箱格式' }
-    ]
-  }
-];
-```
-
-## 最佳实践
-
-### 1. 数据类型定义
-- 所有数据模型都应继承 `BaseEntity`
-- 使用 TypeScript 严格类型检查
-- 定义清晰的接口和类型
-
-### 2. API 集成
-- 优先使用真实 API，Mock 数据仅用于开发测试
-- API 响应格式应符合 `BaseListResponse` 规范
-- 错误处理统一在 Hook 层面处理
-
-### 3. 组件复用
-- 使用 `CRUDPageTemplate` 保持页面一致性
-- 通过配置而非修改代码来定制功能
-- 自定义操作通过 `optionRender` 实现
-
-### 4. 性能优化
-- 合理使用 `useCallback` 和 `useMemo`
-- 避免不必要的重新渲染
-- 分页加载大量数据
-## 扩展开发
-
-### 1. 添加新功能
-- 在 `hooks/` 目录添加新的自定义 Hook
-- 在 `components/` 目录添加新的共享组件
-- 在 `types/` 目录添加相应的类型定义
-
-### 2. 工具函数
-- 在 `utils/helpers.ts` 中添加通用工具函数
-- 保持函数的纯净性和可测试性
-
-### 3. 类型扩展
-- 在 `types/common.ts` 中扩展基础类型
-- 保持向后兼容性
-
-## 注意事项
-
-1. **类型安全**: 严格使用 TypeScript 类型，避免 `any` 类型
-2. **组件职责**: 保持组件单一职责，避免过度耦合
-3. **状态管理**: 合理使用本地状态，避免状态冗余
-4. **错误处理**: 统一错误处理机制，提供友好的用户提示
-5. **性能考虑**: 注意大数据量的性能优化
-
-## 待完善功能
-
-- [ ] `useTableAction.ts` Hook 实现
-- [ ] `helpers.ts` 工具函数补充
-- [ ] 更多自定义组件支持
-- [ ] 国际化支持
-- [ ] 单元测试覆盖
+#### 5.2 添加字段
+**问题描述**：添加省份、城市和学校字段  
+**影响范围**：实名认证数据结构
+**优先级**：高
 
 ---
 
-该模块为商户管理系统提供了强大的基础设施，通过标准化的组件和 Hook，可以快速构建功能完整、用户体验一致的管理页面。
-        
+## 协作节奏规范
+
+### Step Plan 结构
+
+每个实施步骤必须包含以下要素：
+
+1. **步骤目标**：明确本步要实现的功能点
+2. **关键概念**：涉及的核心技术知识点
+3. **设计取舍**：技术方案选择的理由
+4. **技术背景**：相关技术/函数的使用说明
+5. **失败模式**：常见的失败场景及应对
+6. **回滚策略**：出现问题时的恢复方案
+7. **任务清单**：用 `TODO(human)` 标注关键实现点
+
+### 步长控制标准
+
+- **最小步（15-20分钟）**：单个函数或微功能实现
+- **标准步（25-35分钟）**：完整模块或中间件开发
+- **组合步（35-45分钟）**：多模块集成或包含测试
+
+
+---
+
+## 项目约定
+
+### 代码规范
+1. 所有新增代码必须通过 ESLint 和 Prettier 检查
+2. 组件命名使用 PascalCase
+3. 函数和变量使用 camelCase
+4. 常量使用 UPPER_SNAKE_CASE
+
+### 测试要求
+1. 关键功能必须有单元测试
+2. API 接口需要集成测试
+3. UI 交互需要 E2E 测试
+
+### 文档要求
+1. 新增功能需要更新 README
+2. API 变更需要更新接口文档
+3. 复杂逻辑需要添加代码注释
+
+### 版本控制
+1. 功能分支命名：`feature/功能名称`
+2. 修复分支命名：`fix/问题描述`
+3. 每个 PR 必须有详细描述
+
+---
+
+## 风险与应对
+
+### 技术风险
+
+1. **数据量过大**：交易流水导出可能造成内存溢出
+   - 应对：采用流式处理，分批导出
+
+2. **兼容性问题**：不同浏览器的样式差异
+   - 应对：使用 PostCSS 自动添加前缀
+
+### 业务风险
+1. **数据一致性**：并发操作可能导致数据冲突
+   - 应对：实现乐观锁机制
+
+2. **权限控制**：新功能可能存在权限漏洞
+   - 应对：严格的权限测试
+
+---
+
+## 深度思考要点
+
+在实施每个功能时，需要深入考虑：
+
+1. **性能影响**：新功能对系统性能的影响如何？
+2. **用户体验**：改动是否真正提升了用户体验？
+3. **可维护性**：代码是否易于后续维护和扩展？
+4. **安全性**：是否存在潜在的安全风险？
+5. **兼容性**：是否考虑了向后兼容？
+6. **可测试性**：功能是否便于测试？
+7. **文档完整性**：是否有充分的文档支持？
+
+---

@@ -118,6 +118,75 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => {
     const { data } = response;
+    
+    // 如果响应类型是 blob，需要特殊处理
+    if (response.config.responseType === 'blob') {
+      // 检查是否是错误响应（通过content-type判断）
+      const contentType = response.headers['content-type'] || '';
+      console.log('Blob响应 Content-Type:', contentType);
+      console.log('Blob大小:', data.size, 'bytes');
+      
+      // 判断是否是Excel文件
+      const isExcel = contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+                     contentType.includes('application/vnd.ms-excel') ||
+                     contentType.includes('application/octet-stream');
+      
+      if (!isExcel && (contentType.includes('application/json') || contentType.includes('text/'))) {
+        // 如果是JSON或文本格式，说明可能是错误响应或非预期的数据
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const textContent = reader.result as string;
+              console.log('非Excel响应内容:', textContent);
+              
+              // 尝试解析为JSON
+              try {
+                const jsonData = JSON.parse(textContent);
+                console.log('解析后的JSON数据:', jsonData);
+                
+                // 检查是否是错误响应
+                if (jsonData.code && jsonData.code !== 2000) {
+                  console.error('导出API返回错误:', jsonData);
+                  const errorMessage = jsonData.message || jsonData.msg || jsonData.error || '导出失败';
+                  reject(createError(response.config, jsonData.code, errorMessage));
+                } else if (jsonData.code === 2000) {
+                  // 如果是成功响应但返回JSON，说明后端可能返回了数据而非文件
+                  console.error('后端返回了JSON数据而非Excel文件');
+                  reject(new Error('服务器返回了数据而非Excel文件，请检查后端导出接口'));
+                } else {
+                  // 其他情况，返回原始blob（虽然可能不是我们想要的）
+                  console.warn('返回了非预期的内容，可能不是有效的Excel文件');
+                  resolve(data);
+                }
+              } catch {
+                // 不是JSON，可能是其他文本内容
+                console.error('响应不是JSON格式，内容:', textContent.substring(0, 200));
+                reject(new Error('服务器返回了无效的响应格式'));
+              }
+            } catch (e) {
+              console.error('读取响应内容失败:', e);
+              reject(new Error('读取响应数据失败'));
+            }
+          };
+          reader.onerror = () => {
+            console.error('FileReader读取失败');
+            reject(new Error('读取响应数据失败'));
+          };
+          reader.readAsText(data);
+        });
+      }
+      
+      // 检查blob大小
+      if (data.size === 0) {
+        console.error('错误：接收到的文件大小为0');
+        return Promise.reject(new Error('导出的文件为空'));
+      }
+      
+      console.log('成功接收到Excel文件，大小:', data.size, 'bytes');
+      return data; // 返回blob数据
+    }
+    
     if (data && data.code === 4010) {
       // 在响应拦截器中处理token过期，保存失败的请求并尝试刷新Token
       return new Promise((resolve, reject) => {

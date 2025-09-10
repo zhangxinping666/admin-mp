@@ -36,6 +36,7 @@ const SchoolsPage = () => {
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [cityName, setCityName] = useState<string>('');
+  const [editingId, setEditingId] = useState<number | undefined>(undefined);
   const locationOptions = useLocationOptions();
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -88,6 +89,10 @@ const SchoolsPage = () => {
   const handleEditOpen = (record: School) => {
     console.log('===== 编辑数据初始化 =====');
     console.log('原始记录:', record);
+    
+    // 设置编辑的学校ID，用于重名检查时排除自身
+    setEditingId(record.id);
+    
     const editData = {
       ...record,
       school_logo: record.logo_image_url,
@@ -105,6 +110,11 @@ const SchoolsPage = () => {
     
     console.log('编辑表单初始数据:', editData);
     return editData;
+  };
+  
+  // 新增时清除编辑ID
+  const handleCreateClick = () => {
+    setEditingId(undefined);
   };
 
   // 处理表单值，将后端的longitude/latitude转换为前端的location数组
@@ -144,11 +154,13 @@ const SchoolsPage = () => {
         isLoadingOptions,
         userInfo: userInfo || undefined,
         cityName,
+        editingId,
       })}
       initCreate={userInfo?.role_id === 5 && userInfo?.city_id 
         ? { ...initCreate, city_id: userInfo.city_id }
         : initCreate}
       onEditOpen={handleEditOpen}
+      onCreateClick={handleCreateClick}
       handleFormValue={handleFormValue}
       isAddOpen={true}
       disableCreate={!hasPermission('mp:school:add')}

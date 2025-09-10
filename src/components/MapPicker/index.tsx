@@ -62,7 +62,7 @@ const MapPicker = React.memo(
       AMapLoader.load({
         key: import.meta.env.VITE_AMAP_KEY + '',
         version: '2.0',
-        plugins: ['AMap.Scale', 'AMap.AutoComplete', 'AMap.Geolocation'],
+        plugins: ['AMap.Scale', 'AMap.AutoComplete', 'AMap.Geolocation', 'AMap.Geocoder'],
       })
         .then((AMap: any) => {
           const map = new AMap.Map('container', {
@@ -85,6 +85,31 @@ const MapPicker = React.memo(
           //将创建的点标记添加到已有的地图实例：
           map.add(marker);
 
+          // 创建Geocoder实例用于逆地理编码
+          const geocoder = new AMap.Geocoder({
+            city: '全国',
+            radius: 1000,
+            extensions: 'all',
+          });
+
+          // 逆地理编码函数
+          const getAddressFromPosition = (lng: number, lat: number, callback?: (address: string) => void) => {
+            geocoder.getAddress([lng, lat], function(status: string, result: any) {
+              if (status === 'complete' && result.info === 'OK') {
+                const address = result.regeocode.formattedAddress;
+                console.log('逆地理编码成功:', address);
+                if (callback) {
+                  callback(address);
+                }
+              } else {
+                console.log('逆地理编码失败:', status, result);
+                if (callback) {
+                  callback('');
+                }
+              }
+            });
+          };
+
           // 监听标记拖拽结束事件
           marker.on('dragend', function (e: any) {
             const position = marker.getPosition();
@@ -99,14 +124,16 @@ const MapPicker = React.memo(
               onChange(newPosition);
             }
 
-            // 如果有onSave回调，也触发它（兼容旧代码）
-            if (onSave) {
-              onSave({
-                location: { lng: position.lng, lat: position.lat },
-                name: '地图选点',
-                address: '地图选点位置',
-              });
-            }
+            // 获取地址并触发onSave回调
+            getAddressFromPosition(position.lng, position.lat, (address) => {
+              if (onSave) {
+                onSave({
+                  location: { lng: position.lng, lat: position.lat },
+                  name: address || '地图选点',
+                  address: address || '地图选点位置',
+                });
+              }
+            });
           });
           // 添加比例尺插件
           const scale = new AMap.Scale();
@@ -171,11 +198,22 @@ const MapPicker = React.memo(
             marker.setPosition(e.lnglat);
             // 更新内部状态
             setCurrentPosition([e.lnglat.lng, e.lnglat.lat]);
-            // 触发回调
-            onSave?.(e.poi);
+            
+            // 触发onChange回调
             if (onChange && e.lnglat) {
               onChange([e.lnglat.lng, e.lnglat.lat]);
             }
+            
+            // 获取地址并触发onSave回调
+            getAddressFromPosition(e.lnglat.lng, e.lnglat.lat, (address) => {
+              if (onSave) {
+                onSave({
+                  location: { lng: e.lnglat.lng, lat: e.lnglat.lat },
+                  name: address || '地图选点',
+                  address: address || '地图选点位置',
+                });
+              }
+            });
           });
         })
         .catch((e: any) => {

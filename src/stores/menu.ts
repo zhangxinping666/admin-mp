@@ -1,4 +1,5 @@
 import type { SideMenu } from '#/public';
+import { MenuItem } from '@/pages/login/model';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -6,14 +7,14 @@ interface MenuState {
   routePages: string[];
   isPhone: boolean;
   isCollapsed: boolean;
-  selectedKeys: string[]; // 修正 (1): 类型必须是字符串数组
+  selectedKeys: string[]; 
   openKeys: string[];
-  menuList: SideMenu[];
+  menuList: MenuItem[];
   toggleCollapsed: (isCollapsed: boolean) => void;
   togglePhone: (isPhone: boolean) => void;
-  setSelectedKeys: (keys: string[]) => void; // 修正 (2): action 接收的参数也应是数组
+  setSelectedKeys: (keys: string[]) => void;  
   setOpenKeys: (openKeys: string[]) => void;
-  setMenuList: (menuList: SideMenu[]) => void;
+  setMenuList: (menuList: MenuItem[]) => void;
   setRoutePages: (routePages: string[]) => void;
 }
 
@@ -23,16 +24,16 @@ export const useMenuStore = create<MenuState>()(
       (set) => ({
         isPhone: false,
         isCollapsed: false,
-        selectedKeys: [], // 修正 (3): 初始值应为空数组，由 useEffect 动态设置
-        openKeys: [], // 修正 (4): 初始值也建议为空数组
+        selectedKeys: [],  
+        openKeys: [], 
         menuList: [],
         routePages: [],
         setRoutePages: (routePages: string[]) => set({ routePages }),
         toggleCollapsed: (isCollapsed: boolean) => set({ isCollapsed }),
         togglePhone: (isPhone: boolean) => set({ isPhone }),
-        setSelectedKeys: (keys: string[]) => set({ selectedKeys: keys }), // 修正 (5): action 的实现
+        setSelectedKeys: (keys: string[]) => set({ selectedKeys: keys }),  
         setOpenKeys: (openKeys: string[]) => set({ openKeys }),
-        setMenuList: (menuList: SideMenu[]) => set({ menuList }),
+        setMenuList: (menuList: MenuItem[]) => set({ menuList }),
       }),
       {
         name: 'menu-storage',

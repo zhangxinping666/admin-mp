@@ -235,7 +235,8 @@ export const searchList = (
         label: '地区',
         name: 'pid',
         component: 'Select',
-        wrapperWidth: 180,
+        wrapperWidth: 120,
+        groupId: 'location', // 添加groupId将三个下拉框分组
         componentProps: (form) => ({
           options: options.provinceOptions,
           placeholder: '请选择省份',
@@ -251,7 +252,8 @@ export const searchList = (
         label: '',
         name: 'city_id',
         component: 'Select',
-        wrapperWidth: 180,
+        wrapperWidth: 120,
+        groupId: 'location', // 添加groupId将三个下拉框分组
         componentProps: (form) => {
           const provinceValue = form.getFieldValue('pid');
           return {
@@ -271,7 +273,8 @@ export const searchList = (
         label: '',
         name: 'school_id',
         component: 'Select',
-        wrapperWidth: 180,
+        wrapperWidth: 120,
+        groupId: 'location', // 添加groupId将三个下拉框分组
         componentProps: (form) => {
           const cityValue = form.getFieldValue('city_id');
           return {

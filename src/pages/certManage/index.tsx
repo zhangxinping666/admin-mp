@@ -18,7 +18,7 @@ import BaseTable from '@/components/Table/BaseTable';
 import BasePagination from '@/components/Pagination/BasePagination';
 import TableNavigation from '@/components/Navigation/TableNavigation';
 import { ImagePreview } from '@/components/Upload';
-import { searchList, tableColumns, type Cert, type CertItem } from './model';
+import { searchList, tableColumns, type Cert, type CertItem, useLocationOptions } from './model';
 import { getCertList, updateCert, getAuditRecord } from '@/servers/cert';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
@@ -46,6 +46,7 @@ interface record {
 
 const CertPage = () => {
   const { permissions } = useUserStore();
+  const locationOptions = useLocationOptions(); // 使用省市学校选项hook
 
   // 状态管理
   const [isFetch, setFetch] = useState(false);
@@ -261,7 +262,7 @@ const CertPage = () => {
 
           {/* 搜索区域 */}
           <BaseCard>
-            <BaseSearch data={{}} list={searchList()} handleFinish={handleSearch} />
+            <BaseSearch data={{}} list={searchList(locationOptions)} handleFinish={handleSearch} />
           </BaseCard>
 
           {/* 表格区域 */}

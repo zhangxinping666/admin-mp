@@ -21,3 +21,13 @@ export function updateSchool(data: updateSchoolForm) {
 export function deleteSchool(id: Array<number>) {
   return request.delete('/school/deleteSchool', { data: { id_list: id } });
 }
+
+// 检查学校名称是否存在
+export function checkSchoolName(name: string, excludeId?: number) {
+  return request.get('/school/checkName', { 
+    params: { 
+      name,
+      exclude_id: excludeId 
+    } 
+  });
+}

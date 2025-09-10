@@ -58,6 +58,8 @@ function ColleaguesPage() {
   // 【新增】用户选择框的状态
   const [userOptions, setUserOptions] = useState<UserOption[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  // 城市运营商的城市名称
+  const [cityName, setCityName] = useState<string>('');
   // 检查权限的辅助函数
   const { permissions, userInfo } = useUserStore();
   const hasPermission = (permission: string) => {
@@ -132,6 +134,20 @@ function ColleaguesPage() {
 
         console.log('最终分组选项:', finalOptions);
         setGroupedCityOptions(finalOptions);
+        
+        // 如果是城市运营商，获取其所属城市名称
+        if (userInfo?.role_id === 5 && userInfo?.city_id) {
+          // 从所有城市中找到对应的城市名称
+          for (const province of finalOptions) {
+            const city = province.options.find((c: any) => c.value === userInfo.city_id);
+            if (city) {
+              setCityName(city.label);
+              // 同时触发加载该城市的学校
+              handleCityChange(String(userInfo.city_id));
+              break;
+            }
+          }
+        }
       } catch (error) {
         console.error('加载省市选项失败:', error);
       } finally {
@@ -140,7 +156,7 @@ function ColleaguesPage() {
     };
     fetchAndGroupData();
     fetchUserOptions();
-  }, []);
+  }, [userInfo]);
 
   // 【新增】当城市选择变化时，调用此函数获取学校列表
   const handleCityChange = async (cityId: string) => {
@@ -218,8 +234,12 @@ function ColleaguesPage() {
         isSchoolLoading,
         userOptions,
         isLoadingUsers,
+        userInfo: userInfo || undefined,
+        cityName,
       })}
-      initCreate={initCreate}
+      initCreate={userInfo?.role_id === 5 && userInfo?.city_id 
+        ? { ...initCreate, city_id: userInfo.city_id }
+        : initCreate}
       disableCreate={!hasPermission('mp:colonel:add')}
       disableBatchDelete={!hasPermission('mp:colonel:delete')}
       apis={{
@@ -230,8 +250,18 @@ function ColleaguesPage() {
           }
           return colonelApis.fetch(params);
         },
-        createApi: colonelApis.create,
+        createApi: (data: any) => {
+          // 城市运营商强制使用其所属城市ID
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            data.city_id = userInfo.city_id;
+          }
+          return colonelApis.create(data);
+        },
         updateApi: (data: any) => {
+          // 城市运营商编辑时强制使用其所属城市ID
+          if (userInfo?.role_id === 5 && userInfo?.city_id) {
+            data.city_id = userInfo.city_id;
+          }
           // useCRUD传递的格式是 { id, ...values }
           return colonelApis.update(data);
         },

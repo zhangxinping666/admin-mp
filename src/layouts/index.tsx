@@ -14,7 +14,6 @@ import Forbidden from '@/pages/403';
 import styles from './index.module.less';
 import { getUserInfoServe } from '@/servers/login';
 import { getPermissions } from '@/servers/login';
-import type { SideMenu } from '#/public';
 import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
 
 function Layout() {
@@ -33,8 +32,6 @@ function Layout() {
   const initializeUserData = useCallback(async () => {
     try {
       setLoading(true);
-
-      // 获取用户信息
       const { data: userInfo } = await getUserInfoServe();
       setUserInfo(userInfo.data);
       // 只有在权限为空时才获取权限和菜单信息，避免与Guards.tsx冲突
