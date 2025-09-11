@@ -227,7 +227,7 @@ export const searchList = (
 
   // 地区搜索字段（根据角色显示）
   const locationSearchFields: BaseSearchList[] = [];
-  
+
   // role_id=2（超级管理员）显示完整的省市学校选择
   if (roleId === 2) {
     locationSearchFields.push(
@@ -554,6 +554,21 @@ export const detailTableColumns: TableColumn[] = [
     key: 'created_at',
     width: 160,
     render: (value: string) => <span style={{ color: '#666' }}>{value}</span>,
+  },
+  {
+    title: '类别',
+    dataIndex: 'category',
+    key: 'category',
+    width: 100,
+    render: (value: string) => {
+      const category: any = {
+        merchant_entrance: '商家',
+        withdrawal: '提现',
+        rebate: '返佣',
+        withdraw_processing: '提现申请中',
+      };
+      return <span style={{ color: '#666' }}>{category[`${value}`] || '用户'}</span>;
+    },
   },
 ];
 

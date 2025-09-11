@@ -77,8 +77,28 @@ export const searchList = (
         },
       },
     ];
+  } else {
+    list = [
+      {
+        label: '名称',
+        name: 'name',
+        component: 'Input',
+        placeholder: '请输入名称',
+      },
+      {
+        component: 'Select',
+        name: 'status',
+        label: '状态',
+        componentProps: {
+          options: [
+            { label: '全部', value: 0 },
+            { label: '启用', value: 1 },
+            { label: '禁用', value: 2 },
+          ],
+        },
+      },
+    ];
   }
-
   return list;
 };
 
@@ -98,6 +118,46 @@ export const tableColumns = (role_id: number): TableColumn[] => {
         title: '所属学校',
         dataIndex: 'school_name',
         key: 'school_name',
+        ellipsis: true,
+      },
+      {
+        title: '层数',
+        dataIndex: 'layer_nums',
+        key: 'layer_nums',
+        ellipsis: true,
+      },
+      {
+        title: '地址',
+        dataIndex: 'location',
+        key: 'location',
+        ellipsis: true,
+        render: (value: { address: string; longitude: number; latitude: number }) => {
+          return <LocationRenderer value={value} />;
+        },
+      },
+      {
+        title: '状态',
+        dataIndex: 'status',
+        key: 'status',
+        render: (value: number) => (
+          <span style={{ color: value === 1 ? 'green' : 'red' }}>
+            {value === 1 ? '启用' : '禁用'}
+          </span>
+        ),
+      },
+      {
+        title: '操作',
+        dataIndex: 'action',
+        key: 'action',
+        fixed: 'right',
+      },
+    ];
+  } else {
+    list = [
+      {
+        title: '名称',
+        dataIndex: 'name',
+        key: 'name',
         ellipsis: true,
       },
       {
@@ -169,7 +229,7 @@ export const formList = (): BaseFormList[] => [
         onSave: (data: any) => {
           console.log('value', data);
           form.setFieldsValue({
-            location: [data.location.lng, data.location.lat],
+            location: data,
           });
         },
         initValue: () => {
@@ -241,7 +301,7 @@ export const addFormList = (
             onSave: (data: any) => {
               console.log('value', data);
               form.setFieldsValue({
-                location: [data.location.lng, data.location.lat],
+                location: data,
               });
             },
             initValue: () => {
@@ -321,12 +381,7 @@ export const addFormList = (
             onSave: (data: any) => {
               console.log('value', data);
               form.setFieldsValue({
-                location: {
-                  address: data.address,
-
-                  longitude: data.location.lng,
-                  latitude: data.location.lat,
-                },
+                location: data,
               });
             },
             initValue: () => {

@@ -274,7 +274,6 @@ const MerchantApplicationPage = () => {
           return apis.updateApplication({
             id: idList,
             apply_status: params.apply_status,
-            admin_id: userInfo?.id,
             reason: params.reason,
           });
         },
