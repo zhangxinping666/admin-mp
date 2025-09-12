@@ -19,7 +19,6 @@ import Fullscreen from '@/components/Fullscreen';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
 import Nav from './Nav';
-
 type MenuKey = 'logout';
 
 function Header() {
@@ -27,13 +26,10 @@ function Header() {
   const { clear } = useAliveController();
   const { modal } = App.useApp();
   const { isCollapsed, isMaximize, username, nav } = useCommonStore();
-  // 是否窗口最大化
   const navigate = useNavigate();
   const toggleCollapsed = useMenuStore((state) => state.toggleCollapsed);
   const clearInfo = useUserStore((state) => state.clearInfo);
   const { closeAllTab, setActiveKey } = useTabsStore((state) => state);
-
-  // 下拉菜单内容
   const items: MenuProps['items'] = [
     {
       key: 'logout',
@@ -42,7 +38,7 @@ function Header() {
     },
   ];
 
-  /** 点击菜单 */
+  //点击退出登录触发事件
   const onClick: MenuProps['onClick'] = (e) => {
     switch (e.key as MenuKey) {
       case 'logout':
@@ -54,7 +50,7 @@ function Header() {
     }
   };
 
-  /** 退出登录 */
+  //登出函数
   const handleLogout = () => {
     modal.confirm({
       title: t('public.kindTips'),
@@ -65,13 +61,13 @@ function Header() {
         closeAllTab();
         setActiveKey('');
         clearTokens();
-        clear(); // 清除keepalive缓存
+        clear();
         navigate('/login');
       },
     });
   };
 
-  /** 右侧组件抽离减少重复渲染 */
+
   const RightRender = () => {
     return useMemo(
       () => (
@@ -95,13 +91,12 @@ function Header() {
             </div>
           </Dropdown>
         </div>
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
       ),
       [username],
     );
   };
 
-  /** icon渲染 */
   const IconRender = () => {
     return (
       <div className="text-lg cursor-pointer" onClick={() => toggleCollapsed(!isCollapsed)}>

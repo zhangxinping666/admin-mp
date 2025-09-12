@@ -1,7 +1,7 @@
 import type { MenuProps } from 'antd';
 import type { SideMenu } from '#/public';
 
-type MenuItem = Required<MenuProps>['items'][number];
+import { MenuItem } from '@/pages/login/model';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Menu } from 'antd';
 import { Icon } from '@iconify/react';
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMenuStore } from '@/stores';
-import { getFirstMenu, getOpenMenuByRouter, filterMenusByPermissions } from '@/menus/utils/helper';
+import { getFirstMenu, getOpenMenuByRouter } from '@/menus/utils/helper';
 import { buildMenuTree } from '@/menus/utils/menuTree';
 import styles from '../index.module.less';
 import Logo from '@/assets/images/logo.png';
@@ -30,8 +30,7 @@ function LayoutMenu() {
   // 处理菜单数据
   useEffect(() => {
     if (menuList.length > 0) {
-      const filteredMenus = filterMenusByPermissions(menuList, permissions);
-      const menuListWithIcons = processMenuIcons(filteredMenus);
+      const menuListWithIcons = processMenuIcons(menuList);
       const treeMenus = buildMenuTree(menuListWithIcons);
       const convertToAntdItems = (menus: SideMenu[]): MenuItem[] => {
         return menus.map((menu) => {
@@ -82,7 +81,6 @@ function LayoutMenu() {
     }
 
     const newOpenKeys = getOpenMenuByRouter(currentPath);
-
     const needsNewOpenKeys = newOpenKeys.some((key) => !openKeys.includes(key));
 
     if (needsNewOpenKeys) {
@@ -91,38 +89,26 @@ function LayoutMenu() {
     }
   }, [pathname, menuList, openKeys]);
 
-  /**
-   * 处理菜单图标
-   * @param menus - 菜单数组
-   */
-  const processMenuIcons = useCallback((menus: SideMenu[]): SideMenu[] => {
+  //处理菜单图标
+  const processMenuIcons = useCallback((menus: MenuItem[]): MenuItem[] => {
     return menus.map((menu) => {
       const processedMenu = { ...menu };
       // 处理图标
       if (processedMenu.icon && typeof processedMenu.icon === 'string') {
         processedMenu.icon = <Icon icon={processedMenu.icon} />;
       }
-      // 递归处理子菜单
-      if (processedMenu.children?.length) {
-        processedMenu.children = processMenuIcons(processedMenu.children);
-      }
+      console.log("processedMenu", processedMenu)
       return processedMenu;
     });
   }, []);
 
-  /**
-   * 处理跳转
-   * @param path - 路径
-   */
+
+  //处理跳转
   const goPath = (path: string) => {
     navigate(path);
   };
 
-  /**
-   * 点击菜单
-   * @param e - 菜单事件
-   */
-
+  //点击菜单
   const onClickMenu: MenuProps['onClick'] = (e) => {
     const menuItem = getMenuByKey(menuList, e.key);
     if (!menuItem || !menuItem.route_path) {

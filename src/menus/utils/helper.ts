@@ -54,31 +54,7 @@ export const getMenuName = (list: SideMenu[], path: string) => {
   return result;
 };
 
-//过滤权限菜单
-export const filterMenusByPermissions = (menuList: SideMenu[], permissions: string[]) => {
-  const allMenus = cloneDeep(menuList);
 
-  const filterRecursive = (menus: SideMenu[]) => {
-    const accessibleMenus = [];
-
-    for (const menu of menus) {
-      if (menu.children && menu.children.length > 0) {
-        const accessibleChildren = filterRecursive(menu.children);
-        if (accessibleChildren.length > 0) {
-          menu.children = accessibleChildren;
-        } else {
-          menu.children = undefined;
-        }
-      }
-    
-      accessibleMenus.push(menu);
-    }
-
-    return accessibleMenus;
-  };
-
-  return filterRecursive(allMenus);
-};
 
 export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu | undefined {
   for (const menu of menuList) {
