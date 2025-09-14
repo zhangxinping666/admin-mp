@@ -56,7 +56,7 @@ export const getMenuName = (list: SideMenu[], path: string) => {
 
 
 
-export function getMenuByKey(menuList: SideMenu[], targetKey: string): SideMenu | undefined {
+export function getMenuByKey(menuList: MenuItem[], targetKey: string): MenuItem | undefined {
   for (const menu of menuList) {
     if (String((menu as any).key) === targetKey) {
       return menu;

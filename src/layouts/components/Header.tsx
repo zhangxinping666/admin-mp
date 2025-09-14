@@ -18,14 +18,13 @@ import styles from '../index.module.less';
 import Fullscreen from '@/components/Fullscreen';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
-import Nav from './Nav';
 type MenuKey = 'logout';
 
 function Header() {
   const { t } = useTranslation();
   const { clear } = useAliveController();
   const { modal } = App.useApp();
-  const { isCollapsed, isMaximize, username, nav } = useCommonStore();
+  const { isCollapsed, isMaximize, username } = useCommonStore();
   const navigate = useNavigate();
   const toggleCollapsed = useMenuStore((state) => state.toggleCollapsed);
   const clearInfo = useUserStore((state) => state.clearInfo);
@@ -125,7 +124,6 @@ function Header() {
         <div className="flex item-center">
           <IconRender />
 
-          <Nav className="ml-15px" list={nav} />
         </div>
 
         <RightRender />

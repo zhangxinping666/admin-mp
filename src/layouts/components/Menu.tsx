@@ -1,6 +1,4 @@
 import type { MenuProps } from 'antd';
-import type { SideMenu } from '#/public';
-
 import { MenuItem } from '@/pages/login/model';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Menu } from 'antd';
@@ -14,29 +12,62 @@ import { buildMenuTree } from '@/menus/utils/menuTree';
 import styles from '../index.module.less';
 import Logo from '@/assets/images/logo.png';
 import { getMenuByKey } from '@/menus/utils/helper';
+import type { ReactNode } from 'react';
 
 function LayoutMenu() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const [antdMenuItems, setAntdMenuItems] = useState<MenuItem[]>([]);
+  // ✅ 正确的方式
+  const [antdMenuItems, setAntdMenuItems] = useState<MenuItemType[]>([]);
 
   const { isMaximize, isCollapsed, isPhone, openKeys, selectedKeys, permissions, menuList } =
     useCommonStore();
   const { setOpenKeys } = useMenuStore((state) => state);
   const { setSelectedKeys } = useMenuStore((state) => state);
   const { toggleCollapsed } = useMenuStore((state) => state);
+  interface antMenu {
+    key: number,
+    label: string;
+    icon: string | ReactNode,
+    children?: antMenu[]
+  }
+  type MenuItemType = Required<MenuProps>['items'][number];
+  function transformMenuItems(menus: antMenu[]): MenuItemType[] {
+    if (!menus) {
+      return [];
+    }
+    // 明确 map 回调的返回类型是 MenuItemType
+    return menus.map((menuItem): MenuItemType => {
+      // 先创建一个基础对象，包含所有菜单项共有的属性
+      const baseItem = {
+        key: menuItem.key,
+        label: menuItem.label,
+        icon: menuItem.icon ? <div>{menuItem.icon}</div> : null,
+      };
 
+      if (menuItem.children && menuItem.children.length > 0) {
+        return {
+          ...baseItem,
+          children: transformMenuItems(menuItem.children),
+        };
+      }
+
+      // 如果没有子菜单，直接返回基础对象
+      return baseItem;
+    });
+  }
   // 处理菜单数据
   useEffect(() => {
     if (menuList.length > 0) {
       const menuListWithIcons = processMenuIcons(menuList);
       const treeMenus = buildMenuTree(menuListWithIcons);
-      const convertToAntdItems = (menus: SideMenu[]): MenuItem[] => {
+      console.log("treeMenus", treeMenus)
+      const convertToAntdItems = (menus: MenuItem[]): antMenu[] => {
         return menus.map((menu) => {
           const menuKey = (menu as any).id || (menu as any).key;
-          const item: MenuItem = {
-            key: String(menuKey),
+          const item: antMenu = {
+            key: menuKey,
             label: (menu as any).name || (menu as any).label,
             icon: menu.icon,
           };
@@ -49,8 +80,9 @@ function LayoutMenu() {
         });
       };
 
-      const antdItems = convertToAntdItems(treeMenus);
-      setAntdMenuItems(antdItems);
+      const antdItems: antMenu[] = convertToAntdItems(treeMenus);
+      const formattedItems = transformMenuItems(antdItems);
+      setAntdMenuItems(formattedItems);
     } else {
       setAntdMenuItems([]);
     }
@@ -58,7 +90,7 @@ function LayoutMenu() {
 
   useEffect(() => {
     const currentPath = pathname;
-    const findMenuByPath = (menus: SideMenu[], targetPath: string): SideMenu | null => {
+    const findMenuByPath = (menus: MenuItem[], targetPath: string): MenuItem | null => {
       for (const menu of menus) {
         if (menu.route_path === targetPath) {
           return menu;
@@ -135,8 +167,9 @@ function LayoutMenu() {
 
   /** 点击logo */
   const onClickLogo = () => {
-    const firstMenu = getFirstMenu(menuList, permissions);
-    goPath(firstMenu);
+    const firstMenu = getFirstMenu(menuList);
+    if (firstMenu)
+      goPath(firstMenu);
     if (isPhone) hiddenMenu();
   };
 

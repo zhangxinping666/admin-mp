@@ -50,9 +50,10 @@ export interface UserInfoResponse {
 /**
  * @description 菜单项的结构 (支持递归)
  */
+import type { ReactNode } from 'react';
 export interface MenuItem {
   component_path: string;
-  icon: string;
+  icon: string | ReactNode;
   key: number;
   label: string;
   permission: string;
@@ -60,6 +61,7 @@ export interface MenuItem {
   route_path: string;
   sort: number;
   type: number;
+  children?:MenuItem[];
 }
 
 /**

@@ -1,59 +1,38 @@
-import type { SideMenu } from '#/public';
+import { MenuItem } from "@/pages/login/model";
 
-/**
- * 【最终修正版】将扁平化菜单数据转换为树形结构的 SideMenu 数组
- * 这个版本能正确构建树，并清理叶子节点上多余的 children 属性。
- * @param flatMenus - 扁平化的菜单数组
- * @returns 排序后的树形结构的菜单数组
- */
-export function buildMenuTree(flatMenus: SideMenu[]): SideMenu[] {
+export function buildMenuTree(flatMenus: MenuItem[]): MenuItem[] {
   if (!flatMenus || flatMenus.length === 0) {
     return [];
   }
 
-  // 使用 any 类型临时存储节点，因为它在构建过程中会动态添加 children
-  const menuMap = new Map<number, any>();
-  const roots: SideMenu[] = [];
+  // 使用 Map 存储每个节点，键为节点ID
+  // 值为节点对象的深拷贝，并添加了 children 属性
+  const menuMap = new Map<number, MenuItem>();
+  const roots: MenuItem[] = [];
 
-  // 1. 第一次遍历：将所有节点放入 Map 中，方便快速查找
-  //    注意：这一次我们【不】添加 children 属性
-  //    兼容key和id字段
   flatMenus.forEach((item) => {
-    const itemKey = (item as any).key || (item as any).id;
-    menuMap.set(itemKey, { ...item });
+    const clonedItem = { ...item, children: [] }; 
+    menuMap.set(item.key, clonedItem);
   });
 
-  // 2. 第二次遍历：构建树形关系
-  flatMenus.forEach((item) => {
-    const itemKey = (item as any).key || (item as any).id;
-    const itemPid = (item as any).pid;
-    const node = menuMap.get(itemKey);
-
-    // 找到父节点
-    if (itemPid && itemPid !== 0 && menuMap.has(itemPid)) {
-      const parent = menuMap.get(itemPid);
-
-      // 如果父节点还没有 children 数组，就创建一个
-      if (!parent.children) {
-        parent.children = [];
-      }
-      // 将当前节点添加到父节点的 children 中
-      parent.children.push(node);
+  menuMap.forEach((node) => {
+    if (node.pid && menuMap.has(node.pid)) {
+      const parent = menuMap.get(node.pid);
+      parent?.children?.push(node);
     } else {
-      // 如果没有父节点（或pid为0），则是根节点
       roots.push(node);
     }
   });
 
-  // 3. (可选但推荐) 递归排序函数
-  const sortMenus = (menus: SideMenu[]): SideMenu[] => {
-    menus.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+  const sortMenus = (menus: MenuItem[]): MenuItem[] => {
+    menus.sort((a, b) => (a.sort || Infinity) - (b.sort || Infinity));
+    
     menus.forEach((menu) => {
       if (menu.children && menu.children.length > 0) {
-        // 对子菜单也进行排序
         sortMenus(menu.children);
       }
     });
+
     return menus;
   };
 

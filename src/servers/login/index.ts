@@ -15,14 +15,6 @@ export function login(data: LoginData) {
   return request.post<LoginResult>('/backstage/login', data);
 }
 
-// 模板中的内容 可删
-/**
- * 修改密码
- * @param data - 请求数据
- */
-export function updatePassword(data: object) {
-  return request.post('/update-password', data);
-}
 /**
  * 忘记密码
  * @param data - 请求数据
