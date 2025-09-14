@@ -51,18 +51,12 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   const [pageSize, setPageSize] = useState(INIT_PAGINATION.pageSize);
   const [total, setTotal] = useState(0);
   const [tableData, setTableData] = useState<T[]>([]);
-  // 【新增】审批详情弹窗状态
   const [isDetailOpen, setDetailOpen] = useState(false);
-  // 【新增】审批详情数据
   const [detailData, setDetailData] = useState<T>({} as T);
 
-  // 【新增】历史审核记录弹窗状态
   const [isHistoryOpen, setHistoryOpen] = useState(false);
-  // 【新增】当前查看的历史记录ID
   const [historyId, setHistoryId] = useState(-1);
-  // 【新增】历史审核记录数据
   const [historyData, setHistoryData] = useState<Record<string, any>[]>([]);
-  // 获取下一个可用的 ID
   const getNextId = useCallback(() => {
     if (tableData.length === 0) return 1;
     const maxId = Math.max(...tableData.map((item) => item.id));
@@ -102,13 +96,15 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       messageApi.error({ content: '编辑失败：数据异常', duration: 3 });
       return;
     }
-
-    // 添加类型断言和泛型约束
-    const processedRecord = Object.entries(record).reduce<Partial<T>>((acc, [key, value]) => {
-      acc[key] = typeof value === 'boolean' ? (value ? 1 : 0) : value;
-      return acc;
-    }, {});
-    console.log('processedRecord', processedRecord);
+    const processedRecord =
+      Object.entries(record).reduce((acc, [key,
+        value]) => {
+        return {
+          ...acc,
+          [key]: typeof value === 'boolean' ? (value
+            ? 1 : 0) : value
+        };
+      }, {} as Partial<T>);
 
     setCreateTitle(title);
     setCreateId(record.id);

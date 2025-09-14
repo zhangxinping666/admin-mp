@@ -15,7 +15,6 @@ import { useCRUD } from '../hooks/useCRUD';
 import { RightOutlined } from '@ant-design/icons';
 import HistoryModal, { AuditRecord } from './HistoryModal';
 import DetailModal, { FieldConfig } from './DetailModal';
-import { merchantOrderConfig } from '@/pages/merchantManage/merchantApplication/model';
 
 interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
@@ -184,24 +183,24 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       render: (_: any, record: T) =>
         optionRender
           ? optionRender(record, {
-              handleEdit: (rec: T) => {
-                // 如果有onEditOpen回调，先调用它进行数据转换
-                const processedRecord = onEditOpen ? onEditOpen(rec) || rec : rec;
-                handleEdit(`编辑${title}`, processedRecord);
-              },
-              handleDelete: (id: Key[]) => {
-                // 调用原始的删除函数
-                Array.isArray(id) ? handleDelete(id) : handleDelete([id]);
-                // 更新选中状态，移除已删除的项
-                setSelectedRowKeys((prev) => prev.filter((key) => !id.includes(key)));
-              },
-              handleHistory: (id: number) => {
-                handleHistory(id);
-              },
-              handleDetail: (record: any) => {
-                handleDetail(record);
-              },
-            })
+            handleEdit: (rec: T) => {
+              // 如果有onEditOpen回调，先调用它进行数据转换
+              const processedRecord = onEditOpen ? onEditOpen(rec) || rec : rec;
+              handleEdit(`编辑${title}`, processedRecord);
+            },
+            handleDelete: (id: Key[]) => {
+              // 调用原始的删除函数
+              Array.isArray(id) ? handleDelete(id) : handleDelete([id]);
+              // 更新选中状态，移除已删除的项
+              setSelectedRowKeys((prev) => prev.filter((key) => !id.includes(key)));
+            },
+            handleHistory: (id: number) => {
+              handleHistory(id);
+            },
+            handleDetail: (record: any) => {
+              handleDetail(record);
+            },
+          })
           : null,
     },
   ];
@@ -211,7 +210,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       {contextHolder && contextHolder}
       <BaseContent isPermission={true}>
         <Space direction="vertical" size={'large'} className="w-full overflow-x-auto">
-          {/* 导航区域 */}
           {showNavigation && (
             <TableNavigation
               title={title}
@@ -220,12 +218,10 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             />
           )}
 
-          {/* 搜索区域 */}
           <BaseCard>
             <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
           </BaseCard>
 
-          {/* 表格区域 */}
           <BaseCard>
             <Tooltip title={disableBatchDelete || disableBatchUpdate ? '无权限操作' : ''}>
               <Space size={20}>
@@ -261,7 +257,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                 type: 'checkbox',
                 selectedRowKeys,
                 onChange: handleSelectionChange,
-                // 添加以下className属性
                 columnWidth: 60,
                 renderCell: (checked, record, index, originNode) => {
                   return <div className="ant-table-selection-cell">{originNode}</div>;
@@ -275,11 +270,9 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                       disabled={disableCreate}
                       onClick={() => {
                         if (disableCreate) return;
-                        // 如果有自定义的新增点击处理函数，先调用它
                         if (onCreateClick) {
                           onCreateClick();
                         }
-                        // 然后调用默认的新增处理
                         handleCreate(`新增${title}`);
                       }}
                     >
@@ -289,34 +282,26 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                 ) : null
               }
               expandable={{
-                // 明确地告诉表格哪一行是可展开的，这是最佳实践
                 rowExpandable: (record: any) => record.children && record.children.length > 0,
                 expandIcon: ({ expanded, onExpand, record }) => {
-                  // 再次确认该行是否有可展开的子项
-                  const hasChildren = record.children && record.children.length > 0;
-                  // 如果没有子项，渲染一个占位符来保证该列的对齐
+                  const hasChildren = (record as any).children
+                    && (record as any).children.length > 0;
+                  console.log("record", record)
                   if (!hasChildren) {
-                    // 这个span的宽度和内联样式是为了和有图标的行在视觉上对齐
                     return (
                       <span style={{ display: 'inline-block', width: '20px', marginLeft: '6px' }} />
                     );
                   }
-
-                  // 如果有子项，则渲染我们自定义的图标
                   return (
                     <RightOutlined
                       onClick={(e) => {
-                        // 阻止事件冒泡，防止点击图标时触发了 onRow 的 onClick 事件
                         e.stopPropagation();
                         onExpand(record, e);
                       }}
                       style={{
                         cursor: 'pointer',
-                        // 调整图标大小
                         fontSize: '12px',
-                        // 添加右边距
                         marginRight: '14px',
-                        // 平滑的旋转动画
                         transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
                         transition: 'transform 0.2s',
                       }}

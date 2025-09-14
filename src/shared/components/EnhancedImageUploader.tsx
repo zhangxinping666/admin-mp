@@ -85,7 +85,7 @@ export const EnhancedImageUploader = ({
       }
     } catch (error: any) {
       console.error('上传失败:', error);
-      
+
       // 检查是否是磁盘空间不足的错误
       let errorMessage = '图片上传失败';
       if (error.message && error.message.includes('no space left on device')) {
@@ -95,12 +95,12 @@ export const EnhancedImageUploader = ({
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       // 安全调用 onError
       if (typeof onError === 'function') {
         onError(error);
       }
-      
+
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -189,12 +189,14 @@ export const EnhancedImageUploader = ({
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
       {/* 隐藏的文件输入 */}
       <input
+        id="avatar-uploader"
         ref={fileInputRef}
         type="file"
         accept="image/*"
         style={{ display: 'none' }}
         onChange={handleFileSelect}
         disabled={disabled || loading}
+        aria-label="上传头像"
       />
 
       {/* 如果没有图片，显示上传按钮 */}

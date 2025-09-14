@@ -26,8 +26,9 @@ const BalanceApplication = () => {
   const optionRender = (
     record: BalanceApplication,
     actions: {
-      handleEdit: (record: BalanceApplication) => void;
-      handleDelete: (id: Key[]) => void;
+      handleEdit: (record: BalanceApplication)
+        => void;
+      handleDelete?: (id: Key[]) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:merchantApl:update');
@@ -36,7 +37,8 @@ const BalanceApplication = () => {
     return (
       <TableActions
         record={record}
-        onEdit={record.status === 0 ? actions.handleEdit : undefined}
+        onEdit={record.status === 0 ?
+          actions.handleEdit : () => { }}
         editText="审批"
         disableEdit={!canEdit}
         disableDelete={!canDelete}
