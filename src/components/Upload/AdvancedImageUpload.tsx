@@ -2,11 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Upload, Button, Modal, message, Progress, Space } from 'antd';
 import {
   UploadOutlined,
-  EyeOutlined,
-  DeleteOutlined,
   PlusOutlined,
-  CameraOutlined,
-  FileImageOutlined,
 } from '@ant-design/icons';
 import type { UploadFile, UploadProps, RcFile } from 'antd/es/upload/interface';
 

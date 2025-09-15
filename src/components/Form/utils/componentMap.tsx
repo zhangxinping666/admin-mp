@@ -1,7 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { ComponentType, BaseFormList } from '#/form';
 import { initCompProps } from './helper';
-import { CreateBusiness } from '@/components/Business';
 import {
   Input,
   InputNumber,
@@ -58,8 +57,6 @@ componentMap.set('ApiTreeSelect', ApiTreeSelect);
 componentMap.set('AmountRangeInput', AmountRangeInput);
 componentMap.set('PasswordStrength', PasswordStrength);
 
-// 业务组件注入
-CreateBusiness();
 
 /**
  * 获取组件
@@ -108,12 +105,6 @@ export function getComponent(
         <Comp {...initCompProps(t, component, onPressEnter)} {...props} listType="picture">
           <Button icon={<UploadOutlined />}>Upload png only</Button>
         </Comp>
-      ) : component == 'ImageUpload' ? (
-        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
-      ) : component == 'AdvancedImageUpload' ? (
-        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
-      ) : component == 'CropImageUpload' ? (
-        <Comp {...initCompProps(t, component, onPressEnter)} {...componentProps} />
       ) : (
         <Comp {...initCompProps(t, component, onPressEnter)} {...props} />
       )}

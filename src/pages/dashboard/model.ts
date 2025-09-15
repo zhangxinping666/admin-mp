@@ -31,7 +31,7 @@ export const searchList = (t: TFunction): BaseFormList[] => [
     wrapperWidth: 200,
     component: 'ApiSelect',
     componentProps: {
-      api: getGames as ApiFn,
+      api: getGames,
       params: {
         isAll: true,
       },
@@ -47,7 +47,7 @@ export const searchList = (t: TFunction): BaseFormList[] => [
     wrapperWidth: 200,
     component: 'ApiSelect',
     componentProps: {
-      api: getPartnerDemo as ApiFn,
+      api: getPartnerDemo,
       params: [
         '/platform/partner',
         {

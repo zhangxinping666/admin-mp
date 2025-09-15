@@ -29,9 +29,9 @@ export function splitPath(path: string): string[] {
 }
 
 //获取菜单名
-export const getMenuName = (list: SideMenu[], path: string) => {
+export const getMenuName = (list: MenuItem[], path: string) => {
   let result = '';
-  const deepData = (list: SideMenu[], path: string) => {
+  const deepData = (list: MenuItem[], path: string) => {
     if (result) return result;
     for (let i = 0; i < list?.length; i++) {
       const item = list[i];
