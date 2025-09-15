@@ -4,6 +4,7 @@ import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
 import { Space, Tooltip } from 'antd';
+import type { FormInstance } from 'antd';
 import { render } from 'nprogress';
 import dayjs from 'dayjs';
 
@@ -236,8 +237,8 @@ export const searchList = (
         name: 'pid',
         component: 'Select',
         wrapperWidth: 120,
-        groupId: 'location', // 添加groupId将三个下拉框分组
-        componentProps: (form) => ({
+        groupId: 'location',
+        componentProps: (form: FormInstance) => ({
           options: options.provinceOptions,
           placeholder: '请选择省份',
           allowClear: true,
@@ -254,7 +255,7 @@ export const searchList = (
         component: 'Select',
         wrapperWidth: 120,
         groupId: 'location', // 添加groupId将三个下拉框分组
-        componentProps: (form) => {
+        componentProps: (form: FormInstance) => {
           const provinceValue = form.getFieldValue('pid');
           return {
             placeholder: '请选择城市',
@@ -275,7 +276,7 @@ export const searchList = (
         component: 'Select',
         wrapperWidth: 120,
         groupId: 'location', // 添加groupId将三个下拉框分组
-        componentProps: (form) => {
+        componentProps: (form: FormInstance) => {
           const cityValue = form.getFieldValue('city_id');
           return {
             placeholder: '请选择学校',

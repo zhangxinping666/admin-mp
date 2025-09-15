@@ -4,16 +4,29 @@ import {
   tableColumns,
   formList,
   type API,
-  type APIGroupTreeNode,
-  getAPIMethodOptions,
   type APIMethodOption,
 } from './model';
-import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
-import { TableActions } from '@/shared/components/TableActions';
-import { getApiList, getApiDetail, addApi, updateApi, deleteApi } from '@/servers/perms/api';
+import { CRUDPageTemplate } from
+  '@/shared/components/CRUDPageTemplate';
+import { TableActions } from
+  '@/shared/components/TableActions';
+import {
+  getApiList, getApiDetail, addApi, updateApi,
+  deleteApi
+} from '@/servers/perms/api';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
-import { getMenuSelectList } from '@/servers/perms/menu'; // 导入您的真实API
+import { getMenuSelectList } from '@/servers/perms/menu';
+import { MenuDetail, MenuInfoResult } from
+  '../menuManage/model'
+import type { Key } from 'react';
+
+// 定义API分组选项的接口
+interface ApiGroupOption {
+  title: string;
+  value: number;
+  key: number;
+}
 
 // 初始化新增数据
 const initCreate: Partial<API> = {
@@ -22,29 +35,35 @@ const initCreate: Partial<API> = {
   detail: '',
   group: '',
   method: '',
-  status: 1, // 默认状态
+  status: 1,
 };
 
 const ApiPage = () => {
-  const [apiGroupData, setApiGroupData] = useState<APIGroupTreeNode[]>([]);
-  const [apiMethodOptions, setApiMethodOptions] = useState<APIMethodOption[]>([]);
+  const [apiGroupData, setApiGroupData] =
+    useState<ApiGroupOption[]>([]);
+  const [apiMethodOptions, setApiMethodOptions] =
+    useState<APIMethodOption[]>([]);
 
   // 权限检查
   const { permissions } = useUserStore();
-  const hasPermission = (permission: string) => checkPermission(permission, permissions);
+  const hasPermission = (permission: string) =>
+    checkPermission(permission, permissions);
 
-  // 获取API分组数据
   const fetchApiGroups = async () => {
     try {
-      const response = await getMenuSelectList({ type: ['2'] });
+      const response = await getMenuSelectList({
+        type: ['2']
+      });
+      const Data = response as unknown as MenuInfoResult
 
       // 处理响应数据，转换为TreeSelect需要的格式
-      if (response.code === 2000 && response.data) {
-        const processedData = response.data.map((item: any) => ({
-          title: item.name,
-          value: item.id,
-          key: item.id,
-        }));
+      if (Data.code === 2000 && Data.data) {
+        const processedData = Data.data.map((item:
+          MenuDetail) => ({
+            title: item.name,
+            value: item.id,
+            key: item.id,
+          }));
         setApiGroupData(processedData);
       } else {
         console.warn('API分组数据格式异常:', response);
@@ -56,33 +75,13 @@ const ApiPage = () => {
     }
   };
 
-  // 获取API方法数据
-  const fetchApiMethods = async () => {
-    try {
-      const methodData = await getAPIMethodOptions();
-
-      // getAPIMethodOptions已经在model.tsx中处理了数据格式
-      // 确保数据格式正确
-      if (Array.isArray(methodData)) {
-        setApiMethodOptions(methodData);
-      } else {
-        console.warn('API方法数据格式异常:', methodData);
-        setApiMethodOptions([]);
-      }
-    } catch (error) {
-      console.error('获取API方法失败:', error);
-      setApiMethodOptions([]);
-    }
-  };
-
   // 组件挂载时获取数据
   useEffect(() => {
     fetchApiGroups();
-    fetchApiMethods();
   }, []);
 
   // 监听数据变化
-  useEffect(() => {}, [apiGroupData, apiMethodOptions]);
+  useEffect(() => { }, [apiGroupData, apiMethodOptions]);
 
   // API接口配置
   const apis = {
@@ -97,7 +96,7 @@ const ApiPage = () => {
     record: API,
     actions: {
       handleEdit: (record: API) => void;
-      handleDelete: (id: number) => void;
+      handleDelete?: (id: Key[]) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:api:update');
@@ -107,7 +106,8 @@ const ApiPage = () => {
       <TableActions
         record={record}
         onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
+        onDelete={() => actions.handleDelete?.([record.id])}
+        // 传入数组
         disableEdit={!canEdit}
         disableDelete={!canDelete}
       />
@@ -117,9 +117,12 @@ const ApiPage = () => {
   return (
     <CRUDPageTemplate
       title="API管理"
+      isDelete={true}  // 添加isDelete属性
       searchConfig={searchList()}
-      columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
-      formConfig={formList(apiGroupData, apiMethodOptions)}
+      columns={tableColumns.filter((col: any) =>
+        col.dataIndex !== 'action')}
+      formConfig={formList(apiGroupData as any,
+        apiMethodOptions)}  // 临时类型断言
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:api:add')}
       disableBatchDelete={!hasPermission('mp:api:delete')}
@@ -128,16 +131,20 @@ const ApiPage = () => {
         createApi: (data: any) => {
           // 将group和method转换为对应的ID
           const groupItem = apiGroupData.find(
-            (item) => item.title === data.group || item.value === data.group,
+            (item) => item.title === data.group || item.value
+              === data.group,
           );
           const methodItem = apiMethodOptions.find(
-            (item) => item.label === data.method || item.value === data.method,
+            (item) => item.label === data.method ||
+              item.value === data.method,
           );
 
           const transformedData = {
             ...data,
-            group_id: groupItem ? groupItem.value : data.group,
-            method_id: methodItem ? methodItem.value : data.method,
+            group_id: groupItem ? groupItem.value :
+              data.group,
+            method_id: methodItem ? methodItem.value :
+              data.method,
           };
 
           return apis.createApi(transformedData);
@@ -152,7 +159,8 @@ const ApiPage = () => {
             id: apiId,
             ...values,
             group_id:
-              typeof values.group === 'object' ? Number(values.group.value) : Number(values.group),
+              typeof values.group === 'object' ?
+                Number(values.group.value) : Number(values.group),
             method_id:
               typeof values.method === 'object'
                 ? Number(values.method.value)

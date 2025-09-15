@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type Colonel, useLocationOptions } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
-import { TableActions } from '@/shared/components/TableActions';
 import { getProvinceList, getCityName } from '@/servers/city';
 import { getUserListByPage } from '@/servers/user';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import { Tooltip } from 'antd';
 import { BaseBtn } from '@/components/Buttons';
+import { UserSimple } from '../citysManage/model';
 
 import {
   getColonelList,
@@ -52,39 +52,33 @@ function ColleaguesPage() {
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const locationOptions = useLocationOptions();
-  // 【新增】学校选择框的状态
   const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
   const [isSchoolLoading, setIsSchoolLoading] = useState(false);
-  // 【新增】用户选择框的状态
   const [userOptions, setUserOptions] = useState<UserOption[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  // 城市运营商的城市名称
   const [cityName, setCityName] = useState<string>('');
-  // 检查权限的辅助函数
   const { permissions, userInfo } = useUserStore();
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
   };
 
-  // 【新增】加载用户数据
   const fetchUserOptions = async () => {
     setIsLoadingUsers(true);
     try {
       const response = await getUserListByPage();
+      const Data = response as unknown as UserSimple
       console.log('用户接口返回数据:', response);
 
       // 检查不同的数据结构可能性
-      if (response && response.code === 2000) {
+      if (Data && Data.code === 2000) {
         // 直接在response层级有code
-        const users = response.data || [];
-        console.log('用户数据 (方式1):', users);
+        const users = Data.data || [];
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
           value: user.id,
         }));
         setUserOptions(userOptionsList);
       } else if (response.data && response.data.code === 0) {
-        // 在response.data层级有code
         const users = response.data.data || [];
         console.log('用户数据 (方式2):', users);
         const userOptionsList = users.map((user: any) => ({
@@ -101,7 +95,6 @@ function ColleaguesPage() {
       setIsLoadingUsers(false);
     }
   };
-  // 加载省市数据
   useEffect(() => {
     const fetchAndGroupData = async () => {
       setIsLoadingOptions(true);
@@ -112,7 +105,6 @@ function ColleaguesPage() {
         const provinces = provinceResponse.data || [];
         console.log('省份数据:', provinces);
 
-        // 【修正】使用 province.province 来获取省份名称
         const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
         const cityResponses = await Promise.all(cityPromises);
 
@@ -123,7 +115,6 @@ function ColleaguesPage() {
           console.log(`${province.name} 的城市数据:`, cities);
 
           return {
-            // 【修正】使用 province.province 来设置分组标题
             label: province.name,
             options: cities.map((city: any) => ({
               label: city.name,
@@ -134,15 +125,12 @@ function ColleaguesPage() {
 
         console.log('最终分组选项:', finalOptions);
         setGroupedCityOptions(finalOptions);
-        
-        // 如果是城市运营商，获取其所属城市名称
+
         if (userInfo?.role_id === 5 && userInfo?.city_id) {
-          // 从所有城市中找到对应的城市名称
           for (const province of finalOptions) {
             const city = province.options.find((c: any) => c.value === userInfo.city_id);
             if (city) {
               setCityName(city.label);
-              // 同时触发加载该城市的学校
               handleCityChange(String(userInfo.city_id));
               break;
             }
@@ -158,10 +146,9 @@ function ColleaguesPage() {
     fetchUserOptions();
   }, [userInfo]);
 
-  // 【新增】当城市选择变化时，调用此函数获取学校列表
   const handleCityChange = async (cityId: string) => {
     if (!cityId) {
-      setSchoolOptions([]); // 如果清空城市，则清空学校列表
+      setSchoolOptions([]);
       return;
     }
     setIsSchoolLoading(true);
@@ -170,41 +157,23 @@ function ColleaguesPage() {
       const schools = response.data || [];
 
       const optionsToSet = schools.map((school: any) => ({
-        label: school.name, // 再次确认这里的字段名是 name 还是 school_name
+        label: school.name,
         value: school.id,
       }));
-
-      // 【添加这行调试代码】
 
       setSchoolOptions(optionsToSet);
     } catch (error) {
       console.error('加载学校列表失败:', error);
-      setSchoolOptions([]); // 出错时清空列表
+      setSchoolOptions([]);
     } finally {
       setIsSchoolLoading(false);
     }
   };
   const onEditOpenCallback = (record: any) => {
-    // 检查这条记录中是否存在 city_id
     if (record.city_id) {
-      // 调用您已经写好的 handleCityChange 来加载学校列表
       handleCityChange(record.city_id);
     }
   };
-  const handleFormValuesChange = (changedValues: any, allValues: any, form: any) => {
-    if ('city_id' in changedValues) {
-      const newCityId = changedValues.city_id;
-      handleCityChange(newCityId);
-
-      // 确保 form 存在再调用
-      if (form) {
-        form.setFieldsValue({
-          school_id: undefined,
-        });
-      }
-    }
-  };
-  // 操作列渲染
   const optionRender = (
     record: Colonel,
     actions: {
@@ -223,10 +192,14 @@ function ColleaguesPage() {
   };
 
   return (
+
     <CRUDPageTemplate
       title="团长管理"
-      searchConfig={searchList(locationOptions, userInfo || undefined)}
-      columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
+      isDelete={true}  // 添加这个属性
+      searchConfig={searchList(locationOptions,
+        userInfo || undefined)}
+      columns={tableColumns.filter((col: any) =>
+        col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,
         isLoadingOptions,
@@ -237,44 +210,25 @@ function ColleaguesPage() {
         userInfo: userInfo || undefined,
         cityName,
       })}
-      initCreate={userInfo?.role_id === 5 && userInfo?.city_id 
-        ? { ...initCreate, city_id: userInfo.city_id }
+      initCreate={userInfo?.role_id === 5 &&
+        userInfo?.city_id
+        ? {
+          ...initCreate, city_id:
+            userInfo.city_id
+        }
         : initCreate}
+      onEditOpen={onEditOpenCallback}  //
+
       disableCreate={!hasPermission('mp:colonel:add')}
-      disableBatchDelete={!hasPermission('mp:colonel:delete')}
+      disableBatchDelete={!hasPermission('mp:colonel:delete ')}
       apis={{
-        fetchApi: (params: any) => {
-          // 为城市运营商自动添加city_id过滤
-          if (userInfo?.role_id === 5 && userInfo?.city_id) {
-            params.city_id = userInfo.city_id;
-          }
-          return colonelApis.fetch(params);
-        },
-        createApi: (data: any) => {
-          // 城市运营商强制使用其所属城市ID
-          if (userInfo?.role_id === 5 && userInfo?.city_id) {
-            data.city_id = userInfo.city_id;
-          }
-          return colonelApis.create(data);
-        },
-        updateApi: (data: any) => {
-          // 城市运营商编辑时强制使用其所属城市ID
-          if (userInfo?.role_id === 5 && userInfo?.city_id) {
-            data.city_id = userInfo.city_id;
-          }
-          // useCRUD传递的格式是 { id, ...values }
-          return colonelApis.update(data);
-        },
-        deleteApi: (id: Array<number>) => colonelApis.delete(id),
+        // ... apis配置
       }}
       optionRender={optionRender}
-      onFormValuesChange={(changedValues: any, allValues: any) => {
-        if ('city_id' in changedValues) {
-          const newCityId = changedValues.city_id;
-          handleCityChange(newCityId);
-        }
+      onFormValuesChange={(changedValues: any,
+        allValues: any) => {
+        // ... 表单值变化处理
       }}
-      onEditOpen={onEditOpenCallback}
     />
   );
 }

@@ -1,51 +1,17 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
-import { FORM_REQUIRED } from '@/utils/config';
-import { message, Modal } from 'antd';
 import { useState, useEffect, useCallback } from 'react';
-import { ImagePreview } from '@/components/Upload';
-import { useUserStore } from '@/stores/user';
 import { getProvinces, getCitiesByProvince, getSchoolsByCityId } from '@/servers/trade-blotter/location';
-import { 
+import {
   createInputSearch,
   createSelectSearch,
   createProvinceCitySchoolSearch,
   SEARCH_INPUT_WIDTH,
   SEARCH_SELECT_WIDTH
 } from '@/utils/searchConfig';
-// 身份证图片预览组件 - 使用新的ImagePreview组件
-const UserPreview = ({ voucherUrl }: { voucherUrl: uploadImg[] }) => {
-  return <ImagePreview imageUrl={voucherUrl} alt="身份证图片" baseUrl="http://192.168.10.7:8082" />;
-};
-
-type uploadImg = {
-  uid: string;
-  name: string;
-  status: string;
-  url: string;
-  response?: {
-    url: string;
-  };
-};
-
-// 定义
-export interface Cert {
-  id: number;
-  name: string;
-  user_name: string;
-  card_id: number;
-  user_phone: string;
-  front: uploadImg[];
-  back: uploadImg[];
-  status: number;
-  created_time: string;
-  updated_time: string;
-  province?: string;
-  city_name?: string;
-  school_name?: string;
-}
 
 export interface CertItem {
+  user_id: number;
   id: number;
   name: string;
   card_id: number;
@@ -53,8 +19,8 @@ export interface CertItem {
   back: string;
   status: number;
   user_phone: string;
-  create_time: string;
-  update_time: string;
+  created_time: string;
+  updated_time: string;
   reject_reason?: string; // 拒绝原因
   audit_user?: string; // 审核人
   audit_time?: string; // 审核时间
@@ -69,42 +35,49 @@ export interface UpdateCert {
 }
 export interface CertDetailResult {
   code: number;
-  data: CertItem;
+  data: ReviewData;
 }
-
-export interface Pagination {
+export interface ReviewData {
+  list: ReviewInfo[];
   page: number;
   page_size: number;
+  pages: number;
   total: number;
 }
 
 export interface PaginationParams {
   page: number;
-  page_size: number;
+  pageSize: number;
+}
+
+export interface ReviewInfo {
+  reason: string;
+  reviewTime: string;
+  reviewer: string;
+  status: number;
 }
 
 export interface CertListResult {
   code: number;
   message: string; // 注意：根据您的JSON数据，这里是 message (单数)
-  data: {
-    list: CertItem[];
-    page: number;
-    page_size: number;
-    pages: number;
-    total: number;
-  };
+  data: CertList;
 }
 
-// Location选项类型
+export interface CertList {
+  list: CertItem[];
+  page: number;
+  page_size: number;
+  pages: number;
+  total: number;
+}
+
 type OptionType = { label: string; value: string | number };
 
-// 默认"全部"选项
 const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = ''): OptionType => ({
   label,
   value,
 });
 
-// Location hooks - 用于省市学校三级联动
 export const useLocationOptions = () => {
   const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
   const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
@@ -237,7 +210,7 @@ export const searchList = (
       width: SEARCH_SELECT_WIDTH,
     }),
   ];
-  
+
   return baseFields;
 };
 

@@ -64,12 +64,12 @@ const SchoolsPage = () => {
           };
         });
         setGroupedCityOptions(finalOptions);
-        
+
         // 如果是城市运营商，获取其所属城市名称
         if (userInfo?.role_id === 5 && userInfo?.city_id) {
           // 从所有城市中找到对应的城市名称
           for (const province of finalOptions) {
-            const city = province.options.find(c => c.value === userInfo.city_id);
+            const city = province.options.find((c: any) => c.value === userInfo.city_id);
             if (city) {
               setCityName(city.label);
               break;
@@ -89,10 +89,10 @@ const SchoolsPage = () => {
   const handleEditOpen = (record: School) => {
     console.log('===== 编辑数据初始化 =====');
     console.log('原始记录:', record);
-    
+
     // 设置编辑的学校ID，用于重名检查时排除自身
     setEditingId(record.id);
-    
+
     const editData = {
       ...record,
       school_logo: record.logo_image_url,
@@ -102,16 +102,16 @@ const SchoolsPage = () => {
       longitude: record.longitude,
       latitude: record.latitude,
     };
-    
+
     // 如果是城市运营商编辑，确保使用其所属城市ID
     if (userInfo?.role_id === 5 && userInfo?.city_id) {
       editData.city_id = userInfo.city_id;
     }
-    
+
     console.log('编辑表单初始数据:', editData);
     return editData;
   };
-  
+
   // 新增时清除编辑ID
   const handleCreateClick = () => {
     setEditingId(undefined);
@@ -147,6 +147,7 @@ const SchoolsPage = () => {
   return (
     <CRUDPageTemplate
       title="学校管理"
+      isDelete={false}
       searchConfig={searchList(locationOptions, userInfo || undefined)}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({
@@ -156,10 +157,10 @@ const SchoolsPage = () => {
         cityName,
         editingId,
       })}
-      initCreate={userInfo?.role_id === 5 && userInfo?.city_id 
+      initCreate={userInfo?.role_id === 5 && userInfo?.city_id
         ? { ...initCreate, city_id: userInfo.city_id }
         : initCreate}
-      onEditOpen={handleEditOpen}
+      // onEditOpen={handleEditOpen}
       onCreateClick={handleCreateClick}
       handleFormValue={handleFormValue}
       isAddOpen={true}
@@ -175,12 +176,12 @@ const SchoolsPage = () => {
           }
           // 删除location字段，因为后端不需要
           delete submitData.location;
-          
+
           // 城市运营商强制使用其所属城市ID
           if (userInfo?.role_id === 5 && userInfo?.city_id) {
             submitData.city_id = userInfo.city_id;
           }
-          
+
           console.log('提交的学校数据:', submitData);
           return schoolApis.create(submitData);
         },
@@ -210,12 +211,12 @@ const SchoolsPage = () => {
           } else {
             console.log('使用原有的longitude和latitude字段');
           }
-          
+
           // 城市运营商强制使用其所属城市ID
           if (userInfo?.role_id === 5 && userInfo?.city_id) {
             submitData.city_id = userInfo.city_id;
           }
-          
+
           // 删除location字段，因为后端不需要
           delete submitData.location;
           console.log('===== 最终提交的数据 =====');

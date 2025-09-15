@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { searchList, tableColumns, formList, type City, useLocationOptions } from './model';
+import { searchList, tableColumns, formList, type City, useLocationOptions, UserSimple } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { Tooltip } from 'antd';
+import BaseBtn from '@/components/Buttons/components/BaseBtn';
 import {
   getCityList,
   addCity,
@@ -56,13 +57,13 @@ const CitiesPage = () => {
     setIsLoadingUsers(true);
     try {
       const response = await getUserListByPage();
+      const Data = response as unknown as UserSimple
       console.log('用户接口返回数据:', response);
 
       // 检查不同的数据结构可能性
-      if (response && response.code === 2000) {
+      if (Data && Data.code === 2000) {
         // 直接在response层级有code
-        const users = response.data || [];
-        console.log('用户数据 (方式1):', users);
+        const users = Data.data || [];
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
           value: user.id,
@@ -71,7 +72,6 @@ const CitiesPage = () => {
       } else if (response.data && response.data.code === 0) {
         // 在response.data层级有code
         const users = response.data.data || [];
-        console.log('用户数据 (方式2):', users);
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
           value: user.id,
@@ -150,8 +150,10 @@ const CitiesPage = () => {
   return (
     <CRUDPageTemplate
       title="城市运营商"
+      isDelete={true}  // 添加这一行
       searchConfig={searchList(locationOptions)}
-      columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
+      columns={tableColumns.filter((col: any) =>
+        col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,
         isLoadingOptions,
@@ -159,15 +161,17 @@ const CitiesPage = () => {
         isLoadingUsers,
       })}
       initCreate={initCreate}
+
       disableCreate={!hasPermission('mp:city:add')}
-      disableBatchDelete={!hasPermission('mp:city:delete')}
+      disableBatchDelete={!hasPermission('mp:city:delete ')}
       apis={{
         fetchApi: cityApis.fetch,
         createApi: cityApis.create,
         updateApi: (data: any) => {
           return cityApis.update(data);
         },
-        deleteApi: (id: Array<number>) => cityApis.delete(id),
+        deleteApi: (id: Array<number>) =>
+          cityApis.delete(id),
       }}
       optionRender={optionRender}
     />

@@ -4,7 +4,7 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { useState, useEffect, useCallback } from 'react';
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
 import dayjs from 'dayjs';
-import { 
+import {
   createProvinceCitySearch,
   createStatusSearch,
   createInputSearch,
@@ -59,6 +59,16 @@ export interface Pagination {
 export interface PaginationParams {
   page: number;
   pageSize: number;
+}
+
+export interface UserSimple {
+  code: number;
+  data: UserInfo[]
+}
+
+export interface UserInfo {
+  id: number;
+  username: string;
 }
 
 export interface CityListResult {
@@ -228,72 +238,72 @@ export const formList = ({
   isLoadingOptions: boolean;
   isLoadingUsers: boolean;
 }): BaseFormList[] => [
-  {
-    label: '运营商名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入运营商名称',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: '运营商电话',
-    name: 'phone',
-    component: 'Input',
-    placeholder: '请输入运营商电话',
-    rules: [
-      { required: true, message: '请输入用户电话' },
-      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
-    ],
-  },
-  {
-    name: 'user_id',
-    label: '用户',
-    component: 'Select',
-    required: true,
-    rules: FORM_REQUIRED,
-    placeholder: '请选择用户',
-    componentProps: {
-      loading: isLoadingUsers,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-      options: userOptions,
+    {
+      label: '运营商名称',
+      name: 'name',
+      component: 'Input',
+      placeholder: '请输入运营商名称',
+      rules: FORM_REQUIRED,
     },
-  },
-
-  {
-    name: 'city_id', // 这个字段的键名，最终提交给后端
-    label: '城市',
-    component: 'Select',
-    required: true,
-    rules: FORM_REQUIRED,
-    placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
-    componentProps: {
-      loading: isLoadingOptions,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-      options: groupedCityOptions,
-    },
-  },
-  {
-    label: '运营商密码',
-    name: 'password',
-    component: 'Input',
-    placeholder: '不展示密码',
-    componentProps: {
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    placeholder: '请选择状态',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
+    {
+      label: '运营商电话',
+      name: 'phone',
+      component: 'Input',
+      placeholder: '请输入运营商电话',
+      rules: [
+        { required: true, message: '请输入用户电话' },
+        { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
       ],
     },
-  },
-];
+    {
+      name: 'user_id',
+      label: '用户',
+      component: 'Select',
+      required: true,
+      rules: FORM_REQUIRED,
+      placeholder: '请选择用户',
+      componentProps: {
+        loading: isLoadingUsers,
+        showSearch: true, // 开启搜索功能
+        optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+        options: userOptions,
+      },
+    },
+
+    {
+      name: 'city_id', // 这个字段的键名，最终提交给后端
+      label: '城市',
+      component: 'Select',
+      required: true,
+      rules: FORM_REQUIRED,
+      placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
+      componentProps: {
+        loading: isLoadingOptions,
+        showSearch: true, // 开启搜索功能
+        optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+        options: groupedCityOptions,
+      },
+    },
+    {
+      label: '运营商密码',
+      name: 'password',
+      component: 'Input',
+      placeholder: '不展示密码',
+      componentProps: {
+        style: { width: '100%' },
+      },
+    },
+    {
+      label: '状态',
+      name: 'status',
+      component: 'Select',
+      placeholder: '请选择状态',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 2 },
+        ],
+      },
+    },
+  ];

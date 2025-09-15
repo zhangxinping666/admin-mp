@@ -1,5 +1,5 @@
 // MenuPage.tsx
-
+import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type Menu } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
@@ -9,10 +9,11 @@ import {
   updateMenu,
   deleteMenu,
   getMenuSelectList,
-} from '@/servers/perms/menu'; // 导入您的真实API
+} from '@/servers/perms/menu';
 import { refreshSidebarMenu } from '@/utils/menuRefresh';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import type { Key } from 'react';
 
 function buildTree(flatList: Menu[]): Menu[] {
   if (!Array.isArray(flatList) || flatList.length === 0) {
@@ -92,10 +93,7 @@ const MenuPage = () => {
 
       // 调用API获取指定类型的菜单列表
       const response = await getMenuSelectList({ type: typeParams });
-      const flatList = response.data || [];
-
-      // 将扁平列表映射为 Select 需要的 { label, value } 格式
-      const options = flatList.map((item: Menu) => ({
+      const options = response.data.data.map((item: any) => ({
         label: item.name,
         value: item.id,
       }));
@@ -134,7 +132,7 @@ const MenuPage = () => {
     record: Menu,
     actions: {
       handleEdit: (record: Menu) => void;
-      handleDelete: (id: number) => void;
+      handleDelete?: (id: Key[]) => void; // 修改为可选的Key[]类型
     },
   ) => {
     const canEdit = hasPermission('mp:menu:update');
@@ -144,12 +142,13 @@ const MenuPage = () => {
       <TableActions
         record={record}
         onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
+        onDelete={() => actions.handleDelete?.([record.id])} // 传入数组
         disableEdit={!canEdit}
         disableDelete={!canDelete}
       />
     );
   };
+
   const handleFormValuesChange = (changedValues: any, allValues: any) => {
     if (changedValues.type) {
       fetchMenuOptionsByType(changedValues.type);
@@ -159,20 +158,23 @@ const MenuPage = () => {
   return (
     <CRUDPageTemplate
       title="菜单管理"
+      isDelete={true} // 添加isDelete属性
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({ menuOptions, isMenuOptionsLoading })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:menu:add')}
       disableBatchDelete={!hasPermission('mp:menu:delete')}
-      onFormValuesChange={handleFormValuesChange}
+      onFormValuesChange={handleFormValuesChange} // 只保留一个onFormValuesChange
       onEditOpen={(record) => {
         const parentId = record.pid || 0;
         if (record.type) {
           fetchMenuOptionsByType(record.type);
         }
         if (parentId === 0) {
+          // 根目录处理逻辑
         } else {
+          // 非根目录处理逻辑
         }
       }}
       apis={{
@@ -194,7 +196,9 @@ const MenuPage = () => {
           }
 
           const response = await menuApis.fetch(searchParams);
-          const flatList = response?.data || [];
+          const flatList = response?.data as unknown as Menu[];
+          console.log("response", response)
+          console.log("response", response)
           // 调用树形转换函数
           const treeData = buildTree(flatList);
           return {
@@ -202,15 +206,12 @@ const MenuPage = () => {
           };
         },
         createApi: menuApis.create,
-        // ... existing code ...
         updateApi: (data: any) => {
           return menuApis.update(data);
         },
-        // ... existing code ...
         deleteApi: (id: number[]) => menuApis.delete(id),
       }}
       optionRender={optionRender}
-      onFormValuesChange={handleFormValuesChange}
       pagination={true}
     />
   );

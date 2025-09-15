@@ -1,15 +1,12 @@
-import { useEffect, useState, useRef, useCallback, Key } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Button,
   message,
-  type FormInstance,
   TableColumnsType,
   Space,
   Modal,
   Descriptions,
   Input,
-  Form,
-  Tag,
 } from 'antd';
 import BaseContent from '@/components/Content/BaseContent';
 import BaseCard from '@/components/Card/BaseCard';
@@ -18,23 +15,13 @@ import BaseTable from '@/components/Table/BaseTable';
 import BasePagination from '@/components/Pagination/BasePagination';
 import TableNavigation from '@/components/Navigation/TableNavigation';
 import { ImagePreview } from '@/components/Upload';
-import { searchList, tableColumns, type Cert, type CertItem, useLocationOptions } from './model';
+import { searchList, tableColumns, type CertItem, useLocationOptions, ReviewData, CertList } from './model';
 import { getCertList, updateCert, getAuditRecord } from '@/servers/cert';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import { INIT_PAGINATION } from '@/utils/config';
 import type { BaseFormData } from '#/form';
 import { RightOutlined } from '@ant-design/icons';
-
-// 初始化新增数据
-const initCreate: Partial<Cert> = {
-  id: 0,
-  name: '',
-  card_id: 0,
-  front: [],
-  back: [],
-  status: 0, // 默认状态
-};
 
 //审批历史记录
 interface record {
@@ -53,9 +40,8 @@ const CertPage = () => {
   const [isLoading, setLoading] = useState(false);
   const [isCreateLoading, setCreateLoading] = useState(false);
   const [isCreateOpen, setCreateOpen] = useState(false);
-  const [createTitle, setCreateTitle] = useState('新增');
   const [createId, setCreateId] = useState(-1);
-  const [createData, setCreateData] = useState<Partial<Cert>>(initCreate);
+  const [createData, setCreateData] = useState<Partial<CertItem | null>>(null);
   const [searchData, setSearchData] = useState<BaseFormData>({});
 
   // 审核信息弹窗状态
@@ -91,9 +77,10 @@ const CertPage = () => {
       };
 
       const response = await getCertList(params);
-      if (response?.data) {
-        setTableData(response.data.list || []);
-        setTotal(response.data.total || 0);
+      const Data = response.data as unknown as CertList
+      if (Data) {
+        setTableData(Data.list || []);
+        setTotal(Data.total || 0);
       }
     } catch (error) {
       console.error('获取数据失败:', error);
@@ -118,15 +105,6 @@ const CertPage = () => {
     setFetch(true);
   };
 
-  // 审核处理
-  const handleAudit = (record: CertItem) => {
-    setCreateTitle('审核实名认证');
-    console.log(record.id);
-    setCreateId(record.id);
-    setCreateData(record);
-    setRejectReason(''); // 清空拒绝原因
-    setCreateOpen(true);
-  };
 
   // 审批处理
   const handleAuditAction = (record: CertItem) => {
@@ -138,14 +116,16 @@ const CertPage = () => {
 
   // 查看审核信息详情
   const handleViewDetail = async (record: CertItem) => {
+    setCreateData(record)
     setDetailData(record);
     setDetailModalOpen(true);
 
     // 获取审批历史记录
     try {
       const response = await getAuditRecord(record.user_id);
-      if (response?.data?.list) {
-        setAuditHistory(response.data.list);
+      const Data = response.data as unknown as ReviewData
+      if (Data?.list) {
+        setAuditHistory(Data.list);
       } else {
         setAuditHistory([]);
       }
@@ -279,7 +259,7 @@ const CertPage = () => {
               }}
               expandable={{
                 rowExpandable: (record: any) => record.children && record.children.length > 0,
-                expandIcon: ({ expanded, onExpand, record }) => {
+                expandIcon: ({ expanded, onExpand, record }: any) => {
                   const hasChildren = record.children && record.children.length > 0;
                   if (!hasChildren) {
                     return (
@@ -316,26 +296,15 @@ const CertPage = () => {
           </BaseCard>
         </Space>
       </BaseContent>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* 用户信息 */}
+        <Descriptions bordered column={1} size="small">
+          <Descriptions.Item label="用户姓名">{createData?.name}</Descriptions.Item>
+          <Descriptions.Item label="身份证号">{createData?.card_id}</Descriptions.Item>
+          <Descriptions.Item label="用户电话">{createData?.user_phone}</Descriptions.Item>
+        </Descriptions>
+      </div>
 
-      {/* 审核模态框 */}
-      <Modal
-        title={createTitle}
-        open={isCreateOpen}
-        onCancel={() => {
-          setCreateOpen(false);
-          setRejectReason('');
-        }}
-        width={600}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* 用户信息 */}
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="用户姓名">{createData?.name}</Descriptions.Item>
-            <Descriptions.Item label="身份证号">{createData?.card_id}</Descriptions.Item>
-            <Descriptions.Item label="用户电话">{createData?.user_phone}</Descriptions.Item>
-          </Descriptions>
-        </div>
-      </Modal>
 
       {/* 审批弹窗 */}
       <Modal
@@ -369,13 +338,13 @@ const CertPage = () => {
                     imageUrl={
                       auditData.front
                         ? [
-                            {
-                              uid: '1',
-                              name: 'front',
-                              status: 'done',
-                              url: auditData.front,
-                            },
-                          ]
+                          {
+                            uid: '1',
+                            name: 'front',
+                            status: 'done',
+                            url: auditData.front,
+                          },
+                        ]
                         : []
                     }
                     alt="身份证正面"
@@ -390,13 +359,13 @@ const CertPage = () => {
                     imageUrl={
                       auditData.back
                         ? [
-                            {
-                              uid: '2',
-                              name: 'back',
-                              status: 'done',
-                              url: auditData.back,
-                            },
-                          ]
+                          {
+                            uid: '2',
+                            name: 'back',
+                            status: 'done',
+                            url: auditData.back,
+                          },
+                        ]
                         : []
                     }
                     alt="身份证反面"
@@ -455,7 +424,7 @@ const CertPage = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Modal >
 
       {/* 审核信息详情弹窗 */}
       <Modal
@@ -465,17 +434,18 @@ const CertPage = () => {
           setDetailModalOpen(false);
           setAuditHistory([]);
         }}
-        footer={[
-          <Button
-            key="close"
-            onClick={() => {
-              setDetailModalOpen(false);
-              setAuditHistory([]);
-            }}
-          >
-            关闭
-          </Button>,
-        ]}
+        footer={
+          [
+            <Button
+              key="close"
+              onClick={() => {
+                setDetailModalOpen(false);
+                setAuditHistory([]);
+              }}
+            >
+              关闭
+            </Button>,
+          ]}
         width={700}
       >
         {detailData && (
@@ -540,7 +510,7 @@ const CertPage = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Modal >
     </>
   );
 };

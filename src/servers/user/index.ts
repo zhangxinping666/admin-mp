@@ -1,3 +1,4 @@
+import { UserSimple } from '@/pages/citysManage/model';
 import {
   UserListResult,
   PaginationParams,
@@ -24,5 +25,5 @@ export function deleteUser(id: Array<number>) {
 }
 //用户列表
 export function getUserListByPage() {
-  return request.get('/backUser/simple_list');
+  return request.get<UserSimple>('/backUser/simple_list');
 }

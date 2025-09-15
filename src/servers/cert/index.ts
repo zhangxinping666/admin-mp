@@ -1,12 +1,11 @@
 import {
   CertListResult,
-  PaginationParams,
   CertDetailResult,
   UpdateCert,
 } from '../../pages/certManage/model';
 import request from '@/utils/request';
 // 获取列表
-export function getCertList(params: PaginationParams) {
+export function getCertList(params: any) {
   return request.get<CertListResult>('/backAuth/get', { params });
 }
 // 获取详情

@@ -286,13 +286,13 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
       // 值不为 undefined、null、空字符串即为有效
       return value !== undefined && value !== null && value !== '';
     });
-    
+
     console.log('筛选参数检查:', {
       searchData,
       hasValidParams,
       keys: keys.filter(k => !['page', 'page_size', 'pageSize'].includes(k))
     });
-    
+
     return hasValidParams;
   };
 
@@ -389,17 +389,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
             console.error('导出失败：响应不是Blob类型');
             console.error('响应类型:', typeof blob);
             console.error('响应内容:', blob);
-            
-            // 尝试解析错误信息
-            let errorMsg = '导出失败';
-            if (blob && typeof blob === 'object') {
-              if (blob.message) errorMsg = blob.message;
-              else if (blob.error) errorMsg = blob.error;
-              else if (blob.msg) errorMsg = blob.msg;
-            }
-            
             setExportStatus('failed');
-            messageApi.error(errorMsg);
             setTimeout(() => {
               handleCloseExportModal();
             }, 2000);
@@ -411,10 +401,10 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
             response: error.response,
             stack: error.stack
           });
-          
+
           clearInterval(progressTimer);
           setExportStatus('failed');
-          
+
           // 显示具体的错误信息
           let errorMsg = '导出失败';
           if (error.response?.data?.message) {
@@ -422,7 +412,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           } else if (error.message) {
             errorMsg = error.message;
           }
-          
+
           messageApi.error(errorMsg);
           setTimeout(() => {
             handleCloseExportModal();
@@ -451,12 +441,11 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
           // 没有返回task_id的情况，重置导出状态
           console.error('创建导出任务失败，响应:', res);
           setIsExporting(false);
-          
+
           // 显示具体错误信息
           let errorMsg = '创建导出任务失败';
           if (res.message) errorMsg = res.message;
-          else if (res.error) errorMsg = res.error;
-          
+
           messageApi.error(errorMsg);
         }
       }
@@ -467,7 +456,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
         response: err.response,
         stack: err.stack
       });
-      
+
       // 显示具体的错误信息
       let errorMsg = '导出失败';
       if (err.response?.data?.message) {
@@ -475,7 +464,7 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
       } else if (err.message) {
         errorMsg = err.message;
       }
-      
+
       messageApi.error(errorMsg);
       setIsExporting(false);
     }

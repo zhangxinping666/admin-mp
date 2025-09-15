@@ -1,11 +1,12 @@
 import {
   MenuListResult,
-  PaginationParams,
   MenuSearchParams,
   MenuAddForm,
   MenuUpdateForm,
   MenuDetailResult,
+  MenuInfoResult
 } from '../../pages/permissionManage/menuManage/model';
+
 import request from '@/utils/request';
 
 // 获取菜单列表（支持筛选参数）
@@ -38,10 +39,10 @@ export function getMenuSelectList(params?: { type?: string[] }) {
   // 将数组参数转换为逗号分隔的字符串
   const processedParams = params?.type
     ? {
-        ...params,
-        type: params.type.join(','),
-      }
+      ...params,
+      type: params.type.join(','),
+    }
     : params;
 
-  return request.get(`/menu/list`, { params: processedParams });
+  return request.get<MenuInfoResult>(`/menu/list`, { params: processedParams });
 }

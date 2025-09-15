@@ -48,7 +48,7 @@ export interface RoleSelectListResult {
 }
 export interface updateRolePermsForm {
   id: number;
-  id_list: number[];
+  id_list: (number | null)[];
 } // 菜单权限树节点接口
 
 export interface Pagination {
@@ -140,7 +140,7 @@ function buildMenuTree(flatList: MenuData[]): MenuData[] {
 function convertMenuToTreeNode(menuList: MenuData[]): MenuTreeNode[] {
   console.log(menuList);
   return menuList.map((menu) => ({
-    key: menu.id,
+    key: menu.id.toString(),
     title: menu.name,
     id: menu.id,
     path: menu.name,
@@ -153,11 +153,11 @@ function convertMenuToTreeNode(menuList: MenuData[]): MenuTreeNode[] {
 export const getMenuPermissionTree = async (): Promise<MenuTreeNode[]> => {
   try {
     // 调用真实API获取菜单权限数据
-    const response = await getMenuSelectList({ type: [] });
+    const response = await getMenuSelectList({ type: [] }) as any;
     if (response.code === 2000 && response.data) {
       // 将API返回的数据转换为MenuData格式
 
-      const menuData: MenuData[] = response.data.map((item: any) => ({
+      const menuData: MenuData[] = (response.data as any[]).map((item: any) => ({
         id: item.id,
         pid: item.pid,
         name: item.name,
@@ -189,7 +189,7 @@ export interface MenuTreeNode {
   path?: string;
   title?: string;
   label?: string;
-  value?: number;
+  value?: number | string;
   checkable?: boolean;
   children?: MenuTreeNode[];
 }
@@ -197,31 +197,31 @@ export interface MenuTreeNode {
 export const getDataPermissionTree = async (): Promise<MenuTreeNode[]> => {
   try {
     // 1. 首先获取所有的API分组菜单 - 使用type: ['2']获取API分组类型的菜单
-    const groupResponse = await getMenuSelectList({ type: ['2'] });
+    const groupResponse = await getMenuSelectList({ type: ['2'] }) as any;
     if (groupResponse.code !== 2000 || !groupResponse.data) {
       console.error('获取API分组菜单失败', groupResponse);
       return []; // 如果分组都获取不到，直接返回空数组
     }
 
-    const groups = groupResponse.data;
+    const groups = groupResponse.data as any[];
     if (groups.length === 0) {
       return []; // 如果没有分组，也直接返回
     }
 
     // 2. 为每个分组菜单获取对应的API列表
-    const apiPromises = groups.map((group) => getApiListByGroup(group.id));
+    const apiPromises = groups.map((group: any) => getApiListByGroup(group.id));
 
     // 3. 使用 Promise.allSettled 并行执行所有API请求
     const apiResults = await Promise.allSettled(apiPromises);
-    const dataPermissionTree: MenuTreeNode[] = groups.map((group, index) => {
+    const dataPermissionTree: MenuTreeNode[] = groups.map((group: any, index: number) => {
       const result = apiResults[index];
       const groupTitle = group.name || `分组-${group.id}`;
       let children: MenuTreeNode[] = []; // 默认为空
 
       // 检查对应请求的结果
-      if (result.status === 'fulfilled' && result.value.code === 2000 && result.value.data) {
+      if (result.status === 'fulfilled' && (result.value as any).code === 2000 && (result.value as any).data) {
         // 请求成功且数据有效 - 处理返回的API列表数据
-        const apiData = result.value.data;
+        const apiData = (result.value as any).data;
         const apiList = Array.isArray(apiData) ? apiData : apiData.list || [];
         children = apiList.map((api: API) => {
           const displayPath = api.path || api.detail || `API-${api.id}`;

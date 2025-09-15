@@ -5,9 +5,9 @@ import PermissionEditModal from './components/PermissionEditModal';
 import { useState } from 'react';
 import { getRoleList, getRoleDetail, addRole, updateRole, deleteRole } from '@/servers/perms/role';
 import { refreshSidebarMenu } from '@/utils/menuRefresh';
-import { message } from 'antd';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import type { Key } from 'react';
 
 // 初始化新增数据
 const initCreate: Partial<Role> = {
@@ -67,7 +67,7 @@ const RolesPage = () => {
     record: Role,
     actions: {
       handleEdit: (record: Role) => void;
-      handleDelete: (id: number) => void;
+      handleDelete?: (id: Key[]) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:role:update');
@@ -78,7 +78,7 @@ const RolesPage = () => {
       <RoleTableActions
         record={record}
         onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
+        onDelete={() => actions.handleDelete?.([record.id])}
         onEditPermissions={handleEditPermissions}
         disableEdit={!canEdit}
         disableDelete={!canDelete}
@@ -99,6 +99,7 @@ const RolesPage = () => {
       />
       <CRUDPageTemplate
         title="角色管理"
+        isDelete={true}
         searchConfig={searchList()}
         columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}

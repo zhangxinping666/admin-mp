@@ -8,10 +8,12 @@ import MapPicker from '@/components/MapPicker';
 import dayjs from 'dayjs';
 import { checkSchoolName } from '@/servers/school';
 import { debounce } from '@/utils/debounce';
-import { 
-  createInputSearch, 
-  createProvinceCitySearch, 
-  createStatusSearch 
+import type { FormInstance } from 'antd';
+import React from 'react';
+import {
+  createInputSearch,
+  createProvinceCitySearch,
+  createStatusSearch
 } from '@/utils/searchConfig';
 
 // 学校定义
@@ -164,7 +166,7 @@ export const searchList = (
       })
     );
   }
-  
+
   // 状态字段（所有角色都有）
   const statusField = createStatusSearch({ includeAll: true });
 
@@ -220,7 +222,9 @@ export const tableColumns: TableColumn[] = [
     key: 'address',
     width: 200,
     ellipsis: true,
-    render: (_: any, record: School) => <AddressWithLocation record={record} />,
+    render: (_: any, record: School): React.ReactNode => {
+      return <AddressWithLocation record={record} />;
+    },
   },
   {
     title: '所属省份',
@@ -297,7 +301,7 @@ export const formList = ({
             if (!value) {
               return Promise.resolve();
             }
-            
+
             try {
               const response = await checkSchoolName(value, editingId);
               if (response.data?.exists) {
@@ -452,9 +456,6 @@ export const formList = ({
         type: 'hidden',
       },
       hidden: true,
-      wrapperProps: {
-        style: { display: 'none' },
-      },
     },
     {
       label: '',
@@ -464,9 +465,6 @@ export const formList = ({
         type: 'hidden',
       },
       hidden: true,
-      wrapperProps: {
-        style: { display: 'none' },
-      },
     },
     {
       label: '状态',

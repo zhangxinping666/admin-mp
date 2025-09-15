@@ -62,6 +62,17 @@ export interface PaginationParams {
   pageSize: number;
 }
 
+export interface MenuInfoResult {
+  code: number;
+  data: MenuDetail[];
+}
+
+export interface MenuDetail {
+  id: number;
+  pid: number;
+  name: string;
+}
+
 // 菜单筛选参数接口
 export interface MenuSearchParams {
   name?: string;
@@ -69,15 +80,9 @@ export interface MenuSearchParams {
 }
 export interface MenuListResult {
   code: number;
-  message: string; // 注意：根据您的JSON数据，这里是 message (单数)
-  data: {
-    list: Menu[];
-    page: number;
-    page_size: number;
-    pages: number;
-    total: number;
-  };
+  data: Menu[];
 }
+
 export interface MenuDetailResult {
   code: number;
   data: Menu;
@@ -222,138 +227,137 @@ export const formList = ({
   menuOptions: any[];
   isMenuOptionsLoading: boolean;
 }): BaseFormList[] => [
-  {
-    label: '父级菜单',
-    name: 'pid',
-    // 【修改】使用普通的 Select 组件
-    component: 'Select',
-    placeholder: isMenuOptionsLoading ? '菜单加载中...' : '请选择父级菜单',
-    componentProps: {
-      // 【修改】直接使用扁平的 options 数组
-      options: menuOptions,
-      loading: isMenuOptionsLoading,
-      showSearch: true, // 仍然可以支持搜索
-      optionFilterProp: 'label',
-      style: { width: '100%' },
-      // 自定义显示格式，当值为0时显示"根目录"
-      optionLabelProp: 'label',
+    {
+      label: '父级菜单',
+      name: 'pid',
+      // 【修改】使用普通的 Select 组件
+      component: 'Select',
+      placeholder: isMenuOptionsLoading ? '菜单加载中...' : '请选择父级菜单',
+      componentProps: {
+        // 【修改】直接使用扁平的 options 数组
+        options: menuOptions,
+        loading: isMenuOptionsLoading,
+        showSearch: true, // 仍然可以支持搜索
+        optionFilterProp: 'label',
+        style: { width: '100%' },
+        // 自定义显示格式，当值为0时显示"根目录"
+        optionLabelProp: 'label',
+      },
+      showWhen: {
+        name: 'type',
+        value: [2, 3], // 目录和菜单
+      },
     },
-    showWhen: {
+    {
+      name: 'name',
+      label: '菜单名称',
+      component: 'Input',
+      placeholder: '请输入菜单名称',
+      rules: FORM_REQUIRED,
+    },
+    {
       name: 'type',
-      value: [2, 3], // 目录和菜单
+      label: '菜单类型',
+      component: 'RadioGroup',
+      placeholder: '请选择菜单类型',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        options: [
+          { label: '目录', value: 1 },
+          { label: '菜单', value: 2 },
+          { label: '按钮', value: 3 },
+        ],
+      },
     },
-  },
-  {
-    name: 'name',
-    label: '菜单名称',
-    component: 'Input',
-    placeholder: '请输入菜单名称',
-    rules: FORM_REQUIRED,
-  },
-  {
-    name: 'type',
-    label: '菜单类型',
-    component: 'RadioGroup',
-    placeholder: '请选择菜单类型',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: [
-        { label: '目录', value: 1 },
-        { label: '菜单', value: 2 },
-        { label: '按钮', value: 3 },
-      ],
+    // 目录和菜单显示的字段
+    {
+      name: 'route_name',
+      label: '路由名称',
+      component: 'Input',
+      placeholder: '请输入路由名称',
+      rules: FORM_REQUIRED,
+      showWhen: {
+        name: 'type',
+        value: [1, 2], // 目录和菜单
+      },
     },
-  },
-  // 目录和菜单显示的字段
-  {
-    name: 'route_name',
-    label: '路由名称',
-    component: 'Input',
-    placeholder: '请输入路由名称',
-    rules: FORM_REQUIRED,
-    showWhen: {
-      name: 'type',
-      value: [1, 2], // 目录和菜单
+    {
+      name: 'route_path',
+      label: '路由路径',
+      component: 'Input',
+      placeholder: '请输入路由路径',
+      rules: FORM_REQUIRED,
+      showWhen: {
+        name: 'type',
+        value: [1, 2], // 目录和菜单
+      },
     },
-  },
-  {
-    name: 'route_path',
-    label: '路由路径',
-    component: 'Input',
-    placeholder: '请输入路由路径',
-    rules: FORM_REQUIRED,
-    showWhen: {
-      name: 'type',
-      value: [1, 2], // 目录和菜单
+    {
+      name: 'icon',
+      label: '图标',
+      component: 'Input',
+      placeholder: '请输入图标名称',
+      showWhen: {
+        name: 'type',
+        value: [1, 2], // 目录和菜单
+      },
     },
-  },
-  {
-    name: 'icon',
-    label: '图标',
-    component: 'Input',
-    placeholder: '请输入图标名称',
-    showWhen: {
-      name: 'type',
-      value: [1, 2], // 目录和菜单
+    // 仅菜单显示的字段
+    {
+      name: 'component_path',
+      label: '组件路径',
+      component: 'Input',
+      placeholder: '请输入组件路径',
+      rules: FORM_REQUIRED,
+      showWhen: {
+        name: 'type',
+        value: 2, // 仅菜单
+      },
     },
-  },
-  // 仅菜单显示的字段
-  {
-    name: 'component_path',
-    label: '组件路径',
-    component: 'Input',
-    placeholder: '请输入组件路径',
-    rules: FORM_REQUIRED,
-    showWhen: {
-      name: 'type',
-      value: 2, // 仅菜单
+    // 仅按钮显示的字段
+    {
+      name: 'code',
+      label: '权限标识',
+      component: 'Input',
+      placeholder: '请输入权限标识',
+      rules: FORM_REQUIRED,
+      showWhen: {
+        name: 'type',
+        value: 3, // 仅按钮
+      },
     },
-  },
-  // 仅按钮显示的字段
-  {
-    name: 'code',
-    label: '权限标识',
-    component: 'Input',
-    placeholder: '请输入权限标识',
-    rules: FORM_REQUIRED,
-    showWhen: {
-      name: 'type',
-      value: 3, // 仅按钮
+    // 通用状态和配置字段
+    {
+      name: 'status',
+      label: '状态',
+      component: 'Select',
+      placeholder: '请选择状态',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 2 },
+        ],
+      },
     },
-  },
-  // 通用状态和配置字段
-  {
-    name: 'status',
-    label: '状态',
-    component: 'Select',
-    placeholder: '请选择状态',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
+    {
+      name: 'sort',
+      label: '排序',
+      component: 'InputNumber',
+      placeholder: '请输入排序值',
+      componentProps: {
+        min: 0,
+        max: 9999,
+        style: { width: '100%' },
+      },
     },
-  },
-  {
-    name: 'sort',
-    label: '排序',
-    component: 'InputNumber',
-    placeholder: '请输入排序值',
-    componentProps: {
-      min: 0,
-      max: 9999,
-      style: { width: '100%' },
+    {
+      name: 'desc',
+      label: '描述',
+      component: 'TextArea',
+      placeholder: '请输入描述',
+      componentProps: {
+        style: { width: '100%' },
+      },
     },
-  },
-  {
-    name: 'desc',
-    label: '描述',
-    component: 'TextArea',
-    placeholder: '请输入描述',
-    componentProps: {
-      rows: 3,
-      style: { width: '100%' },
-    },
-  },
-];
+  ];

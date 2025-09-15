@@ -142,99 +142,66 @@ export interface APIMethodOption {
   value: number;
 }
 
-// 获取API类别树形数据
-export const getAPIGroupTree = async (): Promise<APIGroupTreeNode[]> => {
-  try {
-    const response = await getDictionaryList({ dict_type_code: 'ApiGroup' });
-    if (response.code === 2000) {
-      return response.data.list.map((item: any) => ({
-        title: item.label,
-        value: item.id,
-      }));
-    }
-    return [];
-  } catch (error) {
-    console.error('获取API分组失败:', error);
-    return [];
-  }
-};
-
-// 获取API方法选项数据
-export const getAPIMethodOptions = async (): Promise<APIMethodOption[]> => {
-  try {
-    const response = await getDictionaryList({ dict_type_code: 'ApiMethod' });
-    if (response.code === 2000) {
-      return response.data.list.map((item: any) => ({
-        label: item.label,
-        value: item.id,
-      }));
-    }
-    return [];
-  } catch (error) {
-    console.error('获取API方法失败:', error);
-    return [];
-  }
-};
 // 表单配置
 export const formList = (
   apiGroupData: APIGroupTreeNode[] = [],
   apiMethodOptions: APIMethodOption[] = [],
 ): BaseFormList[] => [
-  {
-    label: 'API路径',
-    name: 'path',
-    component: 'Input',
-    placeholder: '请输入API路径',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: 'API详情',
-    name: 'detail',
-    component: 'Input',
-    placeholder: '请输入API详情',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: 'API类别',
-    name: 'group',
-    component: 'TreeSelect',
-    placeholder: '请选择API类别',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      treeData: apiGroupData,
-      showSearch: true,
-      treeNodeFilterProp: 'title',
-      allowClear: true,
-      treeDefaultExpandAll: true,
-      placeholder: '输入关键字进行过滤',
-      style: { width: '100%' },
-      fieldNames: {
-        label: 'title',
-        value: 'value',
-        children: 'children',
+    {
+      label: 'API路径',
+      name: 'path',
+      component: 'Input',
+      placeholder: '请输入API路径',
+      rules: FORM_REQUIRED,
+    },
+    {
+      label: 'API详情',
+      name: 'detail',
+      component: 'Input',
+      placeholder: '请输入API详情',
+      rules: FORM_REQUIRED,
+    },
+    {
+      label: 'API类别',
+      name: 'group',
+      component: 'TreeSelect',
+      placeholder: '请选择API类别',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        treeData: apiGroupData,
+        showSearch: true,
+        treeNodeFilterProp: 'title',
+        allowClear: true,
+        treeDefaultExpandAll: true,
+        placeholder: '输入关键字进行过滤',
+        style: { width: '100%' },
+        fieldNames: {
+          label: 'title',
+          value: 'value',
+          children: 'children',
+        },
       },
     },
-  },
-  {
-    label: 'API方法',
-    name: 'method',
-    component: 'Select',
-    placeholder: '请选择API方法',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: apiMethodOptions,
+    {
+      label: 'API方法',
+      name: 'method',
+      component: 'Select',
+      placeholder: '请选择API方法',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        options: apiMethodOptions,
+      },
     },
-  },
-  {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    placeholder: '请选择状态',
-    componentProps: {
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
+    {
+      label: '状态',
+      name: 'status',
+      component: 'Select',
+      placeholder: '请选择状态',
+      componentProps: {
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 2 },
+        ],
+      },
     },
-  },
-];
+  ];

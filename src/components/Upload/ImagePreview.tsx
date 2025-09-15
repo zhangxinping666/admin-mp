@@ -5,7 +5,7 @@ import { EyeOutlined } from '@ant-design/icons';
 export interface UploadImg {
   uid: string;
   name: string;
-  status: string;
+  status?: string;
   url: string;
   response?: {
     url: string;
@@ -43,7 +43,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
   // 处理不同格式的图片URL
   const getImageUrl = () => {
     let rawUrl = '';
-    
+
     if (typeof imageUrl === 'string') {
       rawUrl = imageUrl;
     } else if (Array.isArray(imageUrl)) {
@@ -53,7 +53,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     } else if (imageUrl && typeof imageUrl === 'object') {
       rawUrl = imageUrl.url || imageUrl.response?.url || '';
     }
-    
+
     return getFullImageUrl(rawUrl);
   };
 
@@ -143,7 +143,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
         />
       </Modal>
 
-      <style jsx>{`
+      <style>{`
         .image-preview-overlay:hover {
           opacity: 1 !important;
         }
