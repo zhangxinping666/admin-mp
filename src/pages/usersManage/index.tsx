@@ -182,7 +182,7 @@ const ColleaguesPage = () => {
     record: User,
     actions: {
       handleEdit: (record: User) => void;
-      handleDelete: (id: Key[]) => void;
+      handleDelete?: (id: Key[]) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:user:update');
@@ -192,7 +192,7 @@ const ColleaguesPage = () => {
       <TableActions
         record={record}
         onEdit={actions.handleEdit}
-        onDelete={actions.handleDelete}
+        onDelete={() => actions.handleDelete?.([record.id])}
         disableEdit={!canEdit}
         disableDelete={!canDelete}
       />

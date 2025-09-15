@@ -237,7 +237,6 @@ export const searchList = (
         name: 'pid',
         component: 'Select',
         wrapperWidth: 120,
-        groupId: 'location',
         componentProps: (form: FormInstance) => ({
           options: options.provinceOptions,
           placeholder: '请选择省份',
@@ -254,7 +253,6 @@ export const searchList = (
         name: 'city_id',
         component: 'Select',
         wrapperWidth: 120,
-        groupId: 'location', // 添加groupId将三个下拉框分组
         componentProps: (form: FormInstance) => {
           const provinceValue = form.getFieldValue('pid');
           return {
@@ -275,7 +273,6 @@ export const searchList = (
         name: 'school_id',
         component: 'Select',
         wrapperWidth: 120,
-        groupId: 'location', // 添加groupId将三个下拉框分组
         componentProps: (form: FormInstance) => {
           const cityValue = form.getFieldValue('city_id');
           return {
@@ -317,7 +314,7 @@ export const searchList = (
     },
   };
 
-  return [...baseSearchFields, ...locationSearchFields, statusField];
+  return [...baseSearchFields, ...locationSearchFields, statusField] as BaseSearchList[];
 };
 
 // 表格列配置

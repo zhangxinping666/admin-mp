@@ -174,7 +174,7 @@ export const searchList = (
 };
 
 // 表格列配置
-export const tableColumns: TableColumn[] = [
+export const tableColumns: any[] = [
   {
     title: '名称',
     dataIndex: 'name',
@@ -222,9 +222,9 @@ export const tableColumns: TableColumn[] = [
     key: 'address',
     width: 200,
     ellipsis: true,
-    render: (_: any, record: School): React.ReactNode => {
-      return <AddressWithLocation record={record} />;
-    },
+    render: (_: any, record: any) => (
+      <AddressWithLocation record={record} />
+    ),
   },
   {
     title: '所属省份',
