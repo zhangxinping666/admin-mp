@@ -44,6 +44,6 @@ export default defineConfig(({ mode }) => {
           ])
         : undefined,
     },
-    build: buildOptions(),
+    build: buildOptions(mode),
   };
 });

@@ -19,7 +19,6 @@ import type { RangePickerProps } from 'antd/lib/date-picker';
 import type { DefaultOptionType } from 'antd/lib/select';
 import type { RuleObject } from 'antd/lib/form';
 import type { ServerResult } from '@manpao/request';
-import type { BusinessComponents } from '@/components/Business';
 import type { EditorProps } from '@/components/WangEditor';
 import type { FormInstance } from 'antd/es/form';
 
@@ -84,7 +83,6 @@ export type ComponentType =
   | EditorComponents
   | PasswordStrength
   | TransferComponents
-  | BusinessComponents
   | AmountRangeInput;
 
 // 接口返回的选项类型
