@@ -133,6 +133,11 @@ export const formList: BaseFormList[] = [
           label: '拒绝',
           value: 2,
         },
+        {
+          label: '审核中',
+          value: 0,
+          disabled: true,
+        }
       ],
     },
   },

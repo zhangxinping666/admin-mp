@@ -274,146 +274,84 @@ export const addFormList = (
   schoolOptionsLoading: boolean,
 ): BaseFormList[] => {
   let list: BaseFormList[] = [];
-  if (role_id === 4) {
-    list = [
-      {
-        label: '名称',
-        name: 'name',
-        component: 'Input',
-        placeholder: '请输入楼栋名称',
-        rules: FORM_REQUIRED,
+  list = [
+    {
+      label: '名称',
+      name: 'name',
+      component: 'Input',
+      placeholder: '请输入楼栋名称',
+      rules: FORM_REQUIRED,
+    },
+    {
+      label: '学校',
+      name: 'school_id',
+      component: 'Select',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        placeholder: '请选择学校',
+        options: schoolOptions,
+        loading: schoolOptionsLoading,
+        showSearch: true,
+        optionFilterProp: 'label',
       },
-      {
-        label: '层数',
-        name: 'layer_nums',
-        component: 'InputNumber',
-        placeholder: '请输入层数',
-        rules: FORM_REQUIRED,
+    },
+    {
+      label: '层数',
+      name: 'layer_nums',
+      component: 'InputNumber',
+      placeholder: '请输入层数',
+      rules: FORM_REQUIRED,
+    },
+    {
+      label: '详细地址',
+      name: 'address',
+      component: 'Input',
+      placeholder: '请输入地址',
+      rules: FORM_REQUIRED,
+    },
+    {
+      label: '位置',
+      name: 'location',
+      component: 'customize',
+      rules: FORM_REQUIRED,
+      componentProps: (form) => {
+        return {
+          zoom: 15,
+          onSave: (data: any) => {
+            console.log('value', data);
+            form.setFieldsValue({
+              location: data,
+            });
+          },
+          initValue: () => {
+            return form.getFieldValue('location');
+          },
+        };
       },
-      {
-        label: '位置',
-        name: 'location',
-        component: 'customize',
-        rules: FORM_REQUIRED,
-        componentProps: (form) => {
-          return {
-            zoom: 15,
-            onSave: (data: any) => {
-              console.log('value', data);
-              form.setFieldsValue({
-                location: data,
-              });
-            },
-            initValue: () => {
-              return form.getFieldValue('location');
-            },
-          };
-        },
-        render: (props: any) => {
-          return <MapPicker {...props} />;
-        },
+      render: (props: any) => {
+        return <MapPicker {...props} />;
       },
-      {
-        label: '状态',
-        name: 'status',
-        component: 'Select',
-        placeholder: '请选择状态',
-        componentProps: {
-          options: [
-            {
-              label: '启用',
-              value: 1,
-            },
-            {
-              label: '禁用',
-              value: 2,
-            },
-          ],
-        },
+    },
+    {
+      label: '状态',
+      name: 'status',
+      component: 'Select',
+      placeholder: '请选择状态',
+      componentProps: {
+        options: [
+          {
+            label: '启用',
+            value: 1,
+          },
+          {
+            label: '禁用',
+            value: 2,
+          },
+        ],
+      },
 
-        rules: FORM_REQUIRED,
-      },
-    ];
-  } else {
-    list = [
-      {
-        label: '名称',
-        name: 'name',
-        component: 'Input',
-        placeholder: '请输入楼栋名称',
-        rules: FORM_REQUIRED,
-      },
-      {
-        label: '学校',
-        name: 'school_id',
-        component: 'Select',
-        rules: FORM_REQUIRED,
-        componentProps: {
-          placeholder: '请选择学校',
-          options: schoolOptions,
-          loading: schoolOptionsLoading,
-          showSearch: true,
-          optionFilterProp: 'label',
-        },
-      },
-      {
-        label: '层数',
-        name: 'layer_nums',
-        component: 'InputNumber',
-        placeholder: '请输入层数',
-        rules: FORM_REQUIRED,
-      },
-      {
-        label: '详细地址',
-        name: 'address',
-        component: 'Input',
-        placeholder: '请输入地址',
-        rules: FORM_REQUIRED,
-      },
-      {
-        label: '位置',
-        name: 'location',
-        component: 'customize',
-        rules: FORM_REQUIRED,
-        componentProps: (form) => {
-          return {
-            zoom: 15,
-            onSave: (data: any) => {
-              console.log('value', data);
-              form.setFieldsValue({
-                location: data,
-              });
-            },
-            initValue: () => {
-              return form.getFieldValue('location');
-            },
-          };
-        },
-        render: (props: any) => {
-          return <MapPicker {...props} />;
-        },
-      },
-      {
-        label: '状态',
-        name: 'status',
-        component: 'Select',
-        placeholder: '请选择状态',
-        componentProps: {
-          options: [
-            {
-              label: '启用',
-              value: 1,
-            },
-            {
-              label: '禁用',
-              value: 2,
-            },
-          ],
-        },
-
-        rules: FORM_REQUIRED,
-      },
-    ];
-  }
+      rules: FORM_REQUIRED,
+    },
+  ];
   return list;
 };

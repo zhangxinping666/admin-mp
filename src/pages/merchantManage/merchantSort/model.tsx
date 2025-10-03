@@ -231,7 +231,7 @@ export const formList = (): BaseFormList[] => [
   {
     label: '分类ID',
     name: 'id',
-    component: 'InputNumber',
+    component: 'Input',
     componentProps: {
       placeholder: '请输入分类ID',
       min: 0,
