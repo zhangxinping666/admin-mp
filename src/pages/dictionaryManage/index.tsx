@@ -33,6 +33,7 @@ import { ItemType, MenuItemType } from 'antd/es/menu/interface';
 import { TableActions } from '@/shared/components';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import { set } from 'nprogress';
 // 初始化新增字典数据
 const initCreate: Partial<Dictionary> = {
   name: '',
@@ -177,6 +178,11 @@ const DictionaryManagePage = () => {
   };
   const onClick: MenuProps['onClick'] = (e) => {
     setSelectedKey(e.key);
+    dictionaryData.forEach((item) => {
+      if (item.id === Number(e.key)) {
+        setSelectedDictionary(item as Dictionary);
+      }
+    });
     // 使用find代替forEach提高查找效率
     const selectedItem = dictionaryData.find((item) => `${item.id}` === e.key);
     if (selectedItem) {
@@ -247,6 +253,14 @@ const DictionaryManagePage = () => {
 
       // 重置选中状态
       setSelectedRowKeys([]);
+      setSelectedDictionary(dictionaryData[0] as Dictionary);
+      setSelectedKey(String(dictionaryData[0].id));
+
+      // 刷新选中字典项
+      const selectedItem = dictionaryData.find((item) => `${item.id}` === String(dictionaryData[0].id));
+      if (selectedItem) {
+        handleDictionarySelect(selectedItem);
+      }
 
       // 刷新字典列表
       fetchTableData();
@@ -523,6 +537,14 @@ const DictionaryManagePage = () => {
           }
           fetchTableData();
           setCreateModalVisible(false);
+          // 刷新选中字典项
+          setSelectedKey(String(values.id));
+          setSelectedDictionary(values);
+          setSelectedRowKeys([]);
+          const selectedItem = dictionaryData.find((item) => `${item.id}` === String(values.id));
+          if (selectedItem) {
+            handleDictionarySelect(selectedItem);
+          }
         } catch (error) {
           message.error('操作失败:' + error);
         }
@@ -545,6 +567,7 @@ const DictionaryManagePage = () => {
               setIsEditMode(false);
               itemForm.setFieldsValue(initItemCreate);
               setItemModalVisible(true);
+              itemForm.setFieldValue('dict_type_code', selectedDictionary.code);
             }}
             className="ml-2"
             disabled={!hasPermission('mp:dict:addItem')}
@@ -626,20 +649,33 @@ const DictionaryManagePage = () => {
             </div>
 
             <Form form={itemForm} layout="vertical" initialValues={currentItem || initItemCreate}>
-              {isEditMode
-                ? // (<Form.Item key={currentItem?.id} label='id' name='id'>
-                //         <Input disabled value={currentItem?.id} />
-                //       </Form.Item>
-                itemEditFormList().map((item, index) => (
-                  <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-                    {getComponent(t, item, () => { })}
-                  </Form.Item>
-                ))
-                : itemAddFormList().map((item, index) => (
-                  <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-                    {getComponent(t, item, () => { })}
-                  </Form.Item>
-                ))}
+              {(
+                isEditMode ? itemEditFormList() :
+                  itemAddFormList().map(item => ({
+                    ...item,
+                    // 为新增模式下的字典类型编码字段设置初始值
+                    ...(item.label === '字典类型编码' && {
+                      componentProps: {
+                        ...item.componentProps,
+                        // 直接设置disabled属性，确保字段不可编辑
+                        disabled: true,
+                      },
+                    })
+                  }))
+              ).map((item) => (
+                <Form.Item
+                  key={item.name + item.label} // 使用name作为唯一key
+                  label={item.label}
+                  name={item.name}
+                  rules={item.rules}
+                  // 为新增模式下的字典类型编码字段设置初始值
+                  {...(item.label === '字典类型编码' && !isEditMode && {
+                    initialValue: selectedDictionary?.code
+                  })}
+                >
+                  {getComponent(t, item, () => { })}
+                </Form.Item>
+              ))}
             </Form>
           </>
         )}
