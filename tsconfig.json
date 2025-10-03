@@ -4,7 +4,7 @@
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
-    "skipLibCheck": true,
+    "skipLibCheck": true, // 跳过库文件类型检查，加速编译
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -13,7 +13,7 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noUnusedLocals": true, // 有未使用的变量时，抛出错误
+    "noUnusedLocals": false, // 开发环境关闭未使用变量检查，提升编译速度
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
@@ -21,7 +21,10 @@
     "paths": {
       "@/*": ["src/*"],
       "#/*": ["types/*"]
-    }
+    },
+    // 开发环境性能优化
+    "incremental": true, // 启用增量编译
+    "tsBuildInfoFile": ".tscache" // 缓存编译信息
   },
   "include": ["src", "packages/*", "types/**/*.d.ts"],
   "exclude": ["dist", "node_modules", "cypress"],

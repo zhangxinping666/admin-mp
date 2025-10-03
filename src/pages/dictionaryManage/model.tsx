@@ -262,7 +262,8 @@ export const formList = (): BaseFormList[] => [
     component: 'TextArea',
     componentProps: {
       placeholder: '请输入字典描述',
-      maxLength: 200,
+      showCount: true, // 可选，显示字符计数
+      maxLength: 500,
     },
   },
   {

@@ -214,33 +214,41 @@ const DictionaryManagePage = () => {
   };
 
   // 删除函数
-  const handleDelete = async (keys: Key[]) => {
+  const handleDeleteType = async (keys: Key[]) => {
     // 新增：确保selectedDictionary和code存在
     if (!selectedDictionary || !selectedDictionary.code) {
       message.error('请先选择字典');
       return;
     }
+
     const idList = Array.isArray(keys) ? keys : [keys];
+
     try {
-      await apis.deleteDictionary({ id_list: idList });
-      message.success('删除成功');
-      // 只刷新当前字典的项数据，而非整个字典列表
+      // 第一步：获取当前字典类型下的所有字典项
       const itemRes = await apis.queryDictionaryItem({
         dict_type_code: selectedDictionary.code,
       });
-      setSelectedDictionary((prev) =>
-        prev
-          ? {
-            ...prev,
-            items: itemRes.data?.list || [],
-          }
-          : prev,
-      );
+
+      // 如果有字典项，先删除这些字典项
+      const items = itemRes.data?.list || [];
+      if (items.length > 0) {
+        // 收集所有字典项的ID
+        const itemIds = items.map((item: any) => item.id);
+
+        // 批量删除字典项
+        await apis.deleteDictionaryItem({
+          id_list: itemIds,
+        });
+      }
+
+      // 第二步：删除字典类型
+      await apis.deleteDictionary({ id_list: idList });
+      message.success('删除成功');
+
       // 重置选中状态
       setSelectedRowKeys([]);
-      // 删除这一行：
-      // setSelectedDictionary(null);
-      // 改为刷新字典列表
+
+      // 刷新字典列表
       fetchTableData();
     } catch (error) {
       message.error('删除失败' + error);
@@ -389,7 +397,7 @@ const DictionaryManagePage = () => {
                   message.error('字典类型ID不存在,不能删除');
                   return;
                 }
-                handleDelete([item.id]);
+                handleDeleteType([item.id]);
               }}
               disabled={!hasPermission('mp:dict:deleteType')}
             >
@@ -568,7 +576,7 @@ const DictionaryManagePage = () => {
               dataSource={selectedDictionary.items}
               scroll={{ x: 'max-content' }}
               rowKey="id"
-              pagination={false}
+              pagination={{ position: ['bottomLeft'] }}
               rowSelection={{
                 selectedRowKeys,
                 onChange: handleSelectionChange,
