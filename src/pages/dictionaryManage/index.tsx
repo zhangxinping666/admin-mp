@@ -436,18 +436,20 @@ const DictionaryManagePage = () => {
             新增字典
           </Button>
         }
+        style={{ height: '100%', overflow: 'auto', position: 'relative' }}
       >
-        <div style={{ height: '430px', overflowY: 'auto' }}>
+        <div style={{ height: '100%', overflow: 'auto' }}>
           <Menu
             items={menuItems as ItemType<MenuItemType>[]}
             selectedKeys={selectedKey ? [String(selectedKey)] : []}
             defaultOpenKeys={selectedKey ? [String(selectedKey)] : []}
             mode="inline"
             onClick={onClick}
+            style={{ height: '%', overflow: 'auto' }}
           />
         </div>
         {/* 添加分页组件 */}
-        <div style={{ marginTop: '1rem' }}>
+        <div style={{ marginTop: '1rem', position: 'absolute', bottom: '1rem', left: '1rem' }}>
           <Pagination
             current={currentPage}
             pageSize={pageSize}
@@ -559,7 +561,7 @@ const DictionaryManagePage = () => {
     <Card
       title={selectedDictionary ? `字典项管理: ${selectedDictionary.name}` : '请选择字典'}
       style={{ height: '100%' }}
-      className="h-full flex flex-col overflow-hidden flex-1 flex flex-col overflow-hidden p-0"
+      className="h-full flex flex-col  flex-col overflow-auto p-0"
       extra={
         selectedDictionary && (
           <Button
@@ -577,40 +579,44 @@ const DictionaryManagePage = () => {
         )
       }
     >
-      {selectedDictionary ? (
-        <div className="flex flex-col h-full overflow-hidden">
-          <div className=" p-4 border-b border-gray-200">
-            <Popconfirm
-              title="确定要删除选中的项吗？"
-              onConfirm={handleBatchDelete}
-              okText="确定"
-              cancelText="取消"
-              disabled={selectedRowKeys.length === 0}
-            >
-              <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
-                批量删除 ({selectedRowKeys.length})
-              </BaseBtn>
-            </Popconfirm>
+      <Card.Grid style={{ height: '100%', width: '100%' }} hoverable={false}>
+        {selectedDictionary ? (
+          <div className="flex flex-col h-full overflow-auto">
+            <div className=" p-4 border-b border-gray-200">
+              <Popconfirm
+                title="确定要删除选中的项吗？"
+                onConfirm={handleBatchDelete}
+                okText="确定"
+                cancelText="取消"
+                disabled={selectedRowKeys.length === 0}
+              >
+                <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
+                  批量删除 ({selectedRowKeys.length})
+                </BaseBtn>
+              </Popconfirm>
+            </div>
+            <div className="overflow-auto h-[100%]">
+              <Table
+                className="w-full h-full"
+                columns={itemsClo as any}
+                dataSource={selectedDictionary.items}
+                scroll={{ x: 'max-content' }}
+                rowKey="id"
+                pagination={{ position: ['bottomLeft'], showSizeChanger: true, showQuickJumper: true, pageSizeOptions: ['4', '10', '20', '50'], }}
+
+                rowSelection={{
+                  selectedRowKeys,
+                  onChange: handleSelectionChange,
+                }}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-auto">
-            <Table
-              className="w-full"
-              columns={itemsClo as any}
-              dataSource={selectedDictionary.items}
-              scroll={{ x: 'max-content' }}
-              rowKey="id"
-              pagination={{ position: ['bottomLeft'] }}
-              rowSelection={{
-                selectedRowKeys,
-                onChange: handleSelectionChange,
-              }}
-            />
-          </div>
+        ) : (<div className="flex-1 flex items-center justify-center text-gray-500 h-ful">
+          请从左侧选择一个字典
         </div>
-      ) : (<div className="flex-1 flex items-center justify-center text-gray-500 h-ful">
-        请从左侧选择一个字典
-      </div>
-      )}
+        )}
+      </Card.Grid>
+
     </Card>
   );
 
@@ -623,7 +629,7 @@ const DictionaryManagePage = () => {
 
         <Row gutter={[16, 16]} style={{ height: 'calc(100vh - 180px)' }}>
           {/* 左侧字典列表 - 在小屏幕上占满宽度，大屏幕占1/3 */}
-          <Col xs={24} lg={9} style={{ height: '95%' }}>
+          <Col xs={24} lg={8} style={{ height: '95%' }}>
             {renderDictionaryList()}
           </Col>
 
