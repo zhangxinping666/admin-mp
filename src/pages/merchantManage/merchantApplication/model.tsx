@@ -3,8 +3,8 @@ import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED, PHONE_RULE } from '@/utils/config';
 import LocationRenderer from '@/shared/components/LocationRenderer';
-import type { FieldConfig } from './UniversalDetail';
 import dayjs from 'dayjs';
+import { FieldConfig } from '@/shared/components/DetailModal';
 
 // 商家入驻申请数据接口
 export interface MerchantApplication {

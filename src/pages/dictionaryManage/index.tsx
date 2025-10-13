@@ -20,6 +20,7 @@ import {
   MenuProps,
   Popconfirm,
   Popover,
+  Pagination,
 } from 'antd';
 import { useState, useEffect, Key } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +33,7 @@ import { ItemType, MenuItemType } from 'antd/es/menu/interface';
 import { TableActions } from '@/shared/components';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
+import { set } from 'nprogress';
 // 初始化新增字典数据
 const initCreate: Partial<Dictionary> = {
   name: '',
@@ -69,6 +71,15 @@ const DictionaryManagePage = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   // 添加加载状态避免重复点击
   const [isLoading, setIsLoading] = useState(false);
+
+  // 添加分页相关状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    fetchTableData();
+  }, [currentPage, pageSize]);
 
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
@@ -129,8 +140,12 @@ const DictionaryManagePage = () => {
   // 获取字典数据
   const fetchTableData = async () => {
     try {
-      const res = await apis.queryDictionary();
+      const res = await apis.queryDictionary({
+        page: currentPage,
+        page_size: pageSize,
+      });
       setDictionaryData(res.data.list);
+      setTotalCount(res.data.total || 0);
 
       // 如果有数据
       if (res.data.list && res.data.list.length > 0) {
@@ -163,6 +178,11 @@ const DictionaryManagePage = () => {
   };
   const onClick: MenuProps['onClick'] = (e) => {
     setSelectedKey(e.key);
+    dictionaryData.forEach((item) => {
+      if (item.id === Number(e.key)) {
+        setSelectedDictionary(item as Dictionary);
+      }
+    });
     // 使用find代替forEach提高查找效率
     const selectedItem = dictionaryData.find((item) => `${item.id}` === e.key);
     if (selectedItem) {
@@ -200,33 +220,49 @@ const DictionaryManagePage = () => {
   };
 
   // 删除函数
-  const handleDelete = async (keys: Key[]) => {
+  const handleDeleteType = async (keys: Key[]) => {
     // 新增：确保selectedDictionary和code存在
     if (!selectedDictionary || !selectedDictionary.code) {
       message.error('请先选择字典');
       return;
     }
+
     const idList = Array.isArray(keys) ? keys : [keys];
+
     try {
-      await apis.deleteDictionary({ id_list: idList });
-      message.success('删除成功');
-      // 只刷新当前字典的项数据，而非整个字典列表
+      // 第一步：获取当前字典类型下的所有字典项
       const itemRes = await apis.queryDictionaryItem({
         dict_type_code: selectedDictionary.code,
       });
-      setSelectedDictionary((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: itemRes.data?.list || [],
-            }
-          : prev,
-      );
+
+      // 如果有字典项，先删除这些字典项
+      const items = itemRes.data?.list || [];
+      if (items.length > 0) {
+        // 收集所有字典项的ID
+        const itemIds = items.map((item: any) => item.id);
+
+        // 批量删除字典项
+        await apis.deleteDictionaryItem({
+          id_list: itemIds,
+        });
+      }
+
+      // 第二步：删除字典类型
+      await apis.deleteDictionary({ id_list: idList });
+      message.success('删除成功');
+
       // 重置选中状态
       setSelectedRowKeys([]);
-      // 删除这一行：
-      // setSelectedDictionary(null);
-      // 改为刷新字典列表
+      setSelectedDictionary(dictionaryData[0] as Dictionary);
+      setSelectedKey(String(dictionaryData[0].id));
+
+      // 刷新选中字典项
+      const selectedItem = dictionaryData.find((item) => `${item.id}` === String(dictionaryData[0].id));
+      if (selectedItem) {
+        handleDictionarySelect(selectedItem);
+      }
+
+      // 刷新字典列表
       fetchTableData();
     } catch (error) {
       message.error('删除失败' + error);
@@ -375,7 +411,7 @@ const DictionaryManagePage = () => {
                   message.error('字典类型ID不存在,不能删除');
                   return;
                 }
-                handleDelete([item.id]);
+                handleDeleteType([item.id]);
               }}
               disabled={!hasPermission('mp:dict:deleteType')}
             >
@@ -387,6 +423,7 @@ const DictionaryManagePage = () => {
     }));
 
     return (
+
       <Card
         title="字典列表"
         extra={
@@ -399,14 +436,34 @@ const DictionaryManagePage = () => {
             新增字典
           </Button>
         }
+        style={{ height: '100%', overflow: 'auto', position: 'relative' }}
       >
-        <Menu
-          items={menuItems as ItemType<MenuItemType>[]}
-          selectedKeys={selectedKey ? [String(selectedKey)] : []}
-          defaultOpenKeys={selectedKey ? [String(selectedKey)] : []}
-          mode="inline"
-          onClick={onClick}
-        />
+        <div style={{ height: '100%', overflow: 'auto' }}>
+          <Menu
+            items={menuItems as ItemType<MenuItemType>[]}
+            selectedKeys={selectedKey ? [String(selectedKey)] : []}
+            defaultOpenKeys={selectedKey ? [String(selectedKey)] : []}
+            mode="inline"
+            onClick={onClick}
+            style={{ height: '%', overflow: 'auto' }}
+          />
+        </div>
+        {/* 添加分页组件 */}
+        <div style={{ marginTop: '1rem', position: 'absolute', bottom: '1rem', left: '1rem' }}>
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalCount}
+            onChange={(page, size) => {
+              console.log(page)
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            showSizeChanger
+            showQuickJumper
+            showTotal={(total) => `共 ${total} 条`}
+          />
+        </div>
       </Card>
     );
   };
@@ -482,6 +539,14 @@ const DictionaryManagePage = () => {
           }
           fetchTableData();
           setCreateModalVisible(false);
+          // 刷新选中字典项
+          setSelectedKey(String(values.id));
+          setSelectedDictionary(values);
+          setSelectedRowKeys([]);
+          const selectedItem = dictionaryData.find((item) => `${item.id}` === String(values.id));
+          if (selectedItem) {
+            handleDictionarySelect(selectedItem);
+          }
         } catch (error) {
           message.error('操作失败:' + error);
         }
@@ -495,7 +560,8 @@ const DictionaryManagePage = () => {
   const renderDictionaryItems = () => (
     <Card
       title={selectedDictionary ? `字典项管理: ${selectedDictionary.name}` : '请选择字典'}
-      className="h-full flex flex-col overflow-hidden flex-1 flex flex-col overflow-hidden p-0"
+      style={{ height: '100%' }}
+      className="h-full flex flex-col  flex-col overflow-auto p-0"
       extra={
         selectedDictionary && (
           <Button
@@ -503,6 +569,7 @@ const DictionaryManagePage = () => {
               setIsEditMode(false);
               itemForm.setFieldsValue(initItemCreate);
               setItemModalVisible(true);
+              itemForm.setFieldValue('dict_type_code', selectedDictionary.code);
             }}
             className="ml-2"
             disabled={!hasPermission('mp:dict:addItem')}
@@ -512,41 +579,44 @@ const DictionaryManagePage = () => {
         )
       }
     >
-      {selectedDictionary ? (
-        <div className="flex flex-col h-full overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <Popconfirm
-              title="确定要删除选中的项吗？"
-              onConfirm={handleBatchDelete}
-              okText="确定"
-              cancelText="取消"
-              disabled={selectedRowKeys.length === 0}
-            >
-              <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
-                批量删除 ({selectedRowKeys.length})
-              </BaseBtn>
-            </Popconfirm>
+      <Card.Grid style={{ height: '100%', width: '100%' }} hoverable={false}>
+        {selectedDictionary ? (
+          <div className="flex flex-col h-full overflow-auto">
+            <div className=" p-4 border-b border-gray-200">
+              <Popconfirm
+                title="确定要删除选中的项吗？"
+                onConfirm={handleBatchDelete}
+                okText="确定"
+                cancelText="取消"
+                disabled={selectedRowKeys.length === 0}
+              >
+                <BaseBtn type="primary" danger disabled={selectedRowKeys.length === 0}>
+                  批量删除 ({selectedRowKeys.length})
+                </BaseBtn>
+              </Popconfirm>
+            </div>
+            <div className="overflow-auto h-[100%]">
+              <Table
+                className="w-full h-full"
+                columns={itemsClo as any}
+                dataSource={selectedDictionary.items}
+                scroll={{ x: 'max-content' }}
+                rowKey="id"
+                pagination={{ position: ['bottomLeft'], showSizeChanger: true, showQuickJumper: true, pageSizeOptions: ['4', '10', '20', '50'], }}
+
+                rowSelection={{
+                  selectedRowKeys,
+                  onChange: handleSelectionChange,
+                }}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-auto">
-            <Table
-              className="w-full"
-              columns={itemsClo as any}
-              dataSource={selectedDictionary.items}
-              scroll={{ x: 'max-content' }}
-              rowKey="id"
-              pagination={false}
-              rowSelection={{
-                selectedRowKeys,
-                onChange: handleSelectionChange,
-              }}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        ) : (<div className="flex-1 flex items-center justify-center text-gray-500 h-ful">
           请从左侧选择一个字典
         </div>
-      )}
+        )}
+      </Card.Grid>
+
     </Card>
   );
 
@@ -559,12 +629,12 @@ const DictionaryManagePage = () => {
 
         <Row gutter={[16, 16]} style={{ height: 'calc(100vh - 180px)' }}>
           {/* 左侧字典列表 - 在小屏幕上占满宽度，大屏幕占1/3 */}
-          <Col xs={24} lg={5} style={{ height: '95%' }}>
+          <Col xs={24} lg={8} style={{ height: '95%' }}>
             {renderDictionaryList()}
           </Col>
 
           {/* 右侧字典项表格 - 在小屏幕上占满宽度，大屏幕占2/3 */}
-          <Col xs={24} lg={19} style={{ height: '95%' }}>
+          <Col xs={24} lg={15} style={{ height: '95%' }}>
             {renderDictionaryItems()}
           </Col>
         </Row>
@@ -585,20 +655,33 @@ const DictionaryManagePage = () => {
             </div>
 
             <Form form={itemForm} layout="vertical" initialValues={currentItem || initItemCreate}>
-              {isEditMode
-                ? // (<Form.Item key={currentItem?.id} label='id' name='id'>
-                  //         <Input disabled value={currentItem?.id} />
-                  //       </Form.Item>
-                  itemEditFormList().map((item, index) => (
-                    <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-                      {getComponent(t, item, () => {})}
-                    </Form.Item>
-                  ))
-                : itemAddFormList().map((item, index) => (
-                    <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-                      {getComponent(t, item, () => {})}
-                    </Form.Item>
-                  ))}
+              {(
+                isEditMode ? itemEditFormList() :
+                  itemAddFormList().map(item => ({
+                    ...item,
+                    // 为新增模式下的字典类型编码字段设置初始值
+                    ...(item.label === '字典类型编码' && {
+                      componentProps: {
+                        ...item.componentProps,
+                        // 直接设置disabled属性，确保字段不可编辑
+                        disabled: true,
+                      },
+                    })
+                  }))
+              ).map((item) => (
+                <Form.Item
+                  key={item.name + item.label} // 使用name作为唯一key
+                  label={item.label}
+                  name={item.name}
+                  rules={item.rules}
+                  // 为新增模式下的字典类型编码字段设置初始值
+                  {...(item.label === '字典类型编码' && !isEditMode && {
+                    initialValue: selectedDictionary?.code
+                  })}
+                >
+                  {getComponent(t, item, () => { })}
+                </Form.Item>
+              ))}
             </Form>
           </>
         )}
@@ -615,7 +698,7 @@ const DictionaryManagePage = () => {
         <Form form={dictionaryForm} layout="vertical" initialValues={initCreate}>
           {formList().map((item, index) => (
             <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-              {getComponent(t, item as BaseFormList, () => {})}
+              {getComponent(t, item as BaseFormList, () => { })}
             </Form.Item>
           ))}
         </Form>
@@ -632,7 +715,7 @@ const DictionaryManagePage = () => {
         <Form form={dictionaryForm} layout="vertical" initialValues={initCreate}>
           {DictionaryStyleCol().map((item, index) => (
             <Form.Item key={index} label={item.label} name={item.name} rules={item.rules}>
-              {getComponent(t, item as BaseFormList, () => {})}
+              {getComponent(t, item as BaseFormList, () => { })}
             </Form.Item>
           ))}
         </Form>

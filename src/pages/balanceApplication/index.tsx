@@ -35,14 +35,18 @@ const BalanceApplication = () => {
     const canDelete = hasPermission('mp:merchantApl:delete');
 
     return (
-      <TableActions
-        record={record}
-        onEdit={record.status === 0 ?
-          actions.handleEdit : () => { }}
-        editText="审批"
-        disableEdit={!canEdit}
-        disableDelete={!canDelete}
-      />
+      <>
+        {record.status === 0 ? (
+          <TableActions
+            record={record}
+            onEdit={record.status === 0 ?
+              actions.handleEdit : () => { }}
+            editText="审批"
+            disableEdit={!canEdit}
+            disableDelete={!canDelete}
+          />
+        ) : <span>-</span>}
+      </>
     );
   };
   return (
@@ -78,7 +82,7 @@ const BalanceApplication = () => {
           if (params.status === 0) {
             return {
               code: 0,
-              msg: '待审核状态不能直接修改',
+              msg: '不能更改状态为审核中',
             };
           }
           const res = await updateBalanceApplication(params);

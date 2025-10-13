@@ -262,7 +262,7 @@ export const formList = (): BaseFormList[] => [
     component: 'TextArea',
     componentProps: {
       placeholder: '请输入字典描述',
-      maxLength: 200,
+      showCount: true, // 可选，显示字符计数
     },
   },
   {
@@ -354,7 +354,7 @@ export const itemEditFormList = (): BaseFormList[] => [
     component: 'TextArea',
     componentProps: {
       placeholder: '请输入描述',
-      maxLength: 200,
+      showCount: true, // 可选，显示字符计数
     },
   },
   {
@@ -363,8 +363,9 @@ export const itemEditFormList = (): BaseFormList[] => [
     component: 'TextArea',
     componentProps: {
       placeholder: '请输入扩展值',
-      maxLength: 200,
+      showCount: true, // 可选，显示字符计数
     },
+
   },
 ];
 
@@ -398,7 +399,9 @@ export const itemAddFormList = (): BaseFormList[] => [
     componentProps: {
       placeholder: '请输入字典类型编码',
       maxLength: 50,
+      disabled: true,
     },
+    render: (value: any) => value?.dict_type_code || '',
   },
   {
     label: '排序',
@@ -431,7 +434,8 @@ export const itemAddFormList = (): BaseFormList[] => [
     component: 'TextArea',
     componentProps: {
       placeholder: '请输入描述',
-      maxLength: 200,
+      showCount: true, // 可选，显示字符计数
+
     },
   },
   {
@@ -440,7 +444,7 @@ export const itemAddFormList = (): BaseFormList[] => [
     component: 'TextArea',
     componentProps: {
       placeholder: '请输入扩展值',
-      maxLength: 200,
+      showCount: true, // 可选，显示字符计数
     },
   },
 ];
