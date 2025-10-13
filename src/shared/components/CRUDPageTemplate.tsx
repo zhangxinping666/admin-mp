@@ -286,7 +286,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
                 expandIcon: ({ expanded, onExpand, record }) => {
                   const hasChildren = (record as any).children
                     && (record as any).children.length > 0;
-                  console.log("record", record)
+
                   if (!hasChildren) {
                     return (
                       <span style={{ display: 'inline-block', width: '20px', marginLeft: '6px' }} />

@@ -1,6 +1,6 @@
 // MenuPage.tsx
 import { useState, useEffect } from 'react';
-import { searchList, tableColumns, formList, type Menu } from './model';
+import { searchList, tableColumns, formList, type Menu, MenuSelect } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { TableActions } from '@/shared/components/TableActions';
 import {
@@ -39,15 +39,13 @@ const menuApis = {
   fetch: getMenuList,
   create: async (data: any) => {
     const result = await addMenu(data);
-    // 创建成功后刷新侧边栏菜单
     if (result) {
       await refreshSidebarMenu();
     }
     return result;
   },
   update: async (data: any) => {
-    const result = await updateMenu(data);
-    // 更新成功后刷新侧边栏菜单
+    const result = await updateMenu(data)
     if (result) {
       await refreshSidebarMenu();
     }
@@ -93,16 +91,17 @@ const MenuPage = () => {
 
       // 调用API获取指定类型的菜单列表
       const response = await getMenuSelectList({ type: typeParams });
-      const options = response.data.data.map((item: any) => ({
+      console.log("response", response)
+      const Data = response.data as unknown as MenuSelect[];
+      const options = Data.map((item: any) => ({
         label: item.name,
         value: item.id,
       }));
-
       // 目录和菜单类型都可以选择根目录，按钮类型不能选择根目录
       const finalOptions =
         menuType === 1 || menuType === 2 ? [{ label: '根目录', value: 0 }, ...options] : options;
-
       setMenuOptions(finalOptions);
+      console.log("finalOptions", finalOptions)
     } catch (error) {
       console.error('加载父级菜单选项失败:', error);
     } finally {
@@ -110,12 +109,10 @@ const MenuPage = () => {
     }
   };
 
-  // 初始化时获取目录列表（默认为目录类型）
   useEffect(() => {
     fetchMenuOptionsByType(1);
   }, []);
 
-  // 确保menuOptions始终包含根目录选项
   useEffect(() => {
     if (menuOptions.length === 0 || !menuOptions.find((option) => option.value === 0)) {
       setMenuOptions((prev) => {
@@ -132,17 +129,16 @@ const MenuPage = () => {
     record: Menu,
     actions: {
       handleEdit: (record: Menu) => void;
-      handleDelete?: (id: Key[]) => void; // 修改为可选的Key[]类型
+      handleDelete?: (id: Key[]) => void;
     },
   ) => {
     const canEdit = hasPermission('mp:menu:update');
     const canDelete = hasPermission('mp:menu:delete');
-
     return (
       <TableActions
         record={record}
         onEdit={actions.handleEdit}
-        onDelete={() => actions.handleDelete?.([record.id])} // 传入数组
+        onDelete={() => actions.handleDelete?.([record.id])}
         disableEdit={!canEdit}
         disableDelete={!canDelete}
       />
@@ -158,14 +154,14 @@ const MenuPage = () => {
   return (
     <CRUDPageTemplate
       title="菜单管理"
-      isDelete={true} // 添加isDelete属性
+      isDelete={true}
       searchConfig={searchList()}
       columns={tableColumns.filter((col: any) => col.dataIndex !== 'action')}
       formConfig={formList({ menuOptions, isMenuOptionsLoading })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:menu:add')}
       disableBatchDelete={!hasPermission('mp:menu:delete')}
-      onFormValuesChange={handleFormValuesChange} // 只保留一个onFormValuesChange
+      onFormValuesChange={handleFormValuesChange}
       onEditOpen={(record) => {
         const parentId = record.pid || 0;
         if (record.type) {

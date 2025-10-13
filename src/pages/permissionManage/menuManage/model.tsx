@@ -88,6 +88,11 @@ export interface MenuDetailResult {
   data: Menu;
 }
 
+export interface MenuSelect {
+  label: string;
+  value: number;
+}
+
 // 搜索配置
 export const searchList = (): BaseSearchList[] => [
   {
@@ -230,17 +235,14 @@ export const formList = ({
     {
       label: '父级菜单',
       name: 'pid',
-      // 【修改】使用普通的 Select 组件
       component: 'Select',
       placeholder: isMenuOptionsLoading ? '菜单加载中...' : '请选择父级菜单',
       componentProps: {
-        // 【修改】直接使用扁平的 options 数组
         options: menuOptions,
         loading: isMenuOptionsLoading,
-        showSearch: true, // 仍然可以支持搜索
+        showSearch: true,
         optionFilterProp: 'label',
         style: { width: '100%' },
-        // 自定义显示格式，当值为0时显示"根目录"
         optionLabelProp: 'label',
       },
       showWhen: {
