@@ -68,7 +68,6 @@ function ColleaguesPage() {
       const response = await getUserListByPage();
       const Data = response as unknown as UserSimple
       console.log('用户接口返回数据:', response);
-
       // 检查不同的数据结构可能性
       if (Data && Data.code === 2000) {
         // 直接在response层级有code
@@ -112,7 +111,6 @@ function ColleaguesPage() {
 
         const finalOptions = provinces.map((province: any, index: number) => {
           const cities = cityResponses[index].data || [];
-          console.log(`${province.name} 的城市数据:`, cities);
 
           return {
             label: province.name,
@@ -217,17 +215,24 @@ function ColleaguesPage() {
             userInfo.city_id
         }
         : initCreate}
-      onEditOpen={onEditOpenCallback}  //
-
+      onEditOpen={onEditOpenCallback}
       disableCreate={!hasPermission('mp:colonel:add')}
       disableBatchDelete={!hasPermission('mp:colonel:delete ')}
       apis={{
-        // ... apis配置
+        fetchApi: colonelApis.fetch,
+        createApi: colonelApis.create,
+        updateApi: (data: any) => {
+          return colonelApis.update(data);
+        },
+        deleteApi: (id: Array<number>) =>
+          colonelApis.delete(id),
       }}
       optionRender={optionRender}
-      onFormValuesChange={(changedValues: any,
-        allValues: any) => {
-        // ... 表单值变化处理
+      onFormValuesChange={(changedValues: any, allValues: any) => {
+        // 监听城市选择变化，加载对应的学校列表
+        if (changedValues.city_id !== undefined) {
+          handleCityChange(String(changedValues.city_id));
+        }
       }}
     />
   );
