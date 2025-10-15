@@ -17,6 +17,7 @@ import {
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
 import { getMenuSelectList } from '@/servers/perms/menu';
+import { getDictionaryList } from '@/servers/dictionaryManage/index';
 import { MenuDetail, MenuInfoResult } from
   '../menuManage/model'
 import type { Key } from 'react';
@@ -55,7 +56,7 @@ const ApiPage = () => {
         type: ['2']
       });
       const Data = response as unknown as MenuInfoResult
-
+      console.log(Data)
       // 处理响应数据，转换为TreeSelect需要的格式
       if (Data.code === 2000 && Data.data) {
         const processedData = Data.data.map((item:
@@ -75,9 +76,34 @@ const ApiPage = () => {
     }
   };
 
+  // 获取API请求方法字典数据
+  const fetchApiMethods = async () => {
+    try {
+      const response = await getDictionaryList({
+        dict_type_code: 'ApiMethod'
+      });
+      console.log('API方法字典数据:', response);
+      // 处理响应数据，转换为Select需要的格式
+      if (response.data) {
+        const processedData = response.data.list.map((item: any) => ({
+          label: item.label,
+          value: item.value,
+        }));
+        setApiMethodOptions(processedData);
+      } else {
+        console.warn('API方法字典数据格式异常:', response);
+        setApiMethodOptions([]);
+      }
+    } catch (error) {
+      console.error('获取API方法字典失败:', error);
+      setApiMethodOptions([]);
+    }
+  };
+
   // 组件挂载时获取数据
   useEffect(() => {
     fetchApiGroups();
+    fetchApiMethods();
   }, []);
 
   // 监听数据变化
