@@ -51,7 +51,7 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
       handleEdit: (record: T) => void;
       handleDelete?: (id: Key[]) => void;
       handleHistory?: (id: number) => void;
-      handleDetail?: (id: number) => void;
+      handleDetail?: (record: T) => void;
     },
   ) => React.ReactNode;
   onCreateClick?: () => void; // 新增按钮点击时的自定义处理函数
