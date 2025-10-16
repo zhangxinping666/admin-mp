@@ -136,9 +136,9 @@ export const searchList = (
           allowClear: true,
           onChange: async (value: string) => {
             // 清空城市选择
-            form.setFieldsValue({ city: undefined });
+            form.setFieldsValue({ city_id: undefined, school_id: undefined });
             await options.loadCities(value);
-            form.validateFields(['city']);
+            form.validateFields(['city_id']);
           },
         }),
       },
@@ -170,8 +170,6 @@ export const searchList = (
         placeholder: '请输入学校名称',
         componentProps: (form) => {
           const cityValue = form.getFieldValue('city_id');
-          console.log('获取城市', cityValue);
-
           return {
             placeholder: '请选择学校',
             allowClear: true,

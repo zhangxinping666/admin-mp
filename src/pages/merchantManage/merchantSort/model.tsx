@@ -64,9 +64,9 @@ export const searchList = (
           placeholder: '请选择省份',
           allowClear: true,
           onChange: async (value: string) => {
-            form.setFieldsValue({ city: undefined, school_id: undefined });
+            form.setFieldsValue({ city_id: undefined, school_id: undefined });
             await options.loadCities(value);
-            form.validateFields(['city', 'school_id']);
+            form.validateFields(['city_id', 'school_id']);
           },
         }),
       },

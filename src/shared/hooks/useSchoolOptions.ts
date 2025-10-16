@@ -15,7 +15,7 @@ const useSelectSchoolOptions = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchSchoolOptions = async () => {
+    const fetchSchoolOptions = async (city_id?: number) => {
       try {
         setLoading(true);
         const res = await getSchoolList({
