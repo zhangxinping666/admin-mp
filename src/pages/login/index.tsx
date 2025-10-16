@@ -29,7 +29,6 @@ function Login() {
   const [captchaUrl, setCaptchaUrl] = useState<string>('');
   const [captchaId, setCaptchaId] = useState<string>('');
   const { search } = useLocation();
-  const { saveLoginInfo } = useCommonStore();
   const setMenuList = useMenuStore((state) => state.setMenuList);
   const setThemeValue = usePublicStore((state) => state.setThemeValue);
   const { setPermissions, clearInfo, setUserInfo, setMenuPermissions } = useUserStore((state) => state);
@@ -46,9 +45,8 @@ function Login() {
     setThemeValue(themeCache === 'dark' ? 'dark' : 'light');
   }, [themeCache]);
 
-  //登录
+  // 清除可能存在的过期权限和菜单数据
   useEffect(() => {
-    // 清除可能存在的过期权限和菜单数据
     setPermissions([]);
     setMenuPermissions([]);
     setMenuList([]);
@@ -56,7 +54,7 @@ function Login() {
     handleGetCaptcha();
   }, []);
 
-  /** 获取重定向路由 */
+  // 获取重定向路由 
   const getRedirectUrl = () => {
     if (!search || !search.includes('?redirect=')) {
       return '';
@@ -65,7 +63,7 @@ function Login() {
     return urlParams.get('redirect') || '';
   };
 
-  /** 菜单跳转 */
+  // 菜单跳转
   const handleGoMenu = async (menus: MenuItem[], userPermissions: string[]) => {
     // 检查是否有重定向URL
     if (search?.includes('?redirect=')) {
@@ -130,7 +128,6 @@ function Login() {
         captcha_code: values.captcha_code,
       };
       const loginResponse = await login(loginData);
-      saveLoginInfo(values.account, values.password);
       const loginResult = loginResponse.data as unknown as LoginData;
       const refresh_token = loginResult.refresh_token;
       const access_token = loginResult.access_token;
@@ -158,15 +155,12 @@ function Login() {
     }
   };
 
-  /**
-   * 处理失败
-   * @param errors - 错误信息
-   */
+  // 错误的登录处理逻辑
   const handleFinishFailed: FormProps['onFinishFailed'] = (errors) => {
     console.error('错误信息:', errors);
   };
 
-  /** 获取验证码 */
+  // 获取验证码
   const handleGetCaptcha = async () => {
     try {
       const response = await getCode();

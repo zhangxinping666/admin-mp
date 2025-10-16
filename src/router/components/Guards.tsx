@@ -1,90 +1,35 @@
 import { useEffect, useState } from 'react';
 import { getAccessToken, setAccessToken, setRefreshToken } from '@/stores/token';
 import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
-import { decryption } from '@manpao/utils';
-import { login, getUserInfoServe, getPermissions } from '@/servers/login';
-import { buildMenuTree } from '@/menus/utils/menuTree';
+import { getPermissions } from '@/servers/login';
 import { getFirstMenu } from '@/menus/utils/helper';
 import { useUserStore } from '@/stores/user';
 import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
 import nprogress from 'nprogress';
 import Layout from '@/layouts';
-import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
 import { checkPermission } from '@/utils/permissions';
 import Forbidden from '@/pages/403';
-// 记住我相关常量
-const CHECK_REMEMBER = 'remember-me';
+import { PermissionsData } from '@/pages/login/model'
 
 function Guards() {
   const outlet = useOutlet();
   const navigate = useNavigate();
   const location = useLocation();
   const token = getAccessToken();
-  const [isAutoLogging, setIsAutoLogging] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false); // 标识数据是否已加载完成
   const [isInitialLoad, setIsInitialLoad] = useState(true); // 标识是否为初始加载
   const { setUserInfo, setPermissions, setMenuPermissions, userInfo } = useUserStore(
     (state) => state,
   );
-  const { getLoginInfo, clearLoginInfo, permissions, menuList } = useCommonStore();
+  const { permissions, menuPermissions } = useUserStore((state) => state);
   const setMenuList = useMenuStore((state) => state.setMenuList);
+  const { menuList } = useMenuStore();
 
   // 顶部进度条
   useEffect(() => {
     nprogress.start();
   }, []);
-
-  // 自动登录逻辑
-  const tryAutoLogin = async () => {
-    const remember = localStorage.getItem(CHECK_REMEMBER);
-    const { account, password } = getLoginInfo();
-    // 检查是否开启记住我且存在账号密码
-    if (remember !== 'false' && account && password) {
-      try {
-        setIsAutoLogging(true);
-        const decryptedPassword = decryption(password);
-        const loginResponse = await login({
-          account,
-          password: decryptedPassword.value,
-        });
-        const loginResult = loginResponse.data;
-        const { access_token, refresh_token } = loginResult;
-        setAccessToken(access_token);
-        setRefreshToken(refresh_token);
-
-        const { data: userInfo } = await getUserInfoServe();
-        setUserInfo(userInfo.data);
-        // 设置token和用户信息
-
-        const permissionsResponse = await getPermissions({ role: userInfo.name });
-        const { menus, perms } = permissionsResponse.data;
-
-        // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
-        const routePermissions = extractRoutePathsFromMenus(menus);
-        setPermissions(routePermissions);
-
-        const menuTree = buildMenuTree(menus);
-        setMenuList(menus);
-        setMenuPermissions(routePermissions);
-        setIsDataLoaded(true); // 标记数据加载完成
-        return true;
-      } catch (error) {
-        console.error('自动登录失败:', error);
-        // 清除登录信息和持久化数据
-        clearLoginInfo();
-        localStorage.setItem(CHECK_REMEMBER, 'false');
-        setPermissions([]);
-        setMenuPermissions([]);
-        setMenuList([]);
-        setUserInfo(null);
-        return false;
-      } finally {
-        setIsAutoLogging(false);
-      }
-    }
-    return false;
-  };
 
   const loadPermissionsData = async () => {
     try {
@@ -95,14 +40,11 @@ function Guards() {
         navigate(`/login`, { replace: true });
         return;
       }
-
       const permissionsResponse = await getPermissions({ role: currentUserInfo.name });
-      const { menus, perms } = permissionsResponse.data;
-
+      const Data = permissionsResponse.data as unknown as PermissionsData;
+      const { menus, perms } = Data;
       // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
       const routePermissions = extractRoutePathsFromMenus(menus);
-
-      // 合并路径权限和功能权限
       const finalPermissions = [...routePermissions, ...(perms || [])];
       setPermissions(finalPermissions);
 
@@ -129,7 +71,7 @@ function Guards() {
   };
 
   useEffect(() => {
-    // 如果是登录页面且没有token，直接完成初始化
+    // 如果是登录页面且没有token,直接完成初始化
     if (location.pathname === '/login' && !token) {
       // 清除可能存在的过期数据
       setPermissions([]);
@@ -139,37 +81,31 @@ function Guards() {
       setIsInitialLoad(false);
       return;
     }
-    if (token && permissions.length === 0 && !isAutoLogging) {
+    if (token && permissions.length === 0) {
       loadPermissionsData().finally(() => {
         setIsInitialLoad(false);
       });
       return;
     }
-    if (!token && !isAutoLogging) {
-      // 没有token时，清除所有用户相关数据
+    if (!token) {
+      // 没有token时,清除所有用户相关数据
       setPermissions([]);
       setMenuPermissions([]);
       setMenuList([]);
       setUserInfo(null);
 
-      tryAutoLogin()
-        .then((success) => {
-          if (!success) {
-            // 避免重复跳转到登录页面
-            if (location.pathname !== '/login') {
-              navigate(`/login`, { replace: true });
-            }
-          }
-        })
-        .finally(() => {
-          setIsInitialLoad(false);
-        });
+      // 避免重复跳转到登录页面
+      if (location.pathname !== '/login') {
+        navigate(`/login`, { replace: true });
+      }
+      setIsInitialLoad(false);
     } else if (token && permissions.length > 0) {
       setIsInitialLoad(false);
     }
   }, [permissions.length, token, location.pathname]);
   useEffect(() => {
     if (!isInitialLoad && token && menuList.length > 0 && permissions.length > 0) {
+      // 特殊路径不做校验
       if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
@@ -187,23 +123,30 @@ function Guards() {
         return checkMenuPath(menu);
       });
 
-      const hasPermission = checkRoutePermission(location.pathname, permissions);
+      const hasPermission = menuPermissions.includes(location.pathname);
 
+      console.log('[Guards] Route validation:', {
+        pathname: location.pathname,
+        isValidMenuPath,
+        hasPermission,
+        menuListLength: menuList.length,
+        menuPermissions: menuPermissions.slice(0, 5)
+      });
+
+      // 如果没有权限或不在菜单中，跳转到第一个有权限的菜单
       if (!isValidMenuPath || !hasPermission) {
-        const firstMenu = getFirstMenu(menuList, permissions);
+        console.warn('[Guards] Access denied, redirecting to first menu');
+        const firstMenu = getFirstMenu(menuList);
         if (firstMenu && firstMenu !== location.pathname) {
           navigate(firstMenu, { replace: true });
         }
       }
     }
-  }, [location.pathname, permissions, token, menuList, isDataLoaded, isInitialLoad]);
-
-  // 专门处理已登录用户访问登录页面的情况
+  }, [location.pathname, permissions, token, menuList, menuPermissions, isDataLoaded, isInitialLoad]);
   useEffect(() => {
-    if (token && location.pathname === '/login' && !isAutoLogging) {
-      // 如果有权限数据，跳转到第一个有权限的菜单
-      if (permissions.length > 0 && menuList.length > 0) {
-        const firstMenu = getFirstMenu(menuList, permissions);
+    if (token && location.pathname === '/login') {
+      if (permissions.length > 0 && menuPermissions.length > 0) {
+        const firstMenu = getFirstMenu(menuList);
         if (firstMenu) {
           navigate(firstMenu, { replace: true });
         } else {
@@ -221,20 +164,9 @@ function Guards() {
         navigate('/', { replace: true });
       }
     }
-  }, [token, location.pathname, isAutoLogging, navigate, permissions, menuList]);
+  }, [token, location.pathname, navigate, permissions, menuPermissions]);
   /** 渲染页面 */
   const renderPage = () => {
-    if (isAutoLogging) {
-      return (
-        <div className="w-screen h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <div>页面加载中...</div>
-          </div>
-        </div>
-      );
-    }
-
     // 如果有token但访问登录页面，显示加载状态（实际会被useEffect重定向）
     if (token && location.pathname === '/login') {
       return (

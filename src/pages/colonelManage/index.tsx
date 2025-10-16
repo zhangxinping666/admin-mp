@@ -28,16 +28,19 @@ let initCreate: Partial<Colonel> = {
   school_id: undefined, // 将在数据加载后设置为第一个学校ID
   user_id: undefined, // 关联用户ID
 };
+
 const colonelApis = {
   fetch: getColonelList,
   create: addColonel,
   update: updateColonel,
   delete: deleteColonel,
 };
+
 interface GroupedOption {
   label: string; // 省份名
   options: { label: string; value: number }[]; // 该省份下的城市列表
 }
+
 interface SchoolOption {
   label: string;
   value: number;
@@ -67,10 +70,7 @@ function ColleaguesPage() {
     try {
       const response = await getUserListByPage();
       const Data = response as unknown as UserSimple
-      console.log('用户接口返回数据:', response);
-      // 检查不同的数据结构可能性
       if (Data && Data.code === 2000) {
-        // 直接在response层级有code
         const users = Data.data || [];
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
@@ -79,7 +79,6 @@ function ColleaguesPage() {
         setUserOptions(userOptionsList);
       } else if (response.data && response.data.code === 0) {
         const users = response.data.data || [];
-        console.log('用户数据 (方式2):', users);
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
           value: user.id,
@@ -99,19 +98,11 @@ function ColleaguesPage() {
       setIsLoadingOptions(true);
       try {
         const provinceResponse = await getProvinceList(0);
-        console.log('省份接口返回数据:', provinceResponse);
-
         const provinces = provinceResponse.data || [];
-        console.log('省份数据:', provinces);
-
         const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
         const cityResponses = await Promise.all(cityPromises);
-
-        console.log('城市接口返回数据:', cityResponses);
-
         const finalOptions = provinces.map((province: any, index: number) => {
           const cities = cityResponses[index].data || [];
-
           return {
             label: province.name,
             options: cities.map((city: any) => ({
@@ -120,10 +111,7 @@ function ColleaguesPage() {
             })),
           };
         });
-
-        console.log('最终分组选项:', finalOptions);
         setGroupedCityOptions(finalOptions);
-
         if (userInfo?.role_id === 5 && userInfo?.city_id) {
           for (const province of finalOptions) {
             const city = province.options.find((c: any) => c.value === userInfo.city_id);
@@ -161,7 +149,6 @@ function ColleaguesPage() {
 
       setSchoolOptions(optionsToSet);
     } catch (error) {
-      console.error('加载学校列表失败:', error);
       setSchoolOptions([]);
     } finally {
       setIsSchoolLoading(false);
@@ -179,7 +166,6 @@ function ColleaguesPage() {
     },
   ) => {
     const canEdit = hasPermission('mp:colonel:update');
-
     return (
       <Tooltip title={!canEdit ? '无权限操作' : ''}>
         <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>

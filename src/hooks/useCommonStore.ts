@@ -36,9 +36,6 @@ export const useCommonStore = () => {
   // 菜单数据
   const menuList = useMenuStore((state) => state.menuList);
 
-  const getLoginInfo = useUserStore((state) => state.getLoginInfo);
-  const saveLoginInfo = useUserStore((state) => state.saveLoginInfo);
-  const clearLoginInfo = useUserStore((state) => state.clearLoginInfo);
   return {
     isMaximize,
     isCollapsed,
@@ -56,8 +53,5 @@ export const useCommonStore = () => {
     tabs,
     theme,
     menuList,
-    getLoginInfo,
-    saveLoginInfo,
-    clearLoginInfo,
   } as const;
 };

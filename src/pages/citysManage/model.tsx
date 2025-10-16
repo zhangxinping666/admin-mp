@@ -264,14 +264,14 @@ export const formList = ({
       placeholder: '请选择用户',
       componentProps: {
         loading: isLoadingUsers,
-        showSearch: true, // 开启搜索功能
-        optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+        showSearch: true,
+        optionFilterProp: 'label',
         options: userOptions,
       },
     },
 
     {
-      name: 'city_id', // 这个字段的键名，最终提交给后端
+      name: 'city_id',
       label: '城市',
       component: 'Select',
       required: true,

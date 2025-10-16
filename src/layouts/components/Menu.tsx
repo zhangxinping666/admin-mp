@@ -18,7 +18,6 @@ function LayoutMenu() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  // ✅ 正确的方式
   const [antdMenuItems, setAntdMenuItems] = useState<MenuItemType[]>([]);
 
   const { isMaximize, isCollapsed, isPhone, openKeys, selectedKeys, permissions, menuList } =
@@ -37,9 +36,7 @@ function LayoutMenu() {
     if (!menus) {
       return [];
     }
-    // 明确 map 回调的返回类型是 MenuItemType
     return menus.map((menuItem): MenuItemType => {
-      // 先创建一个基础对象，包含所有菜单项共有的属性
       const baseItem = {
         key: menuItem.key,
         label: menuItem.label,
@@ -129,11 +126,9 @@ function LayoutMenu() {
       if (processedMenu.icon && typeof processedMenu.icon === 'string') {
         processedMenu.icon = <Icon icon={processedMenu.icon} />;
       }
-      console.log("processedMenu", processedMenu)
       return processedMenu;
     });
   }, []);
-
 
   //处理跳转
   const goPath = (path: string) => {
@@ -149,13 +144,10 @@ function LayoutMenu() {
     }
     const targetPath = menuItem.route_path;
     const newOpenKeys = getOpenMenuByRouter(targetPath);
-
     const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
-
     goPath(targetPath);
     setSelectedKeys([String(e.key)]);
     setOpenKeys(mergedOpenKeys);
-
     if (isPhone) {
       hiddenMenu();
     }
@@ -165,7 +157,6 @@ function LayoutMenu() {
     setOpenKeys(keys);
   };
 
-  /** 点击logo */
   const onClickLogo = () => {
     const firstMenu = getFirstMenu(menuList);
     if (firstMenu)
@@ -173,7 +164,6 @@ function LayoutMenu() {
     if (isPhone) hiddenMenu();
   };
 
-  /** 隐藏菜单 */
   const hiddenMenu = () => {
     toggleCollapsed(true);
   };

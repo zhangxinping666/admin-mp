@@ -161,7 +161,6 @@ const CitiesPage = () => {
         isLoadingUsers,
       })}
       initCreate={initCreate}
-
       disableCreate={!hasPermission('mp:city:add')}
       disableBatchDelete={!hasPermission('mp:city:delete ')}
       apis={{
