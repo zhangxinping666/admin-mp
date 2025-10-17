@@ -10,13 +10,12 @@ function Page() {
   useEffect(() => {
     // 只有当菜单和权限都加载完成时才跳转
     if (menuList.length > 0 && permissions.length > 0) {
-      const firstMenu = getFirstMenu(menuList, permissions);
+      const firstMenu = getFirstMenu(menuList);
       if (firstMenu && firstMenu !== '/') {
         navigate(firstMenu, { replace: true });
       }
     }
   }, [menuList, permissions, navigate]);
-
   return <div></div>;
 }
 

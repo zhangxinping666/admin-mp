@@ -122,17 +122,7 @@ function Guards() {
         };
         return checkMenuPath(menu);
       });
-
       const hasPermission = menuPermissions.includes(location.pathname);
-
-      console.log('[Guards] Route validation:', {
-        pathname: location.pathname,
-        isValidMenuPath,
-        hasPermission,
-        menuListLength: menuList.length,
-        menuPermissions: menuPermissions.slice(0, 5)
-      });
-
       // 如果没有权限或不在菜单中，跳转到第一个有权限的菜单
       if (!isValidMenuPath || !hasPermission) {
         console.warn('[Guards] Access denied, redirecting to first menu');

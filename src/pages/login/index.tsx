@@ -129,15 +129,13 @@ function Login() {
       };
       const loginResponse = await login(loginData);
       const loginResult = loginResponse.data as unknown as LoginData;
-      const refresh_token = loginResult.refresh_token;
       const access_token = loginResult.access_token;
       setAccessToken(access_token);
-      setRefreshToken(refresh_token);
 
       const user = await getUserInfo();
       const { menus, perms } = await getUserPermissions(user);
 
-      if (!perms || !refresh_token) {
+      if (!perms || !access_token) {
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
       }
       await handleGoMenu(menus, perms);
@@ -168,7 +166,6 @@ function Login() {
       const Data = response.data as unknown as CaptchaData
       // 检查不同的响应格式
       let captcha_image, captcha_id;
-
       if (Data) {
         if (Data) {
           captcha_image = Data.captcha_image;

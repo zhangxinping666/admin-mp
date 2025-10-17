@@ -3,7 +3,6 @@ import { InputNumber, message } from 'antd';
 import { Form, Button, Input } from 'antd';
 import { setTitle } from '@/utils/helper';
 import { message as globalMessage } from '@manpao/message';
-import { forgetPassword } from '@/servers/login';
 import Logo from '@/assets/images/logo.png';
 
 interface ForgetData {
@@ -58,27 +57,7 @@ function Forget() {
    * @param values - 表单数据
    */
   const handleFinish: FormProps['onFinish'] = async (values: ForgetData) => {
-    // 当密码和确认密码不同时则提示错误
-    if (values.newPassword !== values.confirmPassword) {
-      return messageApi.warning({
-        content: t('login.confirmPasswordMessage'),
-        key: 'confirmPassword',
-      });
-    }
-
-    try {
-      setLoading(true);
-      const { code } = await forgetPassword(values);
-      if (Number(code) !== 200) return;
-
-      globalMessage.success({
-        content: t('login.verificationPassed'),
-        key: 'success',
-      });
-      navigate(`/login${search}`);
-    } finally {
-      setLoading(false);
-    }
+    console.log('修改密码')
   };
 
   /**

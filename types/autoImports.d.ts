@@ -80,6 +80,8 @@ declare global {
   const WangEditor: typeof import('../src/components/WangEditor/index')['default']
   const addComponent: typeof import('../src/components/Form/utils/componentMap')['addComponent']
   const checkPermission: typeof import('../src/utils/permissions')['checkPermission']
+  const clearAccessToken: typeof import('../src/stores/token')['clearAccessToken']
+  const clearAllTokens: typeof import('../src/stores/token')['clearAllTokens']
   const clearTokens: typeof import('../src/stores/token')['clearTokens']
   const createRef: typeof import('react')['createRef']
   const dayjs2String: typeof import('../src/components/Dates/utils/helper')['dayjs2String']

@@ -45,8 +45,7 @@ function Layout() {
         setMenuPermissions(extractRoutePathsFromMenus(menus || []));
       }
     } catch (err) {
-      console.error('获取用户数据失败:', err);
-      console.warn('保持现有权限状态，避免清空已有权限');
+      console.log('获取用户数据失败:', err);
     } finally {
       setLoading(false);
     }
