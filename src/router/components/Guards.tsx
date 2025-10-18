@@ -76,15 +76,6 @@ function Guards() {
 
   // 主加载逻辑 - 只依赖关键状态变化
   useEffect(() => {
-    console.log('[Guards] 主加载逻辑触发', {
-      pathname: location.pathname,
-      hasToken: !!token,
-      hasUserInfo: !!userInfo,
-      permissionsLength: permissions.length,
-      isInitialLoad
-    });
-
-    // 如果是登录页面且没有token,直接完成初始化
     if (location.pathname === '/login' && !token) {
       // 清除可能存在的过期数据
       setPermissions([]);
@@ -95,7 +86,6 @@ function Guards() {
       return;
     }
 
-    // 有token但无权限数据,且有用户信息时加载权限
     if (token && permissions.length === 0 && userInfo && !isLoadingPermissionsRef.current) {
       console.log('[Guards] 检测到需要加载权限数据');
       loadPermissionsData().finally(() => {
@@ -116,32 +106,25 @@ function Guards() {
     } else if (token && permissions.length > 0) {
       setIsInitialLoad(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, userInfo?.id, permissions.length, location.pathname]);
 
   // 路由权限校验 - 只在数据完全加载后执行
   useEffect(() => {
     if (!isInitialLoad && token && menuList.length > 0 && menuPermissions.length > 0) {
+      console.log('[Guards] 路由权限校验', {
+        pathname: location.pathname,
+        menuPermissionsLength: menuPermissions.length
+      });
       if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
-      const isValidMenuPath = menuList.some((menu) => {
-        const checkMenuPath = (menuItem: any): boolean => {
-          if (menuItem.route_path === location.pathname) {
-            return true;
-          }
-          if (menuItem.children && menuItem.children.length > 0) {
-            return menuItem.children.some(checkMenuPath);
-          }
-          return false;
-        };
-        return checkMenuPath(menu);
-      });
       const hasPermission = menuPermissions.includes(location.pathname);
-      if (!isValidMenuPath || !hasPermission) {
-        console.warn('[Guards] 无权限或路径不在菜单中, 跳转到第一个菜单');
+      if (!hasPermission) {
+        console.warn('[Guards] 无权限访问路径:', location.pathname);
+        console.warn('[Guards] 可用权限列表:', menuPermissions);
         const firstMenu = getFirstMenu(menuList);
         if (firstMenu && firstMenu !== location.pathname) {
+          console.warn('[Guards] 跳转到第一个有权限的菜单:', firstMenu);
           navigate(firstMenu, { replace: true });
         }
       }
@@ -166,17 +149,14 @@ function Guards() {
           setUserInfo(null);
         }
       } else if (!isLoadingPermissionsRef.current) {
-        // 如果还没有权限数据且没有正在加载,先跳转到根路径,让权限加载逻辑处理
         console.log('[Guards] 权限数据未加载,跳转到根路径');
         navigate('/', { replace: true });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, location.pathname, permissions.length, menuPermissions.length]);
 
   /** 渲染页面 */
   const renderPage = () => {
-    // 如果有token但访问登录页面,显示加载状态(实际会被useEffect重定向)
     if (token && location.pathname === '/login') {
       return (
         <div className="w-screen h-screen flex items-center justify-center">
