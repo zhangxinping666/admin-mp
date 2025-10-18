@@ -256,7 +256,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           }
           const { data } = await fetchApi(params);
           console.log('Fetchdata', data);
-
           setTableData(data.list || data.data || data || []);
           setTotal(data.total || 0);
         } else if (mockData) {
@@ -275,8 +274,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   );
 
   return {
-    // 状态
-    contextHolder: null, // 使用全局message，不需要contextHolder
+    contextHolder: null,
     createFormRef,
     isFetch,
     setFetch,
@@ -284,11 +282,9 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     isCreateLoading,
     isCreateOpen,
     setCreateOpen,
-    // 【新增】审批详情相关状态
     isDetailOpen,
     setDetailOpen,
     detailData,
-    // 【新增】历史审核记录相关状态
     isHistoryOpen,
     setHistoryOpen,
     historyId,
@@ -303,13 +299,11 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     tableData,
     setTableData,
     pagination,
-    // 方法
     handlePageChange,
     handleSearch,
     handleCreate,
     handleEdit,
     handleDelete,
-    // 【新增】审批详情和历史记录方法
     handleDetail,
     handleHistory,
     handleModalSubmit,

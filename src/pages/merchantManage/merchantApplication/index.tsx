@@ -31,7 +31,7 @@ const MerchantApplicationPage = () => {
   const [isDormStore, setIsDormStore] = useState(false);
 
   const locationOptions = useGroupCitySchoolOptions();
-  
+
   // 为城市运营商自动加载所属城市的学校
   useEffect(() => {
     if (userInfo?.role_id === 5 && userInfo?.city_id) {
@@ -248,7 +248,7 @@ const MerchantApplicationPage = () => {
 
             return res;
           } catch (error) {
-            console.error('获取数据失败:', error);
+            console.log('获取数据失败:', error);
             // 返回默认空数据，避免组件崩溃
             return { data: { list: [], total: 0 } };
           }

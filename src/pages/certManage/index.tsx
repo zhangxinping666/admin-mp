@@ -83,8 +83,7 @@ const CertPage = () => {
         setTotal(Data.total || 0);
       }
     } catch (error) {
-      console.error('获取数据失败:', error);
-      message.error('获取数据失败');
+      console.log('获取数据失败:', error);
     } finally {
       setLoading(false);
       setFetch(false);

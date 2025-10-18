@@ -13,11 +13,10 @@ import Guards from './Guards';
 import { useMenuStore } from '../../stores/menu';
 
 // --- 逻辑重构部分 ---
-
 type PageFiles = Record<string, () => Promise<DefaultComponent<unknown>>>;
 const pages = import.meta.glob('../../pages/**/*.tsx') as PageFiles;
+console.log("pages", pages)
 const layouts = handleRoutes(pages);
-
 function getRoutePaths(menus: any[]): string[] {
   if (!Array.isArray(menus) || menus.length === 0) {
     return [];
@@ -27,7 +26,7 @@ function getRoutePaths(menus: any[]): string[] {
 
 const newRoutes: RouteObject[] = [
   {
-    path: '*',
+    path: '/',
     element: <Guards />,
     children: [
       {
@@ -50,9 +49,7 @@ const newRoutes: RouteObject[] = [
 function App() {
   const location = useLocation();
   const element = useRoutes(newRoutes);
-
   const setRoutePages = useMenuStore((state) => state.setRoutePages);
-
   useEffect(() => {
     const routePaths = getRoutePaths(layouts);
     setRoutePages(routePaths);

@@ -103,16 +103,29 @@ function Login() {
   const getUserPermissions = async (user: any) => {
     try {
       setLoading(true);
+      console.log('[登录] 获取权限 - 用户:', user.name);
       const permissionsResponse = await getPermissions({ role: user.name });
       const Data = permissionsResponse.data as unknown as PermissionsData;
       const { menus, perms } = Data;
+
       const routePermissions = extractRoutePathsFromMenus(menus);
-      //权限菜单路由
+      console.log('[登录] 权限数据加载完成:', {
+        menus: menus?.length,
+        perms: perms?.length,
+        routePermissions: routePermissions?.length
+      });
+
+      // 合并路由权限和按钮权限
+      const finalPermissions = [...routePermissions, ...(perms || [])];
+
+      // 设置菜单路由权限
       setMenuPermissions(routePermissions);
-      //权限按钮
-      setPermissions(perms);
+      // 设置所有权限(路由+按钮)
+      setPermissions(finalPermissions);
+      // 设置菜单列表
       setMenuList(menus);
-      return { menus, perms };
+
+      return { menus, perms: routePermissions };
     } finally {
       setLoading(false);
     }

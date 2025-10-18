@@ -27,7 +27,6 @@ export function handleRoutes(
   routes: Record<string, () => Promise<DefaultComponent<unknown>>>,
 ): RouteObject[] {
   const layouts: RouteObject[] = []; // layout内部组件
-
   for (const key in routes) {
     // 是否在排除名单中
     const isExclude = handleRouterExclude(key);
@@ -45,7 +44,6 @@ export function handleRoutes(
       element: <ComponentNode />,
     });
   }
-
   return layouts;
 }
 

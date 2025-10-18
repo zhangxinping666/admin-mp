@@ -21,22 +21,22 @@ const ERROR_CODE_MAP: Record<number, { message: string; action?: () => void }> =
 export function handleBusinessError(code: number, msg?: string): void {
   const errorConfig = ERROR_CODE_MAP[code];
   if (errorConfig) {
-    message.error(msg || errorConfig.message);
+    // message.error(msg || errorConfig.message);
     errorConfig.action?.();
   } else {
     // 未定义的业务码
-    message.error(msg || `请求失败(错误码: ${code})`);
+    // message.error(msg || `请求失败(错误码: ${code})`);
   }
 }
 
 export function handleHttpError(error: AxiosError): void {
   if (!error.response) {
-    // 网络错误或请求被取消
-    if (error.message.includes('已被取消')) {
-      console.warn('[Request] Cancelled:', error.config?.url);
-      return; // 静默处理
-    }
-    message.error('网络连接失败,请检查网络');
+    // // 网络错误或请求被取消
+    // if (error.message.includes('已被取消')) {
+    //   console.warn('[Request] Cancelled:', error.config?.url);
+    //   return; // 静默处理
+    // }
+    // message.error('网络连接失败,请检查网络');
     return;
   }
 
@@ -50,7 +50,5 @@ export function handleHttpError(error: AxiosError): void {
     502: '网关错误',
     503: '服务不可用',
   };
-
-  message.error(statusMessages[status] || `请求失败(HTTP ${status})`);
-
+  // message.error(statusMessages[status] || `请求失败(HTTP ${status})`);
 }
