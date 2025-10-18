@@ -13,9 +13,7 @@ import Tabs from './components/Tabs';
 import Forbidden from '@/pages/403';
 import styles from './index.module.less';
 import { getUserInfoServe } from '@/servers/login';
-import { getPermissions } from '@/servers/login';
-import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
-import { PermissionsData, UserInfo } from '@/pages/login/model'
+import { UserInfo } from '@/pages/login/model';
 
 function Layout() {
   const { pathname, search } = useLocation();
@@ -24,40 +22,43 @@ function Layout() {
   const outlet = useOutlet();
   const [isLoading, setLoading] = useState(true);
   const [messageApi, contextHolder] = message.useMessage();
-  const { setPermissions, setUserInfo, setMenuPermissions } = useUserStore((state) => state);
-  const { setMenuList, toggleCollapsed, togglePhone } = useMenuStore((state) => state);
+  const { setUserInfo } = useUserStore((state) => state);
+  const { toggleCollapsed, togglePhone } = useMenuStore((state) => state);
 
   const { menuPermissions, userId, isMaximize, isCollapsed, isPhone, isRefresh } = useCommonStore();
 
   const initializeUserData = useCallback(async () => {
+    // 如果用户信息已存在,不再重复获取
+    if (userId) {
+      console.log('[Layout] 用户信息已存在,跳过初始化');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('[Layout] 开始获取用户信息');
       const { data: userInfo } = await getUserInfoServe();
-      const info = userInfo as unknown as UserInfo
-      setUserInfo(userInfo.data);
-      if (menuPermissions.length === 0) {
-        const permissionsResponse = await getPermissions({ role: info.name });
-        const Data = permissionsResponse.data as unknown as PermissionsData;
-        const { perms, menus } = Data;
-        console.log(Data)
-        setPermissions(perms || []);
-        setMenuList(menus || []);
-        setMenuPermissions(extractRoutePathsFromMenus(menus || []));
-      }
+      console.log('[Layout] 用户信息获取成功:', userInfo);
+      const userInformation = userInfo as unknown as UserInfo
+      setUserInfo(userInformation);
     } catch (err) {
-      console.error('获取用户数据失败:', err);
-      console.warn('保持现有权限状态，避免清空已有权限');
+      console.error('[Layout] 获取用户数据失败:', err);
+      messageApi.error('获取用户信息失败');
     } finally {
       setLoading(false);
     }
-  }, [menuPermissions.length]);
+  }, [userId, setUserInfo, messageApi]);
 
   useEffect(() => {
-    // 当用户信息缓存不存在时则重新获取
+    // 当有token但无用户信息时才获取
     if (token && !userId) {
+      console.log('[Layout] 检测到token但无userId,开始初始化');
       initializeUserData();
+    } else {
+      setLoading(false);
     }
-  }, [initializeUserData, token, userId]);
+  }, [token, userId, initializeUserData]);
 
   const handleIsPhone = debounce(() => {
     const isPhone = window.innerWidth <= 768;

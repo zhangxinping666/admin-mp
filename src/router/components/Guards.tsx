@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getAccessToken, setAccessToken, setRefreshToken } from '@/stores/token';
+import { useEffect, useState, useRef } from 'react';
+import { getAccessToken, setAccessToken, setRefreshToken, clearAllTokens } from '@/stores/token';
 import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { getPermissions } from '@/servers/login';
 import { getFirstMenu } from '@/menus/utils/helper';
@@ -17,8 +17,8 @@ function Guards() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = getAccessToken();
-  const [isDataLoaded, setIsDataLoaded] = useState(false); // 标识数据是否已加载完成
   const [isInitialLoad, setIsInitialLoad] = useState(true); // 标识是否为初始加载
+  const isLoadingPermissionsRef = useRef(false); // 使用ref避免状态更新导致重新渲染
   const { setUserInfo, setPermissions, setMenuPermissions, userInfo } = useUserStore(
     (state) => state,
   );
@@ -32,33 +32,37 @@ function Guards() {
   }, []);
 
   const loadPermissionsData = async () => {
+    if (isLoadingPermissionsRef.current) {
+      return;
+    }
+
     try {
-      // 获取当前用户信息
+      isLoadingPermissionsRef.current = true;
       const currentUserInfo = userInfo;
       if (!currentUserInfo || !currentUserInfo.name) {
-        console.error('用户信息不存在，跳转到登录页');
-        navigate(`/login`, { replace: true });
         return;
       }
       const permissionsResponse = await getPermissions({ role: currentUserInfo.name });
       const Data = permissionsResponse.data as unknown as PermissionsData;
       const { menus, perms } = Data;
-      // 从菜单中提取route_path作为权限（与登录逻辑保持一致）
       const routePermissions = extractRoutePathsFromMenus(menus);
       const finalPermissions = [...routePermissions, ...(perms || [])];
-      setPermissions(finalPermissions);
 
+      setPermissions(finalPermissions);
       setMenuList(menus);
-      setMenuPermissions(finalPermissions);
-      setIsDataLoaded(true); // 标记数据加载完成
-    } catch (error) {
-      console.error('Guards获取权限数据失败:', error);
-      // 清除可能存在的过期数据
-      setPermissions([]);
-      setMenuPermissions([]);
-      setMenuList([]);
-      setUserInfo(null);
-      navigate(`/login`, { replace: true });
+      setMenuPermissions(routePermissions);
+    } catch (error: any) {
+      console.error('[Guards] 获取权限数据失败:', error);
+      // 只有在非取消错误时才清除数据
+      if (error?.name !== 'CanceledError') {
+        setPermissions([]);
+        setMenuPermissions([]);
+        setMenuList([]);
+        setUserInfo(null);
+        navigate(`/login`, { replace: true });
+      }
+    } finally {
+      isLoadingPermissionsRef.current = false;
     }
   };
 
@@ -70,7 +74,16 @@ function Guards() {
     return checkPermission(pathname, userPermissions);
   };
 
+  // 主加载逻辑 - 只依赖关键状态变化
   useEffect(() => {
+    console.log('[Guards] 主加载逻辑触发', {
+      pathname: location.pathname,
+      hasToken: !!token,
+      hasUserInfo: !!userInfo,
+      permissionsLength: permissions.length,
+      isInitialLoad
+    });
+
     // 如果是登录页面且没有token,直接完成初始化
     if (location.pathname === '/login' && !token) {
       // 清除可能存在的过期数据
@@ -81,20 +94,21 @@ function Guards() {
       setIsInitialLoad(false);
       return;
     }
-    if (token && permissions.length === 0) {
+
+    // 有token但无权限数据,且有用户信息时加载权限
+    if (token && permissions.length === 0 && userInfo && !isLoadingPermissionsRef.current) {
+      console.log('[Guards] 检测到需要加载权限数据');
       loadPermissionsData().finally(() => {
         setIsInitialLoad(false);
       });
       return;
     }
     if (!token) {
-      // 没有token时,清除所有用户相关数据
       setPermissions([]);
       setMenuPermissions([]);
       setMenuList([]);
       setUserInfo(null);
-
-      // 避免重复跳转到登录页面
+      clearAllTokens();
       if (location.pathname !== '/login') {
         navigate(`/login`, { replace: true });
       }
@@ -102,14 +116,15 @@ function Guards() {
     } else if (token && permissions.length > 0) {
       setIsInitialLoad(false);
     }
-  }, [permissions.length, token, location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, userInfo?.id, permissions.length, location.pathname]);
+
+  // 路由权限校验 - 只在数据完全加载后执行
   useEffect(() => {
-    if (!isInitialLoad && token && menuList.length > 0 && permissions.length > 0) {
-      // 特殊路径不做校验
+    if (!isInitialLoad && token && menuList.length > 0 && menuPermissions.length > 0) {
       if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
-
       const isValidMenuPath = menuList.some((menu) => {
         const checkMenuPath = (menuItem: any): boolean => {
           if (menuItem.route_path === location.pathname) {
@@ -122,36 +137,27 @@ function Guards() {
         };
         return checkMenuPath(menu);
       });
-
       const hasPermission = menuPermissions.includes(location.pathname);
-
-      console.log('[Guards] Route validation:', {
-        pathname: location.pathname,
-        isValidMenuPath,
-        hasPermission,
-        menuListLength: menuList.length,
-        menuPermissions: menuPermissions.slice(0, 5)
-      });
-
-      // 如果没有权限或不在菜单中，跳转到第一个有权限的菜单
       if (!isValidMenuPath || !hasPermission) {
-        console.warn('[Guards] Access denied, redirecting to first menu');
+        console.warn('[Guards] 无权限或路径不在菜单中, 跳转到第一个菜单');
         const firstMenu = getFirstMenu(menuList);
         if (firstMenu && firstMenu !== location.pathname) {
           navigate(firstMenu, { replace: true });
         }
       }
     }
-  }, [location.pathname, permissions, token, menuList, menuPermissions, isDataLoaded, isInitialLoad]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, isInitialLoad, menuList.length, menuPermissions.length]);
+
+  // 登录页面重定向逻辑
   useEffect(() => {
     if (token && location.pathname === '/login') {
+      console.log('[Guards] 在登录页但有token,准备跳转');
       if (permissions.length > 0 && menuPermissions.length > 0) {
         const firstMenu = getFirstMenu(menuList);
         if (firstMenu) {
           navigate(firstMenu, { replace: true });
         } else {
-          // 如果没有有权限的菜单，说明权限数据有问题，清除token
-          console.warn('没有找到有权限的菜单，可能权限数据异常，清除token');
           setAccessToken('');
           setRefreshToken('');
           setPermissions([]);
@@ -159,15 +165,18 @@ function Guards() {
           setMenuList([]);
           setUserInfo(null);
         }
-      } else {
-        // 如果还没有权限数据，先跳转到根路径，让权限加载逻辑处理
+      } else if (!isLoadingPermissionsRef.current) {
+        // 如果还没有权限数据且没有正在加载,先跳转到根路径,让权限加载逻辑处理
+        console.log('[Guards] 权限数据未加载,跳转到根路径');
         navigate('/', { replace: true });
       }
     }
-  }, [token, location.pathname, navigate, permissions, menuPermissions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, location.pathname, permissions.length, menuPermissions.length]);
+
   /** 渲染页面 */
   const renderPage = () => {
-    // 如果有token但访问登录页面，显示加载状态（实际会被useEffect重定向）
+    // 如果有token但访问登录页面,显示加载状态(实际会被useEffect重定向)
     if (token && location.pathname === '/login') {
       return (
         <div className="w-screen h-screen flex items-center justify-center">

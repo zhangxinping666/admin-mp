@@ -13,14 +13,13 @@ export interface LoginResult {
   messages: string;
 }
 
-export interface LoginData{
-    id: number;
-    account_id: string;
-    name: string;
-    access_token: string;
-    refresh_token: string;
-    status: number;
-  };
+export interface LoginData {
+  id: number;
+  account_id: string;
+  name: string;
+  access_token: string;
+  status: number;
+};
 
 /**
  * @description 用户基础信息结构
@@ -61,7 +60,7 @@ export interface MenuItem {
   route_path: string;
   sort: number;
   type: number;
-  children?:MenuItem[];
+  children?: MenuItem[];
 }
 
 /**

@@ -2,11 +2,12 @@ import type { MenuProps } from 'antd';
 import { useMemo } from 'react';
 import { useAliveController } from 'react-activation';
 import { useNavigate } from 'react-router-dom';
-import { clearTokens } from '@/stores/token';
+import { clearAllTokens } from '@/stores/token';
 import { App, Dropdown } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore, useTabsStore, useUserStore } from '@/stores';
+import { logout } from '@/servers/login';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -29,6 +30,8 @@ function Header() {
   const toggleCollapsed = useMenuStore((state) => state.toggleCollapsed);
   const clearInfo = useUserStore((state) => state.clearInfo);
   const { closeAllTab, setActiveKey } = useTabsStore((state) => state);
+  const { setPermissions, setMenuPermissions, setUserInfo } = useUserStore.getState();
+  const { setMenuList } = useMenuStore.getState();
   const items: MenuProps['items'] = [
     {
       key: 'logout',
@@ -56,11 +59,16 @@ function Header() {
       icon: <ExclamationCircleOutlined />,
       content: t('public.signOutMessage'),
       onOk() {
+        logout()
         clearInfo();
         closeAllTab();
         setActiveKey('');
-        clearTokens();
+        clearAllTokens();
         clear();
+        setPermissions([]);
+        setMenuPermissions([]);
+        setMenuList([]);
+        setUserInfo(null);
         navigate('/login');
       },
     });

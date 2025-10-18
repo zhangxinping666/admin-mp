@@ -16,6 +16,20 @@ export function createProxy(list: ProxyList = []) {
       changeOrigin: true,
       ws: prefix === '/ws', // 如果是 /ws，启用 websocket
       rewrite: (path) => path.replace(new RegExp(`^${prefix}`), ''),
+
+      // ✅ 关键配置: 转发 Cookie (支持 HttpOnly Cookie 认证)
+      configure: (proxy) => {
+        proxy.on('proxyRes', (proxyRes) => {
+          const cookies = proxyRes.headers['set-cookie'];
+          if (cookies) {
+            // 移除 Domain 限制,允许本地开发
+            proxyRes.headers['set-cookie'] = cookies.map(cookie =>
+              cookie.replace(/Domain=[^;]+/gi, '')
+                    .replace(/Secure/gi, '') // 本地开发移除 Secure 限制
+            );
+          }
+        });
+      },
     };
   }
 

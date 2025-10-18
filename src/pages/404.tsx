@@ -1,22 +1,32 @@
 import { getFirstMenu, getMenuByKey } from '@/menus/utils/helper';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useCommonStore } from '@/hooks/useCommonStore';
+import { useTabsStore } from '@/stores';
 import { Button } from 'antd';
 import styles from './all.module.less';
 
 function NotFound() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { permissions, menuList } = useCommonStore();
+  const { menuList } = useCommonStore();
   const { addTabs, setActiveKey } = useTabsStore();
 
   /** 跳转首页 */
   const goIndex = () => {
-    const firstMenu = getFirstMenu(menuList, permissions);
+    const firstMenu = getFirstMenu(menuList) as string;
     navigate(firstMenu);
-    const menuByKeyProps = { menus: menuList, permissions, key: firstMenu };
-    const newItems = getMenuByKey(menuByKeyProps);
-    if (newItems?.key) {
-      setActiveKey(String(newItems.key));
-      addTabs(newItems);
+    const menuItem = getMenuByKey(menuList, firstMenu);
+    if (menuItem) {
+      setActiveKey(firstMenu);
+      // 转换 MenuItem 为 TabsData 格式
+      addTabs({
+        key: firstMenu,
+        label: menuItem.label || '',
+        labelZh: menuItem.label || '',
+        labelEn: menuItem.label || '',
+        nav: [],
+      });
     }
   };
 
