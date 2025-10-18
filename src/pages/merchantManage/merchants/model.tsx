@@ -113,7 +113,7 @@ export interface MerchantsQuery {
 
 // 搜索配置
 export const searchList = (
-  options: any, 
+  options: any,
   categoryOptions: any,
   userInfo?: { role_id: number; city_id: number }
 ): BaseSearchList[] => {
@@ -132,7 +132,7 @@ export const searchList = (
 
   // 地区搜索字段（根据角色显示）
   const locationSearchFields: BaseSearchList[] = [];
-  
+
   if (roleId === 2) {
     // 超级管理员：显示完整的省市学校选择
     locationSearchFields.push(
@@ -146,15 +146,15 @@ export const searchList = (
           placeholder: '请选择省份',
           allowClear: true,
           onChange: async (value: string) => {
-            form.setFieldsValue({ city: undefined, school_id: undefined });
+            form.setFieldsValue({ city_id: undefined, school_id: undefined });
             await options.loadCities(value);
-            form.validateFields(['city', 'school_id']);
+            form.validateFields(['city_id', 'school_id']);
           },
         }),
       },
       {
         label: '',
-        name: 'city',
+        name: 'city_id',
         component: 'Select',
         wrapperWidth: 180,
         componentProps: (form) => {
@@ -178,7 +178,7 @@ export const searchList = (
         component: 'Select',
         placeholder: '请选择学校',
         componentProps: (form) => {
-          const cityValue = form.getFieldValue('city');
+          const cityValue = form.getFieldValue('city_id');
           return {
             placeholder: '请选择学校',
             allowClear: true,
@@ -341,152 +341,152 @@ export const formList = ({
   categoryOptions: any;
   timer_range?: string[];
 }): BaseFormList[] => [
-  {
-    label: '店铺名称',
-    name: 'store_name',
-    rules: FORM_REQUIRED,
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入店铺名称',
-      maxLength: 50,
+    {
+      label: '店铺名称',
+      name: 'store_name',
+      rules: FORM_REQUIRED,
+      component: 'Input',
+      componentProps: {
+        placeholder: '请输入店铺名称',
+        maxLength: 50,
+      },
     },
-  },
-  {
-    label: '状态',
-    name: 'status',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择状态',
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 0 },
-      ],
+    {
+      label: '状态',
+      name: 'status',
+      rules: FORM_REQUIRED,
+      component: 'Select',
+      componentProps: {
+        placeholder: '请选择状态',
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 0 },
+        ],
+      },
     },
-  },
-  {
-    label: '商家类型',
-    name: 'type',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择商家类型',
-      options: [
-        { label: '校内', value: '校内' },
-        { label: '校外', value: '校外' },
-      ],
+    {
+      label: '商家类型',
+      name: 'type',
+      rules: FORM_REQUIRED,
+      component: 'Select',
+      componentProps: {
+        placeholder: '请选择商家类型',
+        options: [
+          { label: '校内', value: '校内' },
+          { label: '校外', value: '校外' },
+        ],
+      },
     },
-  },
-  {
-    label: '地址',
-    name: 'site',
-    rules: FORM_REQUIRED,
-    component: 'TextArea',
-    componentProps: {
-      placeholder: '请输入详细地址',
-      maxLength: 200,
+    {
+      label: '地址',
+      name: 'site',
+      rules: FORM_REQUIRED,
+      component: 'TextArea',
+      componentProps: {
+        placeholder: '请输入详细地址',
+        maxLength: 200,
+      },
     },
-  },
-  {
-    label: '位置',
-    name: 'location',
-    rules: FORM_REQUIRED,
-    component: 'customize',
-    componentProps: (form) => {
-      // 获取当前表单的所有值
-      const formValues = form.getFieldsValue();
-      // 如果是编辑模式且有经纬度数据，使用商家的实际位置作为地图中心
-      // 否则使用默认的北京坐标
-      let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
-      if (
-        formValues.longitude &&
-        formValues.latitude &&
-        typeof formValues.longitude === 'number' &&
-        typeof formValues.latitude === 'number'
-      ) {
-        initCenter = [formValues.longitude, formValues.latitude];
-      }
+    {
+      label: '位置',
+      name: 'location',
+      rules: FORM_REQUIRED,
+      component: 'customize',
+      componentProps: (form) => {
+        // 获取当前表单的所有值
+        const formValues = form.getFieldsValue();
+        // 如果是编辑模式且有经纬度数据，使用商家的实际位置作为地图中心
+        // 否则使用默认的北京坐标
+        let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
+        if (
+          formValues.longitude &&
+          formValues.latitude &&
+          typeof formValues.longitude === 'number' &&
+          typeof formValues.latitude === 'number'
+        ) {
+          initCenter = [formValues.longitude, formValues.latitude];
+        }
 
-      return {
-        zoom: 15,
-        style: {
-          width: '100%',
-          height: 400,
-        },
-        onSave: (data: any) => {
-          console.log('value', data);
-          form.setFieldsValue({
-            location: data,
-          });
-        },
-        initValue: () => {
-          return form.getFieldValue('location') || initCenter;
-        },
-      };
+        return {
+          zoom: 15,
+          style: {
+            width: '100%',
+            height: 400,
+          },
+          onSave: (data: any) => {
+            console.log('value', data);
+            form.setFieldsValue({
+              location: data,
+            });
+          },
+          initValue: () => {
+            return form.getFieldValue('location') || initCenter;
+          },
+        };
+      },
+      render: (props: any) => {
+        return <MapPicker {...props} />;
+      },
     },
-    render: (props: any) => {
-      return <MapPicker {...props} />;
+    {
+      label: '是否为宿舍商家',
+      name: 'is_dormitory_store',
+      rules: FORM_REQUIRED,
+      component: 'Select',
+      componentProps: {
+        placeholder: '请选择是否为宿舍商家',
+        options: [
+          { label: '是', value: 1 },
+          { label: '否', value: 0 },
+        ],
+      },
     },
-  },
-  {
-    label: '是否为宿舍商家',
-    name: 'is_dormitory_store',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择是否为宿舍商家',
-      options: [
-        { label: '是', value: 1 },
-        { label: '否', value: 0 },
-      ],
+    {
+      label: '商家分类',
+      name: 'category',
+      rules: FORM_REQUIRED,
+      component: 'Select',
+      componentProps: {
+        placeholder: '请选择商家分类',
+        style: { width: '100%' },
+        options: categoryOptions,
+      },
     },
-  },
-  {
-    label: '商家分类',
-    name: 'category',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择商家分类',
-      style: { width: '100%' },
-      options: categoryOptions,
+    {
+      label: '推荐状态',
+      name: 'recommend',
+      rules: FORM_REQUIRED,
+      component: 'Select',
+      componentProps: {
+        placeholder: '请选择推荐状态',
+        options: [
+          { label: '推荐', value: 1 },
+          { label: '不推荐', value: 0 },
+        ],
+      },
     },
-  },
-  {
-    label: '推荐状态',
-    name: 'recommend',
-    rules: FORM_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      placeholder: '请选择推荐状态',
-      options: [
-        { label: '推荐', value: 1 },
-        { label: '不推荐', value: 0 },
-      ],
+    {
+      label: '联系电话',
+      name: 'phone',
+      rules: PHONE_RULE(true, '请输入正确的联系电话'),
+      component: 'Input',
+      componentProps: {
+        placeholder: '请输入联系电话',
+        maxLength: 20,
+        disabled: true,
+      },
     },
-  },
-  {
-    label: '联系电话',
-    name: 'phone',
-    rules: PHONE_RULE(true, '请输入正确的联系电话'),
-    component: 'Input',
-    componentProps: {
-      placeholder: '请输入联系电话',
-      maxLength: 20,
-      disabled: true,
+    {
+      label: '营业时间',
+      name: 'time_range',
+      rules: FORM_REQUIRED,
+      component: 'TimeRangePicker',
+      componentProps: {
+        placeholder: '请选择营业时间',
+        format: 'HH:mm',
+      },
     },
-  },
-  {
-    label: '营业时间',
-    name: 'time_range',
-    rules: FORM_REQUIRED,
-    component: 'TimeRangePicker',
-    componentProps: {
-      placeholder: '请选择营业时间',
-      format: 'HH:mm',
-    },
-  },
-];
+  ];
 
 export const merchantDetailConfig: FieldConfig[] = [
   // 图片（根据 is_dorm_store 过滤在配置里做）
