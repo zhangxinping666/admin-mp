@@ -3,6 +3,7 @@ import { searchList, tableColumns, formList, type City, useLocationOptions, User
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { Tooltip } from 'antd';
 import BaseBtn from '@/components/Buttons/components/BaseBtn';
+import { getCitiesByProvince } from '@/servers/trade-blotter/location';
 import {
   getCityList,
   addCity,
@@ -90,27 +91,22 @@ const CitiesPage = () => {
   // 加载省市数据
   useEffect(() => {
     const fetchAndGroupData = async () => {
-      setIsLoadingOptions(true);
+      // 过滤掉"全部"选项，只保留真实的省份
+      const realProvinces = locationOptions.provinceOptions.filter(
+        (p) => p.value !== '全部'
+      );
+
+      if (realProvinces.length === 0) {
+        return; // 省份数据还未加载
+      }
+
       try {
-        const provinceResponse = await getProvinceList(0);
-        console.log('省份接口返回数据:', provinceResponse);
-
-        const provinces = provinceResponse.data || [];
-        console.log('省份数据:', provinces);
-
-        // 【修正】使用 province.province 来获取省份名称
-        const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
-        const cityResponses = await Promise.all(cityPromises);
-
-        console.log('城市接口返回数据:', cityResponses);
-
-        const finalOptions = provinces.map((province: any, index: number) => {
-          const cities = cityResponses[index].data || [];
-          console.log(`${province.name} 的城市数据:`, cities);
-
+        // 为每个省份加载城市数据a
+        const cityPromises = realProvinces.map(async (province) => {
+          const { data } = await getCitiesByProvince(Number(province.value));
+          const cities = data || [];
           return {
-            // 【修正】使用 province.province 来设置分组标题
-            label: province.name,
+            label: province.label,
             options: cities.map((city: any) => ({
               label: city.name,
               value: city.city_id,
@@ -118,17 +114,15 @@ const CitiesPage = () => {
           };
         });
 
-        console.log('最终分组选项:', finalOptions);
+        const finalOptions = await Promise.all(cityPromises);
         setGroupedCityOptions(finalOptions);
+
       } catch (error) {
-        console.error('加载省市选项失败:', error);
-      } finally {
-        setIsLoadingOptions(false);
+        console.error('加载分组城市选项失败:', error);
       }
     };
     fetchAndGroupData();
-    fetchUserOptions();
-  }, []);
+  }, [locationOptions.provinceOptions]);
   // 操作列渲染
   const optionRender = (
     record: City,

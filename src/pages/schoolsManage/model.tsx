@@ -85,13 +85,22 @@ const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部')
   value,
 });
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
-export const useLocationOptions = () => {
+export const useLocationOptions = (skipLoad: boolean = false) => {
   const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
   const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
 
   // 加载省份
   useEffect(() => {
+    console.log('[useLocationOptions] useEffect 触发', { skipLoad });
+
+    // 如果是城市运营商，跳过加载
+    if (skipLoad) {
+      console.log('[useLocationOptions] 跳过加载省份数据');
+      return;
+    }
+
     const loadProvinces = async () => {
+      console.log('[useLocationOptions] 开始加载省份数据');
       try {
         const { data } = await getProvinces(0);
         if (Array.isArray(data) && data.length > 0) {
@@ -99,13 +108,14 @@ export const useLocationOptions = () => {
             DEFAULT_ALL_OPTION(),
             ...data.map((p) => ({ label: p.name, value: p.city_id })),
           ]);
+          console.log('[useLocationOptions] 省份加载成功:', data.length);
         }
       } catch (error) {
-        console.error('加载省份失败', error);
+        console.error('[useLocationOptions] 加载省份失败', error);
       }
     };
     loadProvinces();
-  }, []);
+  }, [skipLoad]);
 
   // 加载城市
   const loadCities = useCallback(async (province: string) => {

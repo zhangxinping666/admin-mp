@@ -6,7 +6,7 @@ import { Tooltip } from 'antd';
 import { getSchoolList, addSchool, updateSchool } from '@/servers/school';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
-import { getProvinceList, getCityName } from '@/servers/city';
+import { getCitiesByProvince } from '@/servers/trade-blotter/location';
 import { useLocationOptions } from './model';
 
 // 初始化新增数据
@@ -37,53 +37,77 @@ const SchoolsPage = () => {
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [cityName, setCityName] = useState<string>('');
   const [editingId, setEditingId] = useState<number | undefined>(undefined);
-  const locationOptions = useLocationOptions();
+  const locationOptions = useLocationOptions(userInfo?.role_id === 5);
+
   // 检查权限的辅助函数
   const hasPermission = (permission: string) => {
     return checkPermission(permission, permissions);
   };
 
-  // 加载省市数据
+  // 基于 locationOptions 构建分组的城市选项
   useEffect(() => {
-    const fetchAndGroupData = async () => {
+    console.log('[SchoolsPage] 构建城市选项 useEffect 触发');
+
+    const buildGroupedCityOptions = async () => {
+      // 城市运营商：只加载自己的城市
+      if (userInfo?.role_id === 5 && userInfo?.city_id) {
+        console.log('[SchoolsPage] 城市运营商：加载自己的城市');
+        try {
+          const { data } = await getCitiesByProvince(userInfo.city_id);
+          const cities = data || [];
+          const city = cities.find((c: any) => c.city_id === userInfo.city_id);
+          if (city) {
+            setCityName(city.name);
+            setGroupedCityOptions([{
+              label: '当前城市',
+              options: [{ label: city.name, value: userInfo.city_id }]
+            }]);
+          }
+        } catch (error) {
+          console.error('[SchoolsPage] 加载城市信息失败:', error);
+        }
+        setIsLoadingOptions(false);
+        return;
+      }
+
+      // 非城市运营商：基于 locationOptions 构建分组城市数据
+      const realProvinces = locationOptions.provinceOptions.filter(
+        (p) => p.value !== '全部'
+      );
+
+      if (realProvinces.length === 0) {
+        console.log('[SchoolsPage] 省份数据还未加载');
+        return;
+      }
+
+      console.log('[SchoolsPage] 非城市运营商：构建分组城市数据，省份数量:', realProvinces.length);
       setIsLoadingOptions(true);
       try {
-        const provinceResponse = await getProvinceList(0);
-        const provinces = provinceResponse.data || [];
-        // 【修正】使用 province.province 来获取省份名称
-        const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
-        const cityResponses = await Promise.all(cityPromises);
-        const finalOptions = provinces.map((province: any, index: number) => {
-          const cities = cityResponses[index].data || [];
+        const cityPromises = realProvinces.map(async (province) => {
+          const { data } = await getCitiesByProvince(Number(province.value));
+          const cities = data || [];
           return {
-            label: province.name, // 省份名作为分组标题
+            label: province.label,
             options: cities.map((city: any) => ({
               label: city.name,
               value: city.city_id,
             })),
           };
         });
-        setGroupedCityOptions(finalOptions);
 
-        // 如果是城市运营商，获取其所属城市名称
-        if (userInfo?.role_id === 5 && userInfo?.city_id) {
-          // 从所有城市中找到对应的城市名称
-          for (const province of finalOptions) {
-            const city = province.options.find((c: any) => c.value === userInfo.city_id);
-            if (city) {
-              setCityName(city.label);
-              break;
-            }
-          }
-        }
+        const finalOptions = await Promise.all(cityPromises);
+        setGroupedCityOptions(finalOptions);
+        console.log('[SchoolsPage] 分组城市数据构建完成');
       } catch (error) {
-        console.error('加载省市选项失败:', error);
+        console.error('[SchoolsPage] 加载分组城市选项失败:', error);
       } finally {
         setIsLoadingOptions(false);
       }
     };
-    fetchAndGroupData();
-  }, [userInfo]);
+
+    buildGroupedCityOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationOptions.provinceOptions]);
 
   // 编辑时的数据转换
   const handleEditOpen = (record: School) => {

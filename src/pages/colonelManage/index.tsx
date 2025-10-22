@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { searchList, tableColumns, formList, type Colonel, useLocationOptions } from './model';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
-import { getProvinceList, getCityName } from '@/servers/city';
+import { getCitiesByProvince } from '@/servers/trade-blotter/location';
 import { getUserListByPage } from '@/servers/user';
 import { useUserStore } from '@/stores/user';
 import { checkPermission } from '@/utils/permissions';
@@ -28,24 +28,20 @@ let initCreate: Partial<Colonel> = {
   school_id: undefined, // 将在数据加载后设置为第一个学校ID
   user_id: undefined, // 关联用户ID
 };
-
 const colonelApis = {
   fetch: getColonelList,
   create: addColonel,
   update: updateColonel,
   delete: deleteColonel,
 };
-
 interface GroupedOption {
   label: string; // 省份名
   options: { label: string; value: number }[]; // 该省份下的城市列表
 }
-
 interface SchoolOption {
   label: string;
   value: number;
 }
-
 interface UserOption {
   label: string;
   value: number;
@@ -53,7 +49,6 @@ interface UserOption {
 
 function ColleaguesPage() {
   const [groupedCityOptions, setGroupedCityOptions] = useState<GroupedOption[]>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const locationOptions = useLocationOptions();
   const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
   const [isSchoolLoading, setIsSchoolLoading] = useState(false);
@@ -93,44 +88,67 @@ function ColleaguesPage() {
       setIsLoadingUsers(false);
     }
   };
+
+  // 加载用户数据
   useEffect(() => {
-    const fetchAndGroupData = async () => {
-      setIsLoadingOptions(true);
+    // 城市运营商没有权限访问用户列表，跳过加载
+    if (userInfo?.role_id === 5) {
+      setUserOptions([]);
+      return;
+    }
+    fetchUserOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 基于 locationOptions 构建分组的城市选项
+  useEffect(() => {
+    const buildGroupedCityOptions = async () => {
+      // 过滤掉"全部"选项，只保留真实的省份
+      const realProvinces = locationOptions.provinceOptions.filter(
+        (p) => p.value !== '全部'
+      );
+
+      if (realProvinces.length === 0) {
+        return; // 省份数据还未加载
+      }
+
       try {
-        const provinceResponse = await getProvinceList(0);
-        const provinces = provinceResponse.data || [];
-        const cityPromises = provinces.map((province: any) => getCityName(province.city_id));
-        const cityResponses = await Promise.all(cityPromises);
-        const finalOptions = provinces.map((province: any, index: number) => {
-          const cities = cityResponses[index].data || [];
+        // 为每个省份加载城市数据a
+        const cityPromises = realProvinces.map(async (province) => {
+          const { data } = await getCitiesByProvince(Number(province.value));
+          const cities = data || [];
           return {
-            label: province.name,
+            label: province.label,
             options: cities.map((city: any) => ({
               label: city.name,
               value: city.city_id,
             })),
           };
         });
+
+        const finalOptions = await Promise.all(cityPromises);
         setGroupedCityOptions(finalOptions);
+
+        // 如果是城市运营商，自动设置城市名称并加载学校
         if (userInfo?.role_id === 5 && userInfo?.city_id) {
           for (const province of finalOptions) {
             const city = province.options.find((c: any) => c.value === userInfo.city_id);
+            console.log(city)
             if (city) {
-              setCityName(city.label);
+              setCityName(city.city_name);
               handleCityChange(String(userInfo.city_id));
               break;
             }
           }
         }
       } catch (error) {
-        console.error('加载省市选项失败:', error);
-      } finally {
-        setIsLoadingOptions(false);
+        console.error('加载分组城市选项失败:', error);
       }
     };
-    fetchAndGroupData();
-    fetchUserOptions();
-  }, [userInfo]);
+
+    buildGroupedCityOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationOptions.provinceOptions]);
 
   const handleCityChange = async (cityId: string) => {
     if (!cityId) {
@@ -167,7 +185,7 @@ function ColleaguesPage() {
   ) => {
     const canEdit = hasPermission('mp:colonel:update');
     return (
-      <Tooltip title={!canEdit ? '无权限操作' : ''}>
+      <Tooltip title={!canEdit ? `${record.city_name}` : ''}>
         <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
           编辑
         </BaseBtn>
@@ -186,7 +204,6 @@ function ColleaguesPage() {
         col.dataIndex !== 'action')}
       formConfig={formList({
         groupedCityOptions,
-        isLoadingOptions,
         schoolOptions,
         isSchoolLoading,
         userOptions,
