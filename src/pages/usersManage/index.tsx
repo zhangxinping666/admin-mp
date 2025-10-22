@@ -3,8 +3,10 @@ import {
   searchList,
   tableColumns,
   detailTableColumns,
+  pointsDetailTableColumns,
   formList,
   searchDetailList,
+  searchPointsDetailList,
   useLocationOptions,
   type User,
 } from './model';
@@ -17,6 +19,7 @@ import { Key } from 'react';
 import { message, Modal, Table, Card, Statistic, Row, Col, Divider } from 'antd';
 import styles from './index.module.less';
 import * as apis from '@/servers/balance';
+import * as pointsApis from '@/servers/point';
 import BaseCard from '@/components/Card/BaseCard';
 import BaseSearch from '@/components/Search/BaseSearch';
 
@@ -48,6 +51,16 @@ const ColleaguesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+
+  // 金豆明细弹窗
+  const [pointsVisible, setPointsVisible] = useState(false);
+  const [pointsDetailData, setPointsDetailData] = useState<any[]>([]);
+  const [currentPointsUserId, setCurrentPointsUserId] = useState<any>();
+  const [currentPointsUserInfo, setCurrentPointsUserInfo] = useState<any>(null);
+  // 金豆明细分页状态
+  const [pointsCurrentPage, setPointsCurrentPage] = useState(1);
+  const [pointsPageSize, setPointsPageSize] = useState(10);
+  const [pointsTotal, setPointsTotal] = useState(0);
 
   const { permissions, userInfo } = useUserStore();
 
@@ -102,6 +115,48 @@ const ColleaguesPage = () => {
         message.error('获取余额明细失败' + err);
       });
   };
+
+  // 金豆明细搜索
+  const handlePointsSearch = (values: any) => {
+    console.log('金豆明细搜索', values);
+    const params = {
+      page: 1,
+      page_size: 10,
+      start_date: values.time_range?.[0],
+      end_date: values.time_range?.[1],
+      ...values,
+    };
+    delete params.time_range;
+    pointsApis
+      .getSchoolList(currentPointsUserId)
+      .then((res: any) => {
+        setPointsDetailData(res.data.list || []);
+        setPointsTotal(res.data.total || 0);
+      })
+      .catch((err) => {
+        message.error('获取金豆明细失败: ' + err);
+      });
+  };
+
+  // 处理查看金豆详情
+  const handleViewPointsDetails = (record: any, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    // 重置分页状态
+    setPointsCurrentPage(1);
+    setPointsPageSize(10);
+    pointsApis
+      .getSchoolList(record.id)
+      .then((res: any) => {
+        setPointsDetailData(res.data.list || []);
+        setPointsTotal(res.data.total || 0);
+        setCurrentPointsUserInfo(record);
+        setPointsVisible(true);
+        setCurrentPointsUserId(record.id);
+      })
+      .catch((err) => {
+        message.error('获取金豆明细失败: ' + err);
+      });
+  };
   /**
    * 处理分页变化
    * @param page 当前页码
@@ -123,6 +178,25 @@ const ColleaguesPage = () => {
       })
       .catch((err) => {
         message.error('获取余额明细失败' + err);
+      });
+  };
+
+  /**
+   * 处理金豆明细分页变化
+   * @param page 当前页码
+   * @param pageSize 每页显示条数
+   */
+  const handlePointsPaginationChange = (page: number, pageSize: number) => {
+    setPointsCurrentPage(page);
+    setPointsPageSize(pageSize);
+
+    pointsApis
+      .getSchoolList(currentPointsUserId)
+      .then((res: any) => {
+        setPointsDetailData(res.data.list || []);
+      })
+      .catch((err) => {
+        message.error('获取金豆明细失败: ' + err);
       });
   };
   /**
@@ -205,7 +279,7 @@ const ColleaguesPage = () => {
         title="用户管理"
         isDelete={true}
         searchConfig={searchList(locationOptions, userInfo || undefined)}
-        columns={tableColumns(handleViewDetails).filter((col: any) => col.dataIndex !== 'action')}
+        columns={tableColumns(handleViewDetails, handleViewPointsDetails).filter((col: any) => col.dataIndex !== 'action')}
         formConfig={formList()}
         initCreate={initCreate}
         onEditOpen={handleEditOpen}
@@ -293,6 +367,84 @@ const ColleaguesPage = () => {
           }}
           rowClassName={(record: any, index) => {
             if (record.category === 'withdraw_failed') {
+              return 'error-row';
+            }
+            return index % 2 === 0 ? 'even-row' : 'odd-row';
+          }}
+        />
+      </Modal>
+
+      {/* 金豆明细弹窗 */}
+      <Modal
+        title={
+          <div className={styles.modalTitle}>
+            用户 <span className={styles.userName}>{currentPointsUserInfo?.nickname}</span> 的金豆明细
+          </div>
+        }
+        open={pointsVisible}
+        width={'90%'}
+        onCancel={() => setPointsVisible(false)}
+        footer={null}
+        className={styles.detailModal}
+      >
+        {/* 金豆统计卡片 */}
+        <Card className={styles.statisticsCard} title="金豆统计">
+          <Row gutter={24}>
+            <Col span={8}>
+              <Statistic
+                title="总变动笔数"
+                value={pointsDetailData.length}
+                valueStyle={{ color: '#faad14', fontSize: '20px', fontWeight: 600 }}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                title="获得笔数"
+                value={pointsDetailData.filter((item) => item.operation === 'earn').length}
+                valueStyle={{ color: '#52c41a', fontSize: '20px', fontWeight: 600 }}
+              />
+            </Col>
+            <Col span={8}>
+              <Statistic
+                title="消费笔数"
+                value={pointsDetailData.filter((item) => item.operation === 'spend').length}
+                valueStyle={{ color: '#ff4d4f', fontSize: '20px', fontWeight: 600 }}
+              />
+            </Col>
+          </Row>
+        </Card>
+
+        <Divider className={styles.divider} />
+        {/* 搜索区域 */}
+        <BaseCard>
+          <BaseSearch data={{}} list={searchPointsDetailList()} handleFinish={handlePointsSearch} />
+        </BaseCard>
+        {/* 详情表格 */}
+        <Table
+          className={styles.detailTable}
+          columns={pointsDetailTableColumns}
+          dataSource={pointsDetailData}
+          rowKey="id"
+          scroll={{ x: 1500 }}
+          size="small"
+          pagination={{
+            current: pointsCurrentPage,
+            pageSize: pointsPageSize,
+            total: pointsTotal,
+            onChange: handlePointsPaginationChange,
+            showSizeChanger: true,
+            pageSizeOptions: getDynamicPageSizeOptions(pointsTotal),
+            showTotal: (total) => `共 ${total} 条记录`,
+          }}
+          locale={{
+            emptyText: (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyText}>暂无金豆明细记录</div>
+              </div>
+            ),
+          }}
+          rowClassName={(record: any, index) => {
+            if (record.status === 4) {
               return 'error-row';
             }
             return index % 2 === 0 ? 'even-row' : 'odd-row';
