@@ -58,10 +58,10 @@ export interface PointsHistoryData {
 }
 
 
-export interface ApiResponse {
+export interface ApiResponse<T> {
   code: number;
   message: string;
-  data: PointsHistoryData;
+  data: T;
 }
 
 export interface Pagination {

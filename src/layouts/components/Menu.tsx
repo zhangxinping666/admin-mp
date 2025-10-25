@@ -59,7 +59,6 @@ function LayoutMenu() {
     if (menuList.length > 0) {
       const menuListWithIcons = processMenuIcons(menuList);
       const treeMenus = buildMenuTree(menuListWithIcons);
-      console.log("treeMenus", treeMenus)
       const convertToAntdItems = (menus: MenuItem[]): antMenu[] => {
         return menus.map((menu) => {
           const menuKey = (menu as any).id || (menu as any).key;
@@ -68,7 +67,6 @@ function LayoutMenu() {
             label: (menu as any).name || (menu as any).label,
             icon: menu.icon,
           };
-
           // 如果有子菜单，递归处理
           if (menu.children && menu.children.length > 0) {
             item.children = convertToAntdItems(menu.children);

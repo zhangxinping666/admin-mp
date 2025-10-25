@@ -5,7 +5,7 @@ import { MenuItem } from '@/pages/login/model';
  * @param menus - 菜单数组
  * @returns 排序后的菜单数组
  */
-const sortMenusBySort = (menus: MenuItem[]): MenuItem[] => {
+export const sortMenusBySort = (menus: MenuItem[]): MenuItem[] => {
   // 先对当前层级排序
   const sorted = [...menus].sort((a, b) => {
     // sort 值小的排在前面

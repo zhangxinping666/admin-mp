@@ -19,6 +19,7 @@ import { ThemeType } from '@/stores/public';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
 import { PermissionsData } from './model'
+import { sortMenusBySort } from '@/utils/menuUtils'
 
 function Login() {
   const { t } = useTranslation();
@@ -147,6 +148,7 @@ function Login() {
 
       const user = await getUserInfo();
       const { menus, perms } = await getUserPermissions(user);
+
 
       if (!perms || !access_token) {
         return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });

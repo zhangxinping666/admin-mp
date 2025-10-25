@@ -1,16 +1,20 @@
 
 import {
-  ApiResponse
+  ApiResponse,
+  PointsHistoryData
 } from '../../pages/usersManage/model';
 import request from '@/utils/request';
 // 获取学校列表
-export function getSchoolList(user_id: string) {
-  return request.get<ApiResponse>('/api/points/details', { params: { user_id } });
+export function getPointDetailList(
+  userId: string | number,
+  params: any
+) {
+  const url = `/api/admin/points/users/${userId}/details`;
+  return request.get<ApiResponse<PointsHistoryData>>(url, {
+    params,
+  });
 }
 
-export function getPointDetailList(params: { page: string, page_size: string }) {
-  return request.get<ApiResponse>('/api/admin/points/details', { params });
-}
 // 响应数据
 // {
 //     "code": 2000,

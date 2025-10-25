@@ -128,7 +128,7 @@ const ColleaguesPage = () => {
     };
     delete params.time_range;
     pointsApis
-      .getSchoolList(currentPointsUserId)
+      .getPointDetailList(currentPointsUserId, params)
       .then((res: any) => {
         setPointsDetailData(res.data.list || []);
         setPointsTotal(res.data.total || 0);
@@ -144,8 +144,14 @@ const ColleaguesPage = () => {
     // 重置分页状态
     setPointsCurrentPage(1);
     setPointsPageSize(10);
+
+    const params = {
+      page: 1,
+      page_size: 10,
+    };
+
     pointsApis
-      .getSchoolList(record.id)
+      .getPointDetailList(record.id, params)
       .then((res: any) => {
         setPointsDetailData(res.data.list || []);
         setPointsTotal(res.data.total || 0);
@@ -190,8 +196,13 @@ const ColleaguesPage = () => {
     setPointsCurrentPage(page);
     setPointsPageSize(pageSize);
 
+    const params = {
+      page,
+      page_size: pageSize,
+    };
+
     pointsApis
-      .getSchoolList(currentPointsUserId)
+      .getPointDetailList(currentPointsUserId, params)
       .then((res: any) => {
         setPointsDetailData(res.data.list || []);
       })

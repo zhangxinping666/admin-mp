@@ -39,7 +39,6 @@ interface BalanceDetailParams {
   user_id: string;
   params?: object;
 }
-
 export const getBalanceDetailInfo = (params?: BalanceDetailParams) => {
   return request.get(
     '/admin/balance/accounts/{user_id}/details'.replace('{user_id}', params?.user_id || ''),
