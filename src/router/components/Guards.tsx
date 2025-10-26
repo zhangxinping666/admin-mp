@@ -110,32 +110,31 @@ function Guards() {
 
   // 路由权限校验 - 只在数据完全加载后执行
   useEffect(() => {
-    if (!isInitialLoad && token && menuList.length > 0 && menuPermissions.length > 0) {
-      console.log('[Guards] 路由权限校验', {
-        pathname: location.pathname,
-        menuPermissionsLength: menuPermissions.length
-      });
+    if (!isInitialLoad && token && permissions.length > 0) {
+      // 特殊路由不检查权限
       if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
-      const hasPermission = menuPermissions.includes(location.pathname);
-      if (!hasPermission) {
-        console.warn('[Guards] 无权限访问路径:', location.pathname);
-        console.warn('[Guards] 可用权限列表:', menuPermissions);
-        const firstMenu = getFirstMenu(menuList);
-        if (firstMenu && firstMenu !== location.pathname) {
-          console.warn('[Guards] 跳转到第一个有权限的菜单:', firstMenu);
-          navigate(firstMenu, { replace: true });
+
+      // 只有当 menuPermissions 有数据时才检查
+      if (menuPermissions.length > 0) {
+        const hasPermission = menuPermissions.includes(location.pathname);
+        if (!hasPermission) {
+          console.warn('[Guards] 无权限访问路径:', location.pathname);
+          console.warn('[Guards] 可用权限列表:', menuPermissions);
+          const firstMenu = getFirstMenu(menuList);
+          if (firstMenu && firstMenu !== location.pathname) {
+            console.warn('[Guards] 跳转到第一个有权限的菜单:', firstMenu);
+            navigate(firstMenu, { replace: true });
+          }
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, isInitialLoad, menuList.length, menuPermissions.length]);
+  }, [location.pathname, isInitialLoad, token, permissions.length]);
 
   // 登录页面重定向逻辑
   useEffect(() => {
     if (token && location.pathname === '/login') {
-      console.log('[Guards] 在登录页但有token,准备跳转');
       if (permissions.length > 0 && menuPermissions.length > 0) {
         const firstMenu = getFirstMenu(menuList);
         if (firstMenu) {

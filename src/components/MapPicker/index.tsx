@@ -182,31 +182,38 @@ const MapPicker = React.memo(
             map.setCenter(e.poi.location);
             marker.setPosition(e.poi.location);
 
-            // 触发回调
-            onSave!([e.poi.location.lng, e.poi.location.lat]);
+            // 触发 onSave 回调，传递完整的地点信息
+            if (onSave) {
+              onSave({
+                location: { lng: e.poi.location.lng, lat: e.poi.location.lat },
+                name: e.poi.name || '搜索选点',
+                address: e.poi.address || e.poi.district || e.poi.name || '搜索选点位置',
+              });
+            }
 
+            // 触发 onChange 回调，更新坐标
             if (onChange && e.poi.location) {
               onChange(newPosition);
             }
           });
 
-          // 移除地图点击事件，只允许拖拽标记来选择位置
-          // 用户只能通过拖拽标记或搜索来选择位置
+          // 点击地图选择位置
           map.on('click', function (e: any) {
             console.log('点击地图', e);
 
             // 点击地图时，将标记移动到点击位置
             marker.setPosition(e.lnglat);
-            // 更新内部状态
-            setCurrentPosition([e.lnglat.lng, e.lnglat.lat]);
-            // 触发回调
-            onSave?.([e.lnglat.lng, e.lnglat.lat]);
 
-            if (onChange && e.lnglat) {
-              onChange([e.lnglat.lng, e.lnglat.lat]);
+            // 更新内部状态
+            const newPosition = [e.lnglat.lng, e.lnglat.lat];
+            setCurrentPosition(newPosition);
+
+            // 先触发 onChange 回调，立即更新坐标
+            if (onChange) {
+              onChange(newPosition);
             }
 
-            // 获取地址并触发onSave回调
+            // 然后获取地址并触发 onSave 回调
             getAddressFromPosition(e.lnglat.lng, e.lnglat.lat, (address) => {
               if (onSave) {
                 onSave({

@@ -54,6 +54,18 @@ function LayoutMenu() {
       return baseItem;
     });
   }
+  //处理菜单图标
+  const processMenuIcons = useCallback((menus: MenuItem[]): MenuItem[] => {
+    return menus.map((menu) => {
+      const processedMenu = { ...menu };
+      // 处理图标
+      if (processedMenu.icon && typeof processedMenu.icon === 'string') {
+        processedMenu.icon = <Icon icon={processedMenu.icon} />;
+      }
+      return processedMenu;
+    });
+  }, []);
+
   // 处理菜单数据
   useEffect(() => {
     if (menuList.length > 0) {
@@ -81,7 +93,7 @@ function LayoutMenu() {
     } else {
       setAntdMenuItems([]);
     }
-  }, [menuList, permissions, pathname]);
+  }, [menuList, permissions, pathname, processMenuIcons]);
 
   useEffect(() => {
     const currentPath = pathname;
@@ -107,26 +119,17 @@ function LayoutMenu() {
       setSelectedKeys([]);
     }
 
+    // 计算需要展开的菜单键
     const newOpenKeys = getOpenMenuByRouter(currentPath);
-    const needsNewOpenKeys = newOpenKeys.some((key) => !openKeys.includes(key));
-
-    if (needsNewOpenKeys) {
-      const mergedOpenKeys = [...new Set([...openKeys, ...newOpenKeys])];
-      setOpenKeys(mergedOpenKeys);
-    }
-  }, [pathname, menuList, openKeys]);
-
-  //处理菜单图标
-  const processMenuIcons = useCallback((menus: MenuItem[]): MenuItem[] => {
-    return menus.map((menu) => {
-      const processedMenu = { ...menu };
-      // 处理图标
-      if (processedMenu.icon && typeof processedMenu.icon === 'string') {
-        processedMenu.icon = <Icon icon={processedMenu.icon} />;
+    // 使用函数式更新，避免依赖 openKeys
+    setOpenKeys((prevOpenKeys) => {
+      const needsNewOpenKeys = newOpenKeys.some((key) => !prevOpenKeys.includes(key));
+      if (needsNewOpenKeys) {
+        return [...new Set([...prevOpenKeys, ...newOpenKeys])];
       }
-      return processedMenu;
+      return prevOpenKeys;
     });
-  }, []);
+  }, [pathname, menuList, setSelectedKeys, setOpenKeys]);
 
   //处理跳转
   const goPath = (path: string) => {

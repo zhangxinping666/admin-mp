@@ -91,29 +91,20 @@ function ColleaguesPage() {
 
   // 加载用户数据
   useEffect(() => {
-    // 城市运营商没有权限访问用户列表，跳过加载
-    if (userInfo?.role_id === 5) {
-      setUserOptions([]);
-      return;
-    }
     fetchUserOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 基于 locationOptions 构建分组的城市选项
   useEffect(() => {
     const buildGroupedCityOptions = async () => {
-      // 过滤掉"全部"选项，只保留真实的省份
       const realProvinces = locationOptions.provinceOptions.filter(
         (p) => p.value !== '全部'
       );
-
       if (realProvinces.length === 0) {
-        return; // 省份数据还未加载
+        return;
       }
 
       try {
-        // 为每个省份加载城市数据a
         const cityPromises = realProvinces.map(async (province) => {
           const { data } = await getCitiesByProvince(Number(province.value));
           const cities = data || [];

@@ -184,7 +184,7 @@ const SchoolsPage = () => {
       initCreate={userInfo?.role_id === 5 && userInfo?.city_id
         ? { ...initCreate, city_id: userInfo.city_id }
         : initCreate}
-      // onEditOpen={handleEditOpen}
+      onEditOpen={handleEditOpen}
       onCreateClick={handleCreateClick}
       handleFormValue={handleFormValue}
       isAddOpen={true}

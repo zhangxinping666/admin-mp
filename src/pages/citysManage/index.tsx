@@ -87,7 +87,9 @@ const CitiesPage = () => {
       setIsLoadingUsers(false);
     }
   };
-
+  useEffect(() => {
+    fetchUserOptions();
+  }, []);
   // 加载省市数据
   useEffect(() => {
     const fetchAndGroupData = async () => {
