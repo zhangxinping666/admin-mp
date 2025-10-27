@@ -1,6 +1,4 @@
-import type { SideMenu } from '#/public';
 import { MenuItem } from '@/pages/login/model';
-import { cloneDeep } from 'lodash';
 
 //根据路由获取展开菜单数组
 export function getOpenMenuByRouter(router: string): string[] {
