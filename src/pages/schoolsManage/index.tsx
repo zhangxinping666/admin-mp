@@ -19,7 +19,7 @@ const initCreate: Partial<School> = {
   city_name: '',
   province: '',
   latitude: 39.90923, // 默认纬度
-  longitude: 116.397428, // 默认经度
+  longitude: 116.397428, // 默认经度 
   status: 1, // 默认状态
 };
 const schoolApis = {
@@ -110,7 +110,7 @@ const SchoolsPage = () => {
   }, [locationOptions.provinceOptions]);
 
   // 编辑时的数据转换
-  const handleEditOpen = (record: School) => {
+  const handleEditOpen = (record: School): any => {
     console.log('===== 编辑数据初始化 =====');
     console.log('原始记录:', record);
 

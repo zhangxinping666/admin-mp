@@ -15,8 +15,8 @@ interface AddressWithLocationProps {
 const AddressWithLocation: React.FC<AddressWithLocationProps> = ({ record }) => {
   const [mapVisible, setMapVisible] = useState(false);
   // 检查是否有有效的经纬度数据
-  const hasValidLocation = record.longitude && record.latitude && 
-    typeof record.longitude === 'number' && 
+  const hasValidLocation = record.longitude && record.latitude &&
+    typeof record.longitude === 'number' &&
     typeof record.latitude === 'number';
 
   return (
@@ -46,7 +46,6 @@ const AddressWithLocation: React.FC<AddressWithLocationProps> = ({ record }) => 
         onCancel={() => setMapVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
       >
         {mapVisible && hasValidLocation && (
           <>
@@ -60,13 +59,13 @@ const AddressWithLocation: React.FC<AddressWithLocationProps> = ({ record }) => 
               <strong>坐标：</strong>
               经度 {record.longitude.toFixed(6)}，纬度 {record.latitude.toFixed(6)}
             </div>
-            <div style={{ 
-              borderRadius: 8, 
+            <div style={{
+              borderRadius: 8,
               overflow: 'hidden',
-              border: '1px solid #e8e8e8' 
+              border: '1px solid #e8e8e8'
             }}>
-              <MapViewer 
-                center={[record.longitude, record.latitude]} 
+              <MapViewer
+                center={[record.longitude, record.latitude]}
                 zoom={15}
                 height={400}
               />

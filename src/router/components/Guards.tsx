@@ -130,7 +130,7 @@ function Guards() {
         }
       }
     }
-  }, [location.pathname, isInitialLoad, token, permissions.length]);
+  }, [location.pathname, isInitialLoad, token, permissions.length, menuPermissions, menuList]);
 
   // 登录页面重定向逻辑
   useEffect(() => {

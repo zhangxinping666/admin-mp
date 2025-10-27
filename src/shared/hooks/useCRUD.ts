@@ -122,16 +122,10 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
   };
   // 【新增】打开审批详情
   const handleDetail = async (record: any) => {
-    try {
-      setLoading(true);
-      setDetailOpen(true);
-      setDetailData(record);
-    } catch (error) {
-      messageApi.error({ content: '获取审批详情失败', duration: 3 });
-      console.error('[CRUD] 获取审批详情失败:', error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    setDetailOpen(true);
+    setDetailData(record);
+    setLoading(false);
   };
   // 【新增】打开历史审核记录
   const handleHistory = async (id: number) => {
@@ -141,134 +135,103 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
       return;
     }
 
-    try {
-      setLoading(true);
-      setHistoryId(id as number);
-      console.log('历史记录ID', id);
-      const result = await fetchHistoryApi(id);
-      console.log('历史记录原始数据', result);
+    setLoading(true);
+    setHistoryId(id as number);
+    console.log('历史记录ID', id);
+    const result = await fetchHistoryApi(id);
+    console.log('历史记录原始数据', result);
 
-      // 【新增】格式化历史数据
-      if (formatHistoryData) {
-        setHistoryData(formatHistoryData(result.data?.list || result.data || []));
-      } else {
-        setHistoryData(result.data?.list || result.data || []);
-      }
-      console.log('历史记录', historyData);
-
-      setHistoryOpen(true);
-    } catch (error) {
-      messageApi.error({ content: '获取历史审核记录失败', duration: 3 });
-      console.error('[CRUD] 获取历史审核记录失败:', error);
-    } finally {
-      setLoading(false);
+    // 【新增】格式化历史数据
+    if (formatHistoryData) {
+      setHistoryData(formatHistoryData(result.data?.list || result.data || []));
+    } else {
+      setHistoryData(result.data?.list || result.data || []);
     }
+    console.log('历史记录', historyData);
+
+    setHistoryOpen(true);
+    setLoading(false);
   };
 
   // 在 useCRUD.ts 文件中
 
   // 删除处理
   const handleDelete = async (id: Key[]) => {
-    try {
-      // 确保 deleteApi 存在
-      if (deleteApi) {
-        // 1. 调用后端的删除接口
-        await deleteApi(id);
-        // 2. 提示用户操作成功
-        messageApi.success({ content: '删除成功', duration: 3 });
-        // 3. 【核心改动 1】检查并处理分页，提升用户体验
-        if (tableData.length === 1 && page > 1) {
-          setPage(page - 1);
-        }
-        // 4. 【核心改动 2】触发列表重新获取
-        setFetch(true);
+    // 确保 deleteApi 存在
+    if (deleteApi) {
+      // 1. 调用后端的删除接口
+      await deleteApi(id);
+      // 2. 提示用户操作成功
+      messageApi.success({ content: '删除成功', duration: 3 });
+      // 3. 【核心改动 1】检查并处理分页，提升用户体验
+      if (tableData.length === 1 && page > 1) {
+        setPage(page - 1);
       }
-    } catch (error) {
-      // 5. 如果接口调用失败，提示错误
-      messageApi.error({ content: '删除失败', duration: 3 });
-      console.error('[CRUD] 删除操作失败:', error);
+      // 4. 【核心改动 2】触发列表重新获取
+      setFetch(true);
     }
   };
   // 在 useCRUD.ts 文件中
   const handleModalSubmit = async (values: BaseFormData) => {
     setCreateLoading(true);
     const isEditing = createId != -1;
-    const operationType = isEditing ? '编辑' : '新增';
-    try {
-      if (isEditing) {
-        // --- 编辑逻辑 ---
-        if (!updateApi) {
-          console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
-          throw new Error('Update API not configured.');
-        }
-        // 确保id格式正确：如果是application模式且不是数组则转为数组，否则直接使用createId
-        const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
-        const result = await updateApi({ id: idToPass, ...values });
-        if (result?.code === 0) {
-          throw new Error('编辑失败:' + result.msg);
-        }
-        messageApi.success('编辑成功');
 
-        // 【核心】触发列表重新获取
-        setFetch(true);
-      } else {
-        // --- 新增逻辑 ---
-        if (!createApi) {
-          // 这是在没有提供 createApi 时的本地模拟回退逻辑，可以保留
-          console.warn('[CRUD] 未提供 createApi，执行本地模拟新增。');
-          const newId = getNextId();
-          const newItem = { ...values, id: newId } as T;
-          setTableData((prev) => [...prev, newItem]);
-          setTotal((prev) => prev + 1);
-        } else {
-          const result = await createApi(values);
-          messageApi.success({ content: '新增成功', duration: 3 });
-          // 【核心】重置到第一页，并触发列表重新获取
-          setPage(1);
-          setFetch(true);
-        }
+    if (isEditing) {
+      // --- 编辑逻辑 ---
+      if (!updateApi) {
+        console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
+        setCreateLoading(false);
+        return;
       }
-      setCreateOpen(false); // 操作成功，关闭弹窗
-    } catch (error: any) {
-      console.error(`[CRUD] ${operationType}操作失败`, {
-        error,
-        submittedData: values,
-        timestamp: new Date().toISOString(),
-      });
-      // 显示具体的错误信息，如果有的话
-      const errorMessage = error?.message || error?.error || `${operationType}失败`;
-      messageApi.error({ content: errorMessage, duration: 3 });
-    } finally {
-      setCreateLoading(false);
+      // 确保id格式正确：如果是application模式且不是数组则转为数组，否则直接使用createId
+      const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
+      await updateApi({ id: idToPass, ...values });
+      messageApi.success('编辑成功');
+
+      // 【核心】触发列表重新获取
+      setFetch(true);
+    } else {
+      // --- 新增逻辑 ---
+      if (!createApi) {
+        // 这是在没有提供 createApi 时的本地模拟回退逻辑，可以保留
+        console.warn('[CRUD] 未提供 createApi，执行本地模拟新增。');
+        const newId = getNextId();
+        const newItem = { ...values, id: newId } as T;
+        setTableData((prev) => [...prev, newItem]);
+        setTotal((prev) => prev + 1);
+      } else {
+        await createApi(values);
+        messageApi.success({ content: '新增成功', duration: 3 });
+        // 【核心】重置到第一页，并触发列表重新获取
+        setPage(1);
+        setFetch(true);
+      }
     }
+    setCreateOpen(false); // 操作成功，关闭弹窗
+    setCreateLoading(false);
   };
   // 获取数据
   const fetchTableData = useCallback(
     async (mockData?: T[]) => {
       setLoading(true);
-      try {
-        if (fetchApi) {
-          const params: any = { ...searchData };
-          if (pagination) {
-            // 根据选项决定是否添加分页参数
-            params.page = page;
-            params.page_size = pageSize;
-          }
-          const { data } = await fetchApi(params);
-          console.log('Fetchdata', data);
-          setTableData(data.list || data.data || data || []);
-          setTotal(data.total || 0);
-        } else if (mockData) {
-          // 使用模拟数据
-          setTableData(mockData);
-          setTotal(mockData.length);
+      if (fetchApi) {
+        const params: any = { ...searchData };
+        if (pagination) {
+          // 根据选项决定是否添加分页参数
+          params.page = page;
+          params.page_size = pageSize;
         }
-      } catch (error) {
-        messageApi.error({ content: '获取数据失败:' + error, duration: 3 });
-      } finally {
-        setLoading(false);
-        setFetch(false);
+        const { data } = await fetchApi(params);
+        console.log('Fetchdata', data);
+        setTableData(data.list || data.data || data || []);
+        setTotal(data.total || 0);
+      } else if (mockData) {
+        // 使用模拟数据
+        setTableData(mockData);
+        setTotal(mockData.length);
       }
+      setLoading(false);
+      setFetch(false);
     },
     [fetchApi, searchData, pagination, page, pageSize, messageApi],
   );

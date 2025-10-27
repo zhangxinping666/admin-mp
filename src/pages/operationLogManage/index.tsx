@@ -75,7 +75,6 @@ function Page() {
         ...pagination,
         page: currentPage,
         total,
-        pages,
       });
     } catch (error) {
       console.error('获取操作日志失败', error);

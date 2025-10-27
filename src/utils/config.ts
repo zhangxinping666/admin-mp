@@ -16,6 +16,7 @@ export const THEME_KEY = 'theme_key'; // 主题
 export const INIT_PAGINATION = {
   page: 1,
   pageSize: 20,
+  total: 0,
 };
 
 // 日期格式化

@@ -38,7 +38,7 @@ function ApiPageSelect(props: ApiPageSelectProps) {
       if (api) {
         const apiFun = Array.isArray(params) ? api(...params) : api(params);
         const { code, data } = await apiFun;
-        if (Number(code) !== 200) return;
+        if (Number(code) !== 2000) return;
         const result = apiResultKey
           ? (data as { [apiResultKey: string]: unknown })?.[apiResultKey]
           : data;

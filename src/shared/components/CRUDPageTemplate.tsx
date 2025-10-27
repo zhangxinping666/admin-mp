@@ -30,6 +30,7 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   disableCreate?: boolean;
   disableBatchDelete?: boolean;
   disableBatchUpdate?: boolean;
+  scrollX?: number; // 表格横向滚动最小宽度,用于固定列生效
   onEditOpen?: (record: T) => T | void;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
@@ -83,6 +84,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   apis,
   onRow,
   pagination,
+  scrollX = 1200,
   optionRender,
   onCreateClick,
   onFormValuesChange,
@@ -179,6 +181,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       title: '操作',
       dataIndex: 'action',
       key: 'action',
+      width: 120,
       fixed: 'right' as const,
       render: (_: any, record: T) =>
         optionRender
@@ -245,6 +248,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             <BaseTable
               isLoading={isLoading}
               isAuthHeight={false}
+              scrollX={scrollX}
               columns={(optionRender ? finalColumns : columns) as TableColumnsType}
               getPage={() => {
                 fetchTableData();

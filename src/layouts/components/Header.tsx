@@ -31,7 +31,7 @@ function Header() {
   const clearInfo = useUserStore((state) => state.clearInfo);
   const { closeAllTab, setActiveKey } = useTabsStore((state) => state);
   const { setPermissions, setMenuPermissions, setUserInfo } = useUserStore.getState();
-  const { setMenuList } = useMenuStore.getState();
+  const { setMenuList, setSelectedKeys, setOpenKeys } = useMenuStore.getState();
   const items: MenuProps['items'] = [
     {
       key: 'logout',
@@ -69,6 +69,9 @@ function Header() {
         setMenuPermissions([]);
         setMenuList([]);
         setUserInfo(null);
+        // 重置菜单状态
+        setSelectedKeys([]);
+        setOpenKeys([]);
         navigate('/login');
       },
     });
