@@ -20,17 +20,8 @@ const Dashboard: React.FC = () => {
   }, [fetchData]);
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
+    <div style={{ padding: '24px', background: '#f7f8f8ff', minHeight: '100vh' }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>
-            数据统计
-          </Title>
-          <Typography.Text type="secondary">
-            实时监控平台核心数据指标
-          </Typography.Text>
-        </div>
-
         {error && (
           <Alert
             message="数据加载失败"

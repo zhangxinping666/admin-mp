@@ -8,7 +8,6 @@ import BaseModal from '@/components/Modal/BaseModal';
 import BaseForm from '@/components/Form/BaseForm';
 import BasePagination from '@/components/Pagination/BasePagination';
 import { BaseBtn } from '@/components/Buttons';
-import TableNavigation from '@/components/Navigation/TableNavigation';
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { useCRUD } from '../hooks/useCRUD';
@@ -57,14 +56,6 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   ) => React.ReactNode;
   onCreateClick?: () => void; // 新增按钮点击时的自定义处理函数
   onFormValuesChange?: (changedValues: any, allValues: any) => void; // 表单值变化回调
-  // 导航相关配置
-  showNavigation?: boolean; // 是否显示导航
-  customNavActions?: React.ReactNode; // 自定义导航操作按钮
-  breadcrumbItems?: Array<{
-    title: string;
-    path?: string;
-    icon?: React.ReactNode;
-  }>; // 自定义面包屑
 }
 export const CRUDPageTemplate = <T extends { id: number }>({
   isAddOpen = true,
@@ -92,10 +83,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
   disableCreate = false,
   disableBatchDelete = false,
   disableBatchUpdate = false,
-  // 导航相关配置
-  showNavigation = true,
-  customNavActions,
-  breadcrumbItems,
+
 }: CRUDPageTemplateProps<T>) => {
   const crudOptions = {
     isApplication,
@@ -213,21 +201,15 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       {contextHolder && contextHolder}
       <BaseContent isPermission={true}>
         <Space direction="vertical" size={'large'} className="w-full overflow-x-auto">
-          {showNavigation && (
-            <TableNavigation
-              title={title}
-              customActions={customNavActions}
-              breadcrumbItems={breadcrumbItems}
-            />
-          )}
 
-          <BaseCard>
+
+          <BaseCard style={{ marginBottom: '-10px' }}>
             <BaseSearch data={{}} list={searchConfig} handleFinish={handleSearch} />
           </BaseCard>
 
-          <BaseCard>
+          <BaseCard >
             <Tooltip title={disableBatchDelete || disableBatchUpdate ? '无权限操作' : ''}>
-              <Space size={20}>
+              <Space size={10}>
                 <Popconfirm
                   title="确定要删除选中的项吗？"
                   onConfirm={handleBatchDelete}

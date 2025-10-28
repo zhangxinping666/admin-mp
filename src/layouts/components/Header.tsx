@@ -19,6 +19,7 @@ import styles from '../index.module.less';
 import Fullscreen from '@/components/Fullscreen';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
+import TableNavigation from '@/components/Navigation/TableNavigation';
 type MenuKey = 'logout';
 
 function Header() {
@@ -32,6 +33,10 @@ function Header() {
   const { closeAllTab, setActiveKey } = useTabsStore((state) => state);
   const { setPermissions, setMenuPermissions, setUserInfo } = useUserStore.getState();
   const { setMenuList, setSelectedKeys, setOpenKeys } = useMenuStore.getState();
+
+  // TableNavigation 相关配置
+  const showNavigation = true; // 启用面包屑导航
+  // 不需要传入 title、breadcrumbItems，组件会自动根据路由生成
   const items: MenuProps['items'] = [
     {
       key: 'logout',
@@ -39,7 +44,6 @@ function Header() {
       icon: <LogoutOutlined className="mr-1" />,
     },
   ];
-
   //点击退出登录触发事件
   const onClick: MenuProps['onClick'] = (e) => {
     switch (e.key as MenuKey) {
@@ -134,7 +138,7 @@ function Header() {
       >
         <div className="flex item-center">
           <IconRender />
-
+          <TableNavigation />
         </div>
 
         <RightRender />
