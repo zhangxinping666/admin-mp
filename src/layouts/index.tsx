@@ -37,13 +37,10 @@ function Layout() {
 
     try {
       setLoading(true);
-      console.log('[Layout] 开始获取用户信息');
       const { data: userInfo } = await getUserInfoServe();
-      console.log('[Layout] 用户信息获取成功:', userInfo);
       const userInformation = userInfo as unknown as UserInfo
       setUserInfo(userInformation);
     } catch (err) {
-      console.error('[Layout] 获取用户数据失败:', err);
       messageApi.error('获取用户信息失败');
     } finally {
       setLoading(false);
@@ -53,7 +50,6 @@ function Layout() {
   useEffect(() => {
     // 当有token但无用户信息时才获取
     if (token && !userId) {
-      console.log('[Layout] 检测到token但无userId,开始初始化');
       initializeUserData();
     } else {
       setLoading(false);
@@ -73,7 +69,6 @@ function Layout() {
     return () => {
       window.removeEventListener('resize', handleIsPhone);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

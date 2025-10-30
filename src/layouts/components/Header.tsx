@@ -105,7 +105,6 @@ function Header() {
             </div>
           </Dropdown>
         </div>
-
       ),
       [username],
     );

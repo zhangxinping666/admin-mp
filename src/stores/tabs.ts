@@ -1,9 +1,14 @@
 import type { TabPaneProps } from 'antd';
-import type { NavData } from '@/menus/utils/helper';
 import type { AliveController } from 'react-activation';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+
+// 定义面包屑导航数据类型
+export interface NavData {
+  label: string;
+  path: string;
+}
 
 export interface TabsData extends Omit<TabPaneProps, 'tab'> {
   key: string;
