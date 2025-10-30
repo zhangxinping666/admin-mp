@@ -129,7 +129,6 @@ const BuildingsPage = () => {
 
               return res;
             } catch (error) {
-              console.log('获取数据失败:', error);
               // 返回默认空数据，避免组件崩溃
               return { data: { list: [], total: 0 } };
             }

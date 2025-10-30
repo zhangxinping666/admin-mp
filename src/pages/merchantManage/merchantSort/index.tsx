@@ -32,7 +32,6 @@ const fetchList = async (params?: MerchantSortListRequest, userInfo?: any) => {
     params = { ...params, city_id: userInfo.city_id };
   }
   const res = await getMerchantSortList(params);
-  console.log('获取分类列表:', res);
   return {
     data: res.data as MerchantSortListResponse[],
     total: res.data.length,
@@ -42,7 +41,7 @@ const fetchList = async (params?: MerchantSortListRequest, userInfo?: any) => {
 const MerchantSortPage = () => {
   const { userInfo, permissions } = useUserStore();
   const locationOptions = useGroupCitySchoolOptions();
-  
+
   // 为城市运营商自动加载所属城市的学校
   useEffect(() => {
     if (userInfo?.role_id === 5 && userInfo?.city_id) {

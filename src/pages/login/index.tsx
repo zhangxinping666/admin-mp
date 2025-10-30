@@ -92,7 +92,6 @@ function Login() {
       setLoading(true);
       const userInformation = await getUserInfoServe();
       const Data = userInformation.data as unknown as UserInfo;
-      console.log('userdata', Data)
       setUserInfo(Data);
       return { Data };
     } finally {
@@ -104,17 +103,11 @@ function Login() {
   const getUserPermissions = async (user: any) => {
     try {
       setLoading(true);
-      console.log('[登录] 获取权限 - 用户:', user.name);
       const permissionsResponse = await getPermissions({ role: user.name });
       const Data = permissionsResponse.data as unknown as PermissionsData;
       const { menus, perms } = Data;
 
       const routePermissions = extractRoutePathsFromMenus(menus);
-      console.log('[登录] 权限数据加载完成:', {
-        menus: menus?.length,
-        perms: perms?.length,
-        routePermissions: routePermissions?.length
-      });
 
       // 合并路由权限和按钮权限
       const finalPermissions = [...routePermissions, ...(perms || [])];
@@ -177,7 +170,6 @@ function Login() {
   const handleGetCaptcha = async () => {
     try {
       const response = await getCode();
-      console.log("code", response)
       const Data = response.data as unknown as CaptchaData
       // 检查不同的响应格式
       let captcha_image, captcha_id;

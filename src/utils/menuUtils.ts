@@ -52,7 +52,6 @@ export const extractRoutePathsFromMenus = (menus: MenuItem[]): string[] => {
   };
 
   extractRecursive(sortedMenus);
-  console.log('routePaths (sorted)', routePaths);
   return routePaths;
 };
 

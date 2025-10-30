@@ -139,7 +139,6 @@ import { ImageCropper } from '@/components/Upload';
   file={file}
   onCancel={() => setVisible(false)}
   onOk={(croppedFile) => {
-    console.log('裁剪完成', croppedFile);
     setVisible(false);
   }}
   aspectRatio={1}
@@ -182,7 +181,6 @@ const validation = await validateImage(file, {
 
 // 获取图片信息
 const info = await getImageInfo(file);
-console.log(info.width, info.height, info.size);
 ```
 
 ## 表单集成

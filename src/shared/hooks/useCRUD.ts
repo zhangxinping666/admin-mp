@@ -137,9 +137,7 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
 
     setLoading(true);
     setHistoryId(id as number);
-    console.log('历史记录ID', id);
     const result = await fetchHistoryApi(id);
-    console.log('历史记录原始数据', result);
 
     // 【新增】格式化历史数据
     if (formatHistoryData) {
@@ -147,7 +145,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     } else {
       setHistoryData(result.data?.list || result.data || []);
     }
-    console.log('历史记录', historyData);
 
     setHistoryOpen(true);
     setLoading(false);
@@ -222,7 +219,6 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
           params.page_size = pageSize;
         }
         const { data } = await fetchApi(params);
-        console.log('Fetchdata', data);
         setTableData(data.list || data.data || data || []);
         setTotal(data.total || 0);
       } else if (mockData) {

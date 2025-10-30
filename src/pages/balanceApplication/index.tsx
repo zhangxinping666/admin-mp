@@ -13,8 +13,6 @@ const BalanceApplication = () => {
   };
   // 标准化修改记录
   const normalizeEditRecord = (record: BalanceApplication) => {
-    console.log('标准化修改记录', record);
-    console.log('userInfo', userInfo);
 
     return {
       ...record,
@@ -70,7 +68,6 @@ const BalanceApplication = () => {
           delete params.time_range;
 
           const res = await getBalanceApplication(params);
-          console.log('res', res);
           return {
             data: {
               list: res.data.list,

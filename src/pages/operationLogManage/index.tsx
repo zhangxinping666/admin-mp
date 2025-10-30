@@ -68,7 +68,6 @@ function Page() {
       };
 
       const res = await getOperationLogServe(requestParams);
-      console.log(res);
       const { list, total, page: currentPage, pages } = res.data;
       setTableData(list || []);
       setPagination({

@@ -8,13 +8,9 @@ interface PublicState {
   isFullscreen: boolean; // 是否全屏
   isRefresh: boolean; // 重新加载
   isRefreshPage: boolean; // 重新加载页面
-  /** 设置主题 */
   setThemeValue: (theme: ThemeType) => void;
-  /** 设置全屏 */
   setFullscreen: (isFullscreen: boolean) => void;
-  /** 设置重新加载 */
   setRefresh: (isRefresh: boolean) => void;
-  /** 设置重新加载页面 */
   setRefreshPage: (isRefreshPage: boolean) => void;
 }
 

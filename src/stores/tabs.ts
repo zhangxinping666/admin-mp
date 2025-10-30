@@ -4,12 +4,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-// 定义面包屑导航数据类型
-export interface NavData {
-  label: string;
-  path: string;
-}
-
 export interface TabsData extends Omit<TabPaneProps, 'tab'> {
   key: string;
   label: React.ReactNode;
@@ -17,7 +11,10 @@ export interface TabsData extends Omit<TabPaneProps, 'tab'> {
   labelEn: React.ReactNode;
   nav: NavData[];
 }
-
+export interface NavData {
+  label: string;  // 导航标签文本
+  path: string;   // 导航路径
+}
 interface TabsGoNext {
   key: string;
   nextPath: string;
@@ -144,7 +141,6 @@ export const useTabsStore = create<TabsState>()(
         closeRight: (payload, dropScope) =>
           set((state) => {
             const { tabs, activeKey } = state;
-
             // 清除非当前的keepalive缓存
             for (let i = 0; i < tabs?.length; i++) {
               const item = tabs[i];
@@ -152,41 +148,30 @@ export const useTabsStore = create<TabsState>()(
                 dropScope(item.key);
               }
             }
-
             const index = tabs.findIndex((item) => item.key === payload);
             if (index >= 0) tabs.splice(index + 1, tabs.length - index - 1);
             set({ activeKey: tabs[tabs.length - 1]?.key || '' });
-
             // 如果当前标签不是要关闭的标签，就导航到要关闭的标签
             if (activeKey !== payload) {
               set({ isCloseTabsLock: true });
             }
-
             if (tabs.length) tabs[0].closable = tabs.length > 1;
-
             return { tabs };
           }),
         closeOther: (payload, dropScope) =>
           set((state) => {
             const { tabs, activeKey } = state;
-            // 保留当前标签，关闭其他标签
             const filteredTabs: TabsData[] = [];
-
             for (let i = 0; i < tabs?.length; i++) {
               const item = tabs[i];
-
-              // 如果当前标签不是要关闭的标签，就保留
               if (item.key === payload) {
                 filteredTabs.push(item);
               } else {
-                // 清除非当前的keepalive缓存
                 dropScope(item.key);
               }
             }
 
             tabs.filter((item) => item.key === payload);
-
-            // 如果当前标签不是要关闭的标签，就导航到要关闭的标签
             if (activeKey !== payload) {
               set({ isCloseTabsLock: true });
             }
@@ -210,8 +195,19 @@ export const useTabsStore = create<TabsState>()(
         },
       }),
       {
-        name: 'tabs-storage', // 存储中的项目名称，必须是唯一的
-        storage: createJSONStorage(() => localStorage), // 使用sessionStorage作为存储
+        name: 'tabs-storage-v2',
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => {
+          const currentTab = state.tabs.find(tab => tab.key === state.activeKey);
+          const result = {
+            isCloseTabsLock: state.isCloseTabsLock,
+            isMaximize: state.isMaximize,
+            tabs: currentTab ? [{ ...currentTab, closable: false }] : [],
+            activeKey: state.activeKey,
+            nav: currentTab ? currentTab.nav : [],
+          };
+          return result;
+        },
       },
     ),
     {

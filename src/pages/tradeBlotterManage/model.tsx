@@ -67,7 +67,6 @@ export const useLocationOptions = () => {
 
   // 加载城市
   const loadCities = useCallback(async (province: string) => {
-    console.log(province);
     if (!province || province === '全部') {
       setCityOptions([]);
       return;

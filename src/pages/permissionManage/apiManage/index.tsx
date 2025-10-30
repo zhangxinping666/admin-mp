@@ -56,7 +56,6 @@ const ApiPage = () => {
         type: ['2']
       });
       const Data = response as unknown as MenuInfoResult
-      console.log(Data)
       // 处理响应数据，转换为TreeSelect需要的格式
       if (Data.code === 2000 && Data.data) {
         const processedData = Data.data.map((item:
@@ -82,7 +81,6 @@ const ApiPage = () => {
       const response = await getDictionaryList({
         dict_type_code: 'ApiMethod'
       });
-      console.log('API方法字典数据:', response);
       // 处理响应数据，转换为Select需要的格式
       if (response.data) {
         const processedData = response.data.list.map((item: any) => ({

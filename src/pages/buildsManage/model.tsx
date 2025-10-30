@@ -227,14 +227,12 @@ export const formList = (): BaseFormList[] => [
       return {
         zoom: 15,
         onSave: (data: any) => {
-          console.log('value', data);
           form.setFieldsValue({
             location: data,
           });
         },
         initValue: () => {
           const location = form.getFieldValue('location');
-          console.log('地图定位', location);
           if (location) {
             return [location.longitude, location.latitude];
           }
@@ -318,7 +316,6 @@ export const addFormList = (
         return {
           zoom: 15,
           onSave: (data: any) => {
-            console.log('value', data);
             form.setFieldsValue({
               location: data,
             });

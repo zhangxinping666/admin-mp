@@ -28,9 +28,7 @@ function Layout() {
   const { menuPermissions, userId, isMaximize, isCollapsed, isPhone, isRefresh } = useCommonStore();
 
   const initializeUserData = useCallback(async () => {
-    // 如果用户信息已存在,不再重复获取
     if (userId) {
-      console.log('[Layout] 用户信息已存在,跳过初始化');
       setLoading(false);
       return;
     }
@@ -48,7 +46,6 @@ function Layout() {
   }, [userId, setUserInfo, messageApi]);
 
   useEffect(() => {
-    // 当有token但无用户信息时才获取
     if (token && !userId) {
       initializeUserData();
     } else {

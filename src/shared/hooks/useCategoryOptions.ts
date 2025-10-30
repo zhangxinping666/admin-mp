@@ -13,11 +13,8 @@ function useCategoryOptions(params: any) {
   const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
 
   useEffect(() => {
-    console.log('进来了', params);
     getCategoryList(params).then((res) => {
-      console.log('成功了', res);
       const list = res?.data?.list;
-      console.log('cateList', list);
       setCategoryOptions(
         list.map((item: any) => ({
           label: item.name,

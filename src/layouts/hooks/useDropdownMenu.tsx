@@ -76,27 +76,22 @@ export function useDropdownMenu(props: Props) {
     onOpenChange?.(false);
 
     switch (type) {
-      // 重新加载
       case ITabEnums.REFRESH:
         handleRefresh(key);
         break;
 
-      // 关闭当前
       case ITabEnums.CLOSE_CURRENT:
         closeTabs(key, dropScope);
         break;
 
-      // 关闭其他
       case ITabEnums.CLOSE_OTHER:
         closeOther(key, dropScope);
         break;
 
-      // 关闭左侧
       case ITabEnums.CLOSE_LEFT:
         closeLeft(key, dropScope);
         break;
 
-      // 关闭右侧
       case ITabEnums.CLOSE_RIGHT:
         closeRight(key, dropScope);
         break;

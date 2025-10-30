@@ -34,9 +34,7 @@ function Header() {
   const { setPermissions, setMenuPermissions, setUserInfo } = useUserStore.getState();
   const { setMenuList, setSelectedKeys, setOpenKeys } = useMenuStore.getState();
 
-  // TableNavigation 相关配置
   const showNavigation = true; // 启用面包屑导航
-  // 不需要传入 title、breadcrumbItems，组件会自动根据路由生成
   const items: MenuProps['items'] = [
     {
       key: 'logout',
@@ -44,6 +42,7 @@ function Header() {
       icon: <LogoutOutlined className="mr-1" />,
     },
   ];
+
   //点击退出登录触发事件
   const onClick: MenuProps['onClick'] = (e) => {
     switch (e.key as MenuKey) {
@@ -73,7 +72,6 @@ function Header() {
         setMenuPermissions([]);
         setMenuList([]);
         setUserInfo(null);
-        // 重置菜单状态
         setSelectedKeys([]);
         setOpenKeys([]);
         navigate('/login');

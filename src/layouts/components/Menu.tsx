@@ -119,9 +119,7 @@ function LayoutMenu() {
       setSelectedKeys([]);
     }
 
-    // 计算需要展开的菜单键
     const newOpenKeys = getOpenMenuByRouter(currentPath);
-    // 使用函数式更新，避免依赖 openKeys
     setOpenKeys((prevOpenKeys) => {
       const needsNewOpenKeys = newOpenKeys.some((key) => !prevOpenKeys.includes(key));
       if (needsNewOpenKeys) {

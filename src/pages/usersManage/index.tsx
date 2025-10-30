@@ -76,7 +76,6 @@ const ColleaguesPage = () => {
 
   // 余额明细搜索
   const handleSearch = (values: any) => {
-    console.log('余额明细搜索', values);
     const params = {
       page: 1,
       page_size: 10,
@@ -118,7 +117,6 @@ const ColleaguesPage = () => {
 
   // 金豆明细搜索
   const handlePointsSearch = (values: any) => {
-    console.log('金豆明细搜索', values);
     const params = {
       page: 1,
       page_size: 10,

@@ -109,14 +109,12 @@ export function initCompProps(
         onChange: (info: any) => {
           if (info.file.status === 'uploading') {
             // 可以添加上传中的状态处理
-            console.log('上传中', info.file.percent);
           } else if (info.file.status === 'done') {
             message.success(`${info.file.name} 上传成功`);
             // 处理上传成功后的逻辑，如更新fileList
           } else if (info.file.status === 'error') {
             message.error(`${info.file.name} 上传失败`);
           }
-          console.log(info.fileList);
         },
         listType: 'picture',
         showUploadList: {

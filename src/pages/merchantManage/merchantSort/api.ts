@@ -12,6 +12,7 @@ const api = {
 export interface MerchantSortListRequest {
   name?: string;
   status?: number;
+  city_id?: number;
 }
 
 // 商家响应接口
@@ -44,6 +45,7 @@ export interface CreateMerchantSortRequest {
    * 类别的状态
    */
   status: number;
+  city_id: number;
 }
 // 创建商家响应接口
 export interface CreateMerchantSortResponse {
@@ -54,9 +56,7 @@ export interface CreateMerchantSortResponse {
 }
 // 更新商家请求接口
 export interface UpdateMerchantSortRequest {
-  /**
-   * 退款比例
-   */
+
   drawback: number;
   /**
    * 类别的图标URL
@@ -74,6 +74,7 @@ export interface UpdateMerchantSortRequest {
    * 类别的状态
    */
   status: number;
+  city_id: number;
 }
 // 更新商家响应接口
 export interface UpdateMerchantSortResponse {

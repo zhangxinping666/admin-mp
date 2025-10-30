@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "defaultMode": "acceptEdits",
-    "allow": [
-      "mcp__ide__getDiagnostics"
-    ]
-  },
-  "outputStyle": "Learning"
-}

@@ -22,7 +22,6 @@ const useSelectSchoolOptions = () => {
           page: 1,
           page_size: 1000,
         });
-        console.log('getSchoolList', res);
         const list: School[] = (res.data as any).list;
 
         // 处理学校数据，转换为下拉选项格式
@@ -33,7 +32,6 @@ const useSelectSchoolOptions = () => {
             value: item.id,
           }))
           .sort((a, b) => a.label.localeCompare(b.label)); // 按名称排序
-        console.log('options', options);
 
         setSchoolOptions(options);
       } catch (error) {

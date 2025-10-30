@@ -195,7 +195,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           : null,
     },
   ];
-  console.log('isDelete', isDelete);
   return (
     <>
       {contextHolder && contextHolder}
