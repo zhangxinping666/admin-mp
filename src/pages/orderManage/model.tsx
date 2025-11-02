@@ -310,6 +310,20 @@ export const tableColumns: TableColumn[] = [
     render: (value: string) => value || '-',
   },
   {
+    title: '商品名称',
+    dataIndex: 'product_name',
+    key: 'product_name',
+    width: 150,
+    ellipsis: true,
+  },
+    {
+    title: '订单号',
+    dataIndex: 'order_item_no',
+    key: 'order_item_no',
+    width: 150,
+    ellipsis: true,
+  },
+  {
     title: '申请审批时间',
     dataIndex: 'created_time',
     key: 'created_time',
