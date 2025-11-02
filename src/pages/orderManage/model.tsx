@@ -309,6 +309,13 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
     render: (value: string) => value || '-',
   },
+   {
+    title: '店铺名称',
+    dataIndex: 'store_name',
+    key: 'store_name',
+    width: 150,
+    ellipsis: true,
+  },
   {
     title: '商品名称',
     dataIndex: 'product_name',
