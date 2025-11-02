@@ -1,9 +1,13 @@
 import request from '@/utils/request';
+import type { DashboardStatisticsResponse } from '@/pages/dashboard/model';
+
+const BASE_URL = '/balance/statistics';
 
 /**
- * 获取数据总览数据
- * @param data - 请求数据
+ * 获取财务仪表盘统计数据 (GET)
+ *
+ * @returns Promise<DashboardStatisticsResponse>
  */
-export function getDataTrends(data: object) {
-  return request.get('/dashboard', { params: data });
+export function getDashboardStatistics(): Promise<DashboardStatisticsResponse> {
+  return request.get<DashboardStatisticsResponse>(BASE_URL);
 }

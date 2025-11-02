@@ -46,12 +46,10 @@ const SchoolsPage = () => {
 
   // 基于 locationOptions 构建分组的城市选项
   useEffect(() => {
-    console.log('[SchoolsPage] 构建城市选项 useEffect 触发');
 
     const buildGroupedCityOptions = async () => {
       // 城市运营商：只加载自己的城市
       if (userInfo?.role_id === 5 && userInfo?.city_id) {
-        console.log('[SchoolsPage] 城市运营商：加载自己的城市');
         try {
           const { data } = await getCitiesByProvince(userInfo.city_id);
           const cities = data || [];
@@ -76,11 +74,9 @@ const SchoolsPage = () => {
       );
 
       if (realProvinces.length === 0) {
-        console.log('[SchoolsPage] 省份数据还未加载');
         return;
       }
 
-      console.log('[SchoolsPage] 非城市运营商：构建分组城市数据，省份数量:', realProvinces.length);
       setIsLoadingOptions(true);
       try {
         const cityPromises = realProvinces.map(async (province) => {
@@ -97,7 +93,6 @@ const SchoolsPage = () => {
 
         const finalOptions = await Promise.all(cityPromises);
         setGroupedCityOptions(finalOptions);
-        console.log('[SchoolsPage] 分组城市数据构建完成');
       } catch (error) {
         console.error('[SchoolsPage] 加载分组城市选项失败:', error);
       } finally {
@@ -111,8 +106,6 @@ const SchoolsPage = () => {
 
   // 编辑时的数据转换
   const handleEditOpen = (record: School): any => {
-    console.log('===== 编辑数据初始化 =====');
-    console.log('原始记录:', record);
 
     // 设置编辑的学校ID，用于重名检查时排除自身
     setEditingId(record.id);
@@ -132,7 +125,6 @@ const SchoolsPage = () => {
       editData.city_id = userInfo.city_id;
     }
 
-    console.log('编辑表单初始数据:', editData);
     return editData;
   };
 
@@ -206,7 +198,6 @@ const SchoolsPage = () => {
             submitData.city_id = userInfo.city_id;
           }
 
-          console.log('提交的学校数据:', submitData);
           return schoolApis.create(submitData);
         },
         fetchApi: (params: any) => {
@@ -217,23 +208,13 @@ const SchoolsPage = () => {
           return schoolApis.fetch(params);
         },
         updateApi: (data: any) => {
-          console.log('===== 更新前的表单数据 =====');
-          console.log('原始数据:', data);
-          console.log('location字段:', data.location);
-          console.log('longitude字段:', data.longitude);
-          console.log('latitude字段:', data.latitude);
+
 
           const submitData = { ...data };
           // 从location数组提取经纬度
           if (data.location && Array.isArray(data.location)) {
             submitData.longitude = data.location[0];
             submitData.latitude = data.location[1];
-            console.log('从location提取经纬度:', {
-              longitude: submitData.longitude,
-              latitude: submitData.latitude,
-            });
-          } else {
-            console.log('使用原有的longitude和latitude字段');
           }
 
           // 城市运营商强制使用其所属城市ID
@@ -243,8 +224,6 @@ const SchoolsPage = () => {
 
           // 删除location字段，因为后端不需要
           delete submitData.location;
-          console.log('===== 最终提交的数据 =====');
-          console.log('提交数据:', submitData);
           return schoolApis.update(submitData);
         },
       }}

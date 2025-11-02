@@ -14,7 +14,6 @@ function TabOptions(props: Props) {
 
   /**
    * 菜单显示变化
-   * @param open - 显示值
    */
   const onOpenChange = (open: boolean) => {
     setOpen(open);

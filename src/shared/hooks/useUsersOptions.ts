@@ -4,7 +4,6 @@ const useUsersOptions = (params: any) => {
   const [usersOptions, setUsersOptions] = useState<any[]>([]);
   const userStore = useUserStore();
   const schoolName = userStore?.userInfo?.school_name;
-  console.log('userParams', params);
   useEffect(() => {
     getUsers({
       page: 1,

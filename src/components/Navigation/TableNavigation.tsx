@@ -1,6 +1,8 @@
 import React from 'react';
 import { Breadcrumb, Button } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useMenuStore } from '@/stores';
+import type { MenuItem } from '@/pages/login/model';
 
 export interface TableNavigationProps {
   title?: string;
@@ -19,6 +21,28 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const menuList = useMenuStore((state) => state.menuList);
+
+  /**
+   * 从菜单数据中递归查找路由对应的标题
+   * @param routePath - 路由路径
+   * @param menus - 菜单列表
+   * @returns 菜单标题或 null
+   */
+  const findMenuTitle = (routePath: string, menus: MenuItem[]): string | null => {
+    for (const menu of menus) {
+      // 匹配当前菜单项
+      if (menu.route_path === routePath) {
+        return menu.label as string;
+      }
+      // 递归查找子菜单
+      if (menu.children && menu.children.length > 0) {
+        const childTitle = findMenuTitle(routePath, menu.children);
+        if (childTitle) return childTitle;
+      }
+    }
+    return null;
+  };
 
   // 生成面包屑导航
   const generateBreadcrumbItems = () => {
@@ -47,63 +71,9 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
       currentPath += `/${segment}`;
       const isLast = index === pathSegments.length - 1;
 
-      // 根据路径映射生成标题
-      let segmentTitle = segment;
-      switch (segment) {
-        case 'permissionManage':
-          segmentTitle = '权限管理';
-          break;
-        case 'menuManage':
-          segmentTitle = '菜单管理';
-          break;
-        case 'roleManage':
-          segmentTitle = '角色管理';
-          break;
-        case 'apiManage':
-          segmentTitle = 'API管理';
-          break;
-        case 'merchantManage':
-          segmentTitle = '商户管理';
-          break;
-        case 'merchantSort':
-          segmentTitle = '商户分类';
-          break;
-        case 'merchantApplication':
-          segmentTitle = '商户申请';
-          break;
-        case 'dictionaryManage':
-          segmentTitle = '字典管理';
-          break;
-        case 'tradeBlotterManage':
-          segmentTitle = '交易流水管理';
-          break;
-        case 'schoolsManage':
-          segmentTitle = '学校管理';
-          break;
-        case 'usersManage':
-          segmentTitle = '用户管理';
-          break;
-        case 'balanceManage':
-          segmentTitle = '余额管理';
-          break;
-        case 'buildsManage':
-          segmentTitle = '楼栋楼层管理';
-          break;
-        case 'certManage':
-          segmentTitle = '实名认证管理';
-          break;
-        case 'citysManage':
-          segmentTitle = '城市运营商管理';
-          break;
-        case 'colonelManage':
-          segmentTitle = '团长管理';
-          break;
-        case 'orderManage':
-          segmentTitle = '订单管理';
-          break;
-        default:
-          segmentTitle = title || segment;
-      }
+      // 🔥 动态从菜单数据中查找标题（替代硬编码的 switch-case）
+      const menuTitle = findMenuTitle(currentPath, menuList);
+      const segmentTitle = menuTitle || title || segment;
 
       items.push({
         key: currentPath,
@@ -126,22 +96,15 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
   return (
     <div className="flex justify-between items-center mb--2  px-2  rounded-lg text-base">
       <div className="flex items-center space-x-2">
-        {/* 面包屑导航 */}
         <Breadcrumb
-          style={{ fontSize: '20px', fontWeight: 'bold' }}
+          style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 6px 8px' }}
           className="text-base"
           items={generateBreadcrumbItems()}
         />
       </div>
 
       <div className="flex items-center space-x-1">
-        {/* 自定义操作按钮 */}
         {customActions}
-
-        {/* 返回按钮 */}
-        <Button onClick={() => window.history.back()} type="default" size="large">
-          返回
-        </Button>
       </div>
     </div>
   );

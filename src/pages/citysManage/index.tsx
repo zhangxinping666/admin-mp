@@ -59,7 +59,6 @@ const CitiesPage = () => {
     try {
       const response = await getUserListByPage();
       const Data = response as unknown as UserSimple
-      console.log('用户接口返回数据:', response);
 
       // 检查不同的数据结构可能性
       if (Data && Data.code === 2000) {
@@ -78,8 +77,6 @@ const CitiesPage = () => {
           value: user.id,
         }));
         setUserOptions(userOptionsList);
-      } else {
-        console.log('未知的数据结构:', response);
       }
     } catch (error) {
       console.error('加载用户选项失败:', error);

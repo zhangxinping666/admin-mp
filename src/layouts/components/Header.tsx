@@ -19,6 +19,7 @@ import styles from '../index.module.less';
 import Fullscreen from '@/components/Fullscreen';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
+import TableNavigation from '@/components/Navigation/TableNavigation';
 type MenuKey = 'logout';
 
 function Header() {
@@ -32,6 +33,8 @@ function Header() {
   const { closeAllTab, setActiveKey } = useTabsStore((state) => state);
   const { setPermissions, setMenuPermissions, setUserInfo } = useUserStore.getState();
   const { setMenuList, setSelectedKeys, setOpenKeys } = useMenuStore.getState();
+
+  const showNavigation = true; // 启用面包屑导航
   const items: MenuProps['items'] = [
     {
       key: 'logout',
@@ -69,7 +72,6 @@ function Header() {
         setMenuPermissions([]);
         setMenuList([]);
         setUserInfo(null);
-        // 重置菜单状态
         setSelectedKeys([]);
         setOpenKeys([]);
         navigate('/login');
@@ -101,7 +103,6 @@ function Header() {
             </div>
           </Dropdown>
         </div>
-
       ),
       [username],
     );
@@ -134,7 +135,7 @@ function Header() {
       >
         <div className="flex item-center">
           <IconRender />
-
+          <TableNavigation />
         </div>
 
         <RightRender />

@@ -54,9 +54,6 @@ export const EnhancedImageUploader = ({
 
       // 调用上传接口
       const response = await getImage(formData as any);
-
-      console.log('上传响应:', response);
-
       // 根据响应格式提取URL
       let imageUrl = '';
       if (response.data) {

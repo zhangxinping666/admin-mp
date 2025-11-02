@@ -24,9 +24,6 @@ const MerchantApplicationPage = () => {
   const schoolId = userInfo?.school_id;
   const roleId = userInfo?.role_id;
   const [categoryOptions] = useCategoryOptions(schoolId);
-  console.log('categoryOptions', categoryOptions);
-  console.log('schoolId', schoolId);
-  console.log('userInfo', userInfo);
 
   const [isDormStore, setIsDormStore] = useState(false);
 
@@ -248,7 +245,6 @@ const MerchantApplicationPage = () => {
 
             return res;
           } catch (error) {
-            console.log('获取数据失败:', error);
             // 返回默认空数据，避免组件崩溃
             return { data: { list: [], total: 0 } };
           }
@@ -268,9 +264,7 @@ const MerchantApplicationPage = () => {
             throw new Error('待审核状态不能进行操作');
           }
 
-          console.log('updata', params);
           const idList = Array.isArray(params.id) ? params.id[0] : params.id;
-          console.log('params', params);
           return apis.updateApplication({
             id: idList,
             apply_status: params.apply_status,
@@ -279,7 +273,6 @@ const MerchantApplicationPage = () => {
         },
         deleteApi: (params: any) => {
           const idList = Array.isArray(params) ? params : [params];
-          console.log('idList', idList);
           return apis.deleteApplication({ ids: idList });
         },
       }}

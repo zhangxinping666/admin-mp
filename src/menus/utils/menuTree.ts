@@ -1,7 +1,6 @@
 import { MenuItem } from "@/pages/login/model";
 
 export function buildMenuTree(flatMenus: MenuItem[]): MenuItem[] {
-  console.log("flatMenus", flatMenus)
   if (!flatMenus || flatMenus.length === 0) {
     return [];
   }

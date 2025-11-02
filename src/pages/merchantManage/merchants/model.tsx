@@ -45,8 +45,6 @@ const ImagePreview = ({
   // 处理可能的 base64 数据
   const rawUrl = displayUrl?.url || displayUrl?.response?.url || '';
   const processedUrl = getFullImageUrl(rawUrl);
-  console.log('processedUrl', processedUrl);
-  console.log('displayUrl', displayUrl);
 
   return (
     <>
@@ -310,7 +308,6 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'timer_range',
     key: 'timer_range',
     render: (value: string[]) => {
-      console.log('营业时间', value);
       return value[0] + ' ~ ' + value[1];
     },
   },
@@ -414,7 +411,6 @@ export const formList = ({
             height: 400,
           },
           onSave: (data: any) => {
-            console.log('value', data);
             form.setFieldsValue({
               location: data,
             });

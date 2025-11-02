@@ -15,7 +15,6 @@ const MapViewer = React.memo(
       return [116.397428, 39.90923];
     };
     const defaultCenter = getDefaultCenter();
-    console.log('地图中心点坐标:', defaultCenter);
     useEffect(() => {
       let map: any = null;
       (window as any)._AMapSecurityConfig = {

@@ -455,7 +455,6 @@ const DictionaryManagePage = () => {
             pageSize={pageSize}
             total={totalCount}
             onChange={(page, size) => {
-              console.log(page)
               setCurrentPage(page);
               setPageSize(size);
             }}
