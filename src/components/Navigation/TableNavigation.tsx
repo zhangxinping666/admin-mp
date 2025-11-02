@@ -98,6 +98,9 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
         case 'colonelManage':
           segmentTitle = '团长管理';
           break;
+        case 'orderManage':
+          segmentTitle = '订单管理';
+          break;
         default:
           segmentTitle = title || segment;
       }
