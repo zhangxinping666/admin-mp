@@ -317,13 +317,6 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '最后审批时间',
-    dataIndex: 'updated_time',
-    key: 'updated_time',
-    width: 150,
-    ellipsis: true,
-  },
-  {
     title: '订单状态',
     dataIndex: 'status',
     key: 'status',
