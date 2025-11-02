@@ -309,7 +309,7 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
     render: (value: string) => value || '-',
   },
-   {
+  {
     title: '店铺名称',
     dataIndex: 'store_name',
     key: 'store_name',
@@ -323,7 +323,7 @@ export const tableColumns: TableColumn[] = [
     width: 150,
     ellipsis: true,
   },
-    {
+  {
     title: '订单号',
     dataIndex: 'order_item_no',
     key: 'order_item_no',
@@ -347,6 +347,13 @@ export const tableColumns: TableColumn[] = [
         {value === 0 ? '全部' : value === 1 ? '待支付' : value === 2 ? '已取消' : value === 3 ? '待核销' : value === 4 ? '待评价' : value === 5 ? '已过期' : value === 6 ? '已退款' : '已退款'}
       </span>
     ),
+  },
+  {
+    title: '实付金额',
+    dataIndex: 'payable_amount',
+    key: 'payable_amount',
+    width: 150,
+    ellipsis: true,
   },
   {
     title: '操作',
