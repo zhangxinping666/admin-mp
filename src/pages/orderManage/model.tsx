@@ -331,11 +331,36 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'status',
     key: 'status',
     width: 100,
-    render: (value: number) => (
-      <span style={{ color: value === 1 ? '#faad14' : value === 2 ? '#1890ff' : '#ff4d4f' }}>
-        {value === 0 ? '全部' : value === 1 ? '待支付' : value === 2 ? '已取消' : value === 3 ? '待核销' : value === 4 ? '待评价' : value === 5 ? '已过期' : value === 6 ? '已退款' : '已退款'}
-      </span>
-    ),
+    render: (value: number) => {
+      const getStatusColor = (status: number) => {
+        switch (status) {
+          case 1: return '#faad14'; // 待支付 - 橙色（提醒）
+          case 2: return '#8c8c8c'; // 已取消 - 灰色（中性）
+          case 3: return '#1890ff'; // 待核销 - 蓝色（进行中）
+          case 4: return '#722ed1'; // 待评价 - 紫色（待处理）
+          case 5: return '#ff4d4f'; // 已过期 - 红色（警告）
+          case 6: return '#52c41a'; // 已退款 - 绿色（成功）
+          default: return '#52c41a'; // 已完成 - 绿色（成功）
+        }
+      };
+      const getStatusText = (status: number) => {
+        switch (status) {
+          case 0: return '全部';
+          case 1: return '待支付';
+          case 2: return '已取消';
+          case 3: return '待核销';
+          case 4: return '待评价';
+          case 5: return '已过期';
+          case 6: return '已退款';
+          default: return '已完成';
+        }
+      };
+      return (
+        <span style={{ color: getStatusColor(value) }}>
+          {getStatusText(value)}
+        </span>
+      );
+    },
   },
   {
     title: '实付金额',
@@ -452,7 +477,7 @@ export async function mockOrderList(params: OrderListReq = {}): Promise<OrderLis
       gold_bean_amount: i % 5 === 0 ? 5 : 0,
       product_image_url: 'https://dummyimage.com/120x120/eee/333&text=Run',
       item_status: st,
-      item_status_text: ['全部', '待支付', '已取消', '待核销', '待评价', '已过期', '已退款'][st] || '待支付',
+      item_status_text: ['全部', '待支付', '已取消', '待核销', '待评价', '已过期', '已退款'][st] || '已完成',
       // 额外字段以适配表格
       status: st, // 表格列使用 status
       created_time: createdTime, // 表格列使用 created_time
