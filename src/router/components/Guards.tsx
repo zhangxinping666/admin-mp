@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { getAccessToken, setAccessToken, setRefreshToken, clearAllTokens } from '@/stores/token';
+import { getAccessToken, setAccessToken, clearAllTokens } from '@/stores/token';
 import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { getPermissions } from '@/servers/login';
 import { getFirstMenu } from '@/menus/utils/helper';
@@ -110,8 +110,6 @@ function Guards() {
       if (menuPermissions.length > 0) {
         const hasPermission = menuPermissions.includes(location.pathname);
         if (!hasPermission) {
-          console.warn('[Guards] 无权限访问路径:', location.pathname);
-          console.warn('[Guards] 可用权限列表:', menuPermissions);
           const firstMenu = getFirstMenu(menuList);
           if (firstMenu && firstMenu !== location.pathname) {
             console.warn('[Guards] 跳转到第一个有权限的菜单:', firstMenu);
