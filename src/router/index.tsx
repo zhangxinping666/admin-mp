@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { BrowserRouter as Router } from 'react-router-dom';
 import nprogress from 'nprogress';
 import RouterPage from './components/Router';

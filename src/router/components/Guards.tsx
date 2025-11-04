@@ -10,13 +10,23 @@ import Layout from '@/layouts';
 import { useMenuStore } from '@/stores/menu';
 import { checkPermission } from '@/utils/permissions';
 import Forbidden from '@/pages/403';
+import { useTabsStore } from '@/stores';
 import { PermissionsData } from '@/pages/login/model'
 
+const LoadingRedirct = () => (
+  <div className="w-screen h-screen flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <div>正在加载...</div>
+    </div>
+  </div>
+)
 function Guards() {
   const outlet = useOutlet();
   const navigate = useNavigate();
   const location = useLocation();
   const token = getAccessToken();
+  const { closeAllTab, setActiveKey } = useTabsStore((state) => state);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const isLoadingPermissionsRef = useRef(false);
   const { setUserInfo, setPermissions, setMenuPermissions, userInfo } = useUserStore(
@@ -71,12 +81,15 @@ function Guards() {
     return checkPermission(pathname, userPermissions);
   };
 
+  // 认证与权限加载
   useEffect(() => {
     if (location.pathname === '/login' && !token) {
       setPermissions([]);
       setMenuPermissions([]);
       setMenuList([]);
       setUserInfo(null);
+      closeAllTab();
+      setActiveKey('');
       setIsInitialLoad(false);
       return;
     }
@@ -102,6 +115,7 @@ function Guards() {
     }
   }, [token, userInfo?.id, permissions.length, location.pathname]);
 
+  //已登录用户的“路由授权”处理器
   useEffect(() => {
     if (!isInitialLoad && token && permissions.length > 0) {
       if (['/', '/403', '/404'].includes(location.pathname)) {
@@ -120,6 +134,7 @@ function Guards() {
     }
   }, [location.pathname, isInitialLoad, token, permissions.length, menuPermissions, menuList]);
 
+  //处理“已登录访问 /login”的边缘情况
   useEffect(() => {
     if (token && location.pathname === '/login') {
       if (permissions.length > 0 && menuPermissions.length > 0) {
@@ -128,7 +143,6 @@ function Guards() {
           navigate(firstMenu, { replace: true });
         } else {
           setAccessToken('');
-          setRefreshToken('');
           setPermissions([]);
           setMenuPermissions([]);
           setMenuList([]);
@@ -141,29 +155,23 @@ function Guards() {
   }, [token, location.pathname, permissions.length, menuPermissions.length]);
 
   const renderPage = () => {
-    if (token && location.pathname === '/login') {
-      return (
-        <div className="w-screen h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <div>正在跳转...</div>
-          </div>
-        </div>
-      );
-    }
-
     if (location.pathname === '/login') {
-      return <div>{outlet}</div>;
-    }
-
-    if (token && permissions.length > 0) {
-      const hasPermission = checkRoutePermission(location.pathname, permissions);
-      if (!hasPermission) {
-        return <Forbidden />;
+      if (token) {
+        return <LoadingRedirct />
       }
+      //没有token正常显示登录页
+      return <div>{outlet}</div>
     }
-
-    return <Layout />;
+    if (!token) {
+      return <LoadingRedirct />
+    }
+    if (token && (isInitialLoad || (permissions.length === 0 && isLoadingPermissionsRef.current))) {
+      return <LoadingRedirct />
+    }
+    if (token && permissions.length > 0) {
+      return <Layout />
+    }
+    return <LoadingRedirct />
   };
 
   return <>{renderPage()}</>;

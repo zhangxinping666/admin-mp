@@ -10,9 +10,9 @@ const ERROR_CODE_MAP: Record<number, { message: string; action?: () => void }> =
   },
   4230: {
     message: '无权限访问此资源',
-    action: () => {
-      window.location.href = '/403';
-    },
+    // action: () => {
+    //   window.location.href = '/403';
+    // },
   },
 }
 
