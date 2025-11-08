@@ -30,7 +30,7 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   disableCreate?: boolean;
   disableBatchDelete?: boolean;
   disableBatchUpdate?: boolean;
-  onEditOpen?: (record: T) => T | void;
+  onEditOpen?: (record: T) => T;
   searchConfig: BaseSearchList[];
   columns: TableColumn[];
   formConfig: BaseFormList[];

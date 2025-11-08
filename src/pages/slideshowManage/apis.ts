@@ -1,32 +1,30 @@
 import request from '@/utils/request';
 
 const apis = {
-  createSchoolCarousel: '/schoolCarousel/create',
-  updateSchoolCarousel: '/schoolCarousel/update',
-  deleteSchoolCarousel: '/schoolCarousel/delete',
-  applySchoolCarousel: '/schoolCarousel/apply',
-  cancelApplySchoolCarousel: '/schoolCarousel/cancelApply',
-  getSchoolCarouselList: '/schoolCarousel/list',
-  toggleSchoolCarousel: '/schoolCarousel/toggle',
-  getCityCarousel: '/cityCarousel/list',
-  toggleCityCarousel: '/cityCarousel/toggle',
-  reviewCityCarousel: '/cityCarousel/review',
+  createCarousel: '/carousel/create',
+  updateCarousel: '/carousel/update',
+  deleteCarousel: '/carousel/delete',
+  applySchoolCarousel: '/carousel/school/apply',
+  cancelApplySchoolCarousel: '/carousel/school/cancelApply',
+  getCarouselList: '/carousel/list',
+  toggleCityCarousel: '/carousel/city/toggle',
+  reviewCityCarousel: '/carousel/city/review',
   updateSystemCarousel: '/systemCarousel/updateStatus',
 }
 
-// 创建学校轮播图草稿
-export const createSchoolCarousel = (data: any) => {
-  return request.post(apis.createSchoolCarousel, data);
+// 创建轮播图草稿
+export const createCarousel = (data: any) => {
+  return request.post(apis.createCarousel, data);
 }
 
-// 更新学校轮播图草稿
-export const updateSchoolCarousel = (data: any) => {
-  return request.put(apis.updateSchoolCarousel, data);
+// 更新轮播图草稿
+export const updateCarousel = (data: any) => {
+  return request.put(apis.updateCarousel, data);
 }
 
-// 删除学校轮播图草稿
-export const deleteSchoolCarousel = (data: any) => {
-  return request.delete(apis.deleteSchoolCarousel, data);
+// 删除轮播图草稿
+export const deleteCarousel = (data: any) => {
+  return request.delete(apis.deleteCarousel, data);
 }
 
 // 轮播图申请
@@ -39,19 +37,14 @@ export const cancelApplySchoolCarousel = (data: any) => {
   return request.post(apis.cancelApplySchoolCarousel, data);
 }
 
-// 团长获取轮播图列表
-export const getSchoolCarouselList = (params: any) => {
-  return request.get(apis.getSchoolCarouselList, params);
+// 获取轮播图列表
+export const getCarouselList = (params: any) => {
+  return request.get(apis.getCarouselList, { params });
 }
 
 // 团长切换轮播图优先级
-export const toggleSchoolCarousel = (data: any) => {
-  return request.put(apis.toggleSchoolCarousel, data);
-}
-
-// 城市运营商获取轮播图列表
-export const getCityCarousel = (params: any) => {
-  return request.get(apis.getCityCarousel, params);
+export const toggleCarousel = (data: any) => {
+  return request.put(apis.toggleCityCarousel, data);
 }
 
 // 城市运营商切换轮播图优先级
