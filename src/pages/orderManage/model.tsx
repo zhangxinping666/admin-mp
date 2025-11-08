@@ -148,7 +148,6 @@ export const useLocationOptions = () => {
 export const searchList = (
   options?: ReturnType<typeof useLocationOptions>
 ): BaseSearchList[] => {
-  // 如果传入了 options，添加省市学校筛选
   if (options) {
     const locationFields = createProvinceCitySchoolSearch({
       provinceOptions: options.provinceOptions,
@@ -159,7 +158,6 @@ export const searchList = (
     });
 
     const baseFields: BaseSearchList[] = [
-      // 分组：左侧选择类型，右侧输入关键词
       ({
         label: '搜索',
         name: 'search_type',
@@ -208,13 +206,11 @@ export const searchList = (
       },
     ];
 
-    // 将地区筛选插入到基础字段之前
     return [...locationFields, ...baseFields];
   }
 
   // 没有options时，只返回基础字段
   const baseFields: BaseSearchList[] = [
-    // 分组：左侧选择类型，右侧输入关键词
     ({
       label: '搜索',
       name: 'search_type',

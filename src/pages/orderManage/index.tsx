@@ -1,26 +1,23 @@
 import { Space, Button } from 'antd';
 import { CRUDPageTemplate } from '@/shared';
 import { searchList, tableColumns, useLocationOptions, mockOrderList } from './model';
-// import { getOrderList } from '@/servers/order';
+import { getOrderList } from '@/servers/order';
 import type { OrderListData, OrderItem } from './model';
 import {orderDetailConfig} from './model';
 
-// 将后端返回的订单条目补齐为模板要求的 { id: number }
 type OrderRow = OrderItem & { id: number };
-
-
 
 export default function OrderManage() {
   const locationOptions = useLocationOptions();
 
   const fetchApi = async (params: any) => {
-    const { search_type, search_value, ...rest } = params || {};
-    const mappedParams: any = { ...rest };
-    if (search_type && search_value) {
-      mappedParams[search_type] = search_value;
-    }
-
-    const res = await mockOrderList(mappedParams);
+    // const { search_type, search_value, ...rest } = params || {};
+    // const mappedParams: any = { ...rest };
+    // if (search_type && search_value) {
+    //   mappedParams[search_type] = search_value;
+    // }
+    // const res = await mockOrderList(mappedParams);
+    const res = await getOrderList(params);
     const data = res?.data as unknown as OrderListData;
     const list = (data?.list || []).map((item: OrderItem) => ({
       ...item,
