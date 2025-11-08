@@ -66,7 +66,7 @@ export function setupResponseInterceptor(instance: AxiosInstance): void {
       // ========== 业务码检查 ==========
       if (data?.code !== 2000) {
         // Token 过期,触发刷新
-        if (data.code === 4000) {
+        if (data.code === 40000) {
           return handleTokenExpired(response.config);
         }
         // 其他业务错误

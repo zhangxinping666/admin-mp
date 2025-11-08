@@ -1,4 +1,4 @@
-import { Tooltip } from 'antd';
+import { Tooltip, Modal } from 'antd';
 import BaseBtn from '@/components/Buttons/components/BaseBtn';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { useUserStore } from '@/stores/user';
@@ -39,7 +39,8 @@ const initCreate: Partial<RebateConfigItem> = {
   max_order_amount: null,
   priority: 0,
   status: 1,
-  valid_from: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  valid_start_time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  valid_end_time: null
 };
 
 const RebateConfigurationPage = () => {
@@ -50,50 +51,59 @@ const RebateConfigurationPage = () => {
     return checkPermission(permission, permissions);
   };
 
-  // 操作列渲染
   const optionRender = (
     record: RebateConfigItem,
     actions: {
       handleEdit: (record: RebateConfigItem) => void;
       handleDelete?: (id: number[]) => void;
     },
-  ) => {
-    const canEdit = hasPermission('mp:rebate:update');
-    const canDelete = hasPermission('mp:rebate:del');
 
+  ) => {
+    const showDeleteConfirm = () => {
+      Modal.confirm({
+        title: '温馨提示',
+        content: '您确定要删除这条记录吗？此操作不可撤销。',
+        okText: '确认删除',
+        okType: 'danger',
+        cancelText: '取消',
+        // 关键：在 onOk 回调中执行真正的删除操作
+        onOk() {
+          actions.handleDelete?.([record.id!]);
+        },
+      });
+    };
     return (
       <div className="flex gap-2">
-        <Tooltip title={!canEdit ? '无权限操作' : ''}>
-          <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
+        <Tooltip >
+          <BaseBtn onClick={() => actions.handleEdit(record)}>
             编辑
           </BaseBtn>
         </Tooltip>
-        <Tooltip title={!canDelete ? '无权限操作' : ''}>
-          <BaseBtn
-            danger
-            onClick={() => canDelete && actions.handleDelete?.([record.id!])}
-            disabled={!canDelete}
-          >
-            删除
-          </BaseBtn>
-        </Tooltip>
+        <BaseBtn
+          danger
+          onClick={showDeleteConfirm}
+        >
+          删除
+        </BaseBtn>
+
       </div>
     );
   };
+
 
   // 处理表单数据转换
   const handleFormValue = (values: any) => {
     // 转换日期格式
     const formattedValues = { ...values };
 
-    if (formattedValues.valid_from) {
-      formattedValues.valid_from = dayjs(formattedValues.valid_from).format(
+    if (formattedValues.valid_start_time) {
+      formattedValues.valid_start_time = dayjs(formattedValues.valid_start_time).format(
         'YYYY-MM-DD HH:mm:ss',
       );
     }
 
-    if (formattedValues.valid_to) {
-      formattedValues.valid_to = dayjs(formattedValues.valid_to).format(
+    if (formattedValues.valid_end_time) {
+      formattedValues.valid_end_time = dayjs(formattedValues.valid_end_time).format(
         'YYYY-MM-DD HH:mm:ss',
       );
     }

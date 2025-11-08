@@ -1,4 +1,4 @@
-import { Tooltip } from 'antd';
+import { Tooltip, Modal } from 'antd';
 import BaseBtn from '@/components/Buttons/components/BaseBtn';
 import { CRUDPageTemplate } from '@/shared/components/CRUDPageTemplate';
 import { useUserStore } from '@/stores/user';
@@ -37,6 +37,7 @@ const initCreate: Partial<PointsConfigItem> = {
   status: 1,
   default_expire_days: 365,
   valid_start_time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+  valid_end_time: dayjs().format('YYYY-MM-DD HH:mm:ss') || null
 };
 
 const PointsConfigurationPage = () => {
@@ -54,26 +55,35 @@ const PointsConfigurationPage = () => {
       handleEdit: (record: PointsConfigItem) => void;
       handleDelete?: (id: number[]) => void;
     },
-  ) => {
-    const canEdit = hasPermission('mp:points:update');
-    const canDelete = hasPermission('mp:points:del');
 
+  ) => {
+    const showDeleteConfirm = () => {
+      Modal.confirm({
+        title: '温馨提示',
+        content: '您确定要删除这条记录吗？此操作不可撤销。',
+        okText: '确认删除',
+        okType: 'danger',
+        cancelText: '取消',
+        // 关键：在 onOk 回调中执行真正的删除操作
+        onOk() {
+          actions.handleDelete?.([record.id!]);
+        },
+      });
+    };
     return (
       <div className="flex gap-2">
-        <Tooltip title={!canEdit ? '无权限操作' : ''}>
-          <BaseBtn onClick={() => canEdit && actions.handleEdit(record)} disabled={!canEdit}>
+        <Tooltip >
+          <BaseBtn onClick={() => actions.handleEdit(record)}>
             编辑
           </BaseBtn>
         </Tooltip>
-        <Tooltip title={!canDelete ? '无权限操作' : ''}>
-          <BaseBtn
-            danger
-            onClick={() => canDelete && actions.handleDelete?.([record.id!])}
-            disabled={!canDelete}
-          >
-            删除
-          </BaseBtn>
-        </Tooltip>
+        <BaseBtn
+          danger
+          onClick={showDeleteConfirm}
+        >
+          删除
+        </BaseBtn>
+
       </div>
     );
   };

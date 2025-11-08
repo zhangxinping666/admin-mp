@@ -66,19 +66,10 @@ function Guards() {
         setMenuPermissions([]);
         setMenuList([]);
         setUserInfo(null);
-        navigate(`/login`, { replace: true });
       }
     } finally {
       isLoadingPermissionsRef.current = false;
     }
-  };
-
-  const checkRoutePermission = (pathname: string, userPermissions: string[]): boolean => {
-    if (pathname === '/login' || pathname === '/') {
-      return true;
-    }
-
-    return checkPermission(pathname, userPermissions);
   };
 
   // 认证与权限加载

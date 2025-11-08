@@ -169,7 +169,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       title: '操作',
       dataIndex: 'action',
       key: 'action',
-      width: 120,
+      width: 130,
       fixed: 'right' as const,
       render: (_: any, record: T) =>
         optionRender
@@ -305,7 +305,6 @@ export const CRUDPageTemplate = <T extends { id: number }>({
           </BaseCard>
         </Space>
       </BaseContent>
-      {/* 新增/编辑模态框 */}
       <BaseModal
         title={createTitle}
         open={isCreateOpen}

@@ -1,6 +1,11 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
-import { FORM_REQUIRED } from '@/utils/config';
+import {
+  FORM_REQUIRED,
+  FORM_GT_ZERO,
+  FORM_NOT_NEGATIVE,
+  FORM_LTE_100,
+} from '@/utils/config';
 import dayjs from 'dayjs';
 
 export interface GetRebateConfigListParams {
@@ -214,11 +219,11 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '平台返利比例(%)',
+    label: '平台返利比例',
     name: 'platform_rate',
     component: 'Input',
     placeholder: '请输入平台返利比例',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',
       min: 0,
@@ -226,11 +231,11 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '推广者返利比例(%)',
+    label: '推广者返利比例',
     name: 'promoter_rate',
     component: 'Input',
     placeholder: '请输入推广者返利比例',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',
       min: 0,
@@ -238,11 +243,13 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '购买者返金豆比例(%)',
+    label: '购买者返金豆比例',
     name: 'buyer_points_rate',
     component: 'Input',
     placeholder: '请输入购买者返金豆比例',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
+    extra: '温馨提示：三种返利比例总和必须小于等于 100%',
+
     componentProps: {
       type: 'number',
       min: 0,
@@ -254,7 +261,7 @@ export const formList: BaseFormList[] = [
     name: 'min_order_amount',
     component: 'Input',
     placeholder: '请输入最小订单金额',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_GT_ZERO],
     componentProps: {
       type: 'number',
       min: 0,
@@ -282,11 +289,10 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '生效开始时间',
-    name: 'valid_from',
+    label: '生效结束时间',
+    name: 'valid_start_time',
     component: 'DatePicker',
-    placeholder: '请选择生效开始时间',
-    rules: FORM_REQUIRED,
+    placeholder: '留空表示永久有效',
     componentProps: {
       style: { width: '100%' },
       showTime: true,
@@ -295,7 +301,7 @@ export const formList: BaseFormList[] = [
   },
   {
     label: '生效结束时间',
-    name: 'valid_to',
+    name: 'valid_end_time',
     component: 'DatePicker',
     placeholder: '留空表示永久有效',
     componentProps: {
