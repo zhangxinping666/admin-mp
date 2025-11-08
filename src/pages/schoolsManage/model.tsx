@@ -86,12 +86,17 @@ const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部')
   value,
 });
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
-export const useLocationOptions = () => {
+export const useLocationOptions = (skipLoad: boolean = false) => {
   const [provinceOptions, setProvinceOptions] = useState<OptionType[]>([DEFAULT_ALL_OPTION()]);
   const [cityOptions, setCityOptions] = useState<OptionType[]>([]);
 
   // 加载省份
   useEffect(() => {
+    // 如果是城市运营商，跳过加载
+    if (skipLoad) {
+      return;
+    }
+
     const loadProvinces = async () => {
       try {
         const { data } = await getProvinces(0);
@@ -102,15 +107,14 @@ export const useLocationOptions = () => {
           ]);
         }
       } catch (error) {
-        console.error('加载省份失败', error);
+        console.error('[useLocationOptions] 加载省份失败', error);
       }
     };
     loadProvinces();
-  }, []);
+  }, [skipLoad]);
 
   // 加载城市
   const loadCities = useCallback(async (province: string) => {
-    console.log(province);
     if (!province || province === '全部') {
       setCityOptions([]);
       return;
@@ -408,8 +412,6 @@ export const formList = ({
           },
           // 处理地图搜索选择（包含地址信息）
           onSave: (data: any) => {
-            console.log('===== 地图搜索选择 =====');
-            console.log('搜索数据:', data);
             const newValues = {
               location: [data.location.lng, data.location.lat],
               // 如果选择了具体地点，自动更新地址字段
@@ -417,27 +419,17 @@ export const formList = ({
               longitude: data.location.lng,
               latitude: data.location.lat,
             };
-            console.log('即将设置的新值:', newValues);
             form.setFieldsValue(newValues);
-            console.log(
-              '设置后的表单值:',
-              form.getFieldsValue(['location', 'longitude', 'latitude', 'address']),
-            );
           },
           // 处理地图拖拽选择（只有经纬度）
           onChange: (value: number[]) => {
-            console.log('新位置:', value);
             const newValues = {
               location: value,
               longitude: value[0],
               latitude: value[1],
             };
-            console.log('即将设置的新值:', newValues);
             form.setFieldsValue(newValues);
-            console.log(
-              '设置后的表单值:',
-              form.getFieldsValue(['location', 'longitude', 'latitude']),
-            );
+
           },
           initValue: () => {
             return form.getFieldValue('location');

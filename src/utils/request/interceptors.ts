@@ -80,12 +80,7 @@ export function setupResponseInterceptor(instance: AxiosInstance): void {
         removePendingRequest(error.config);
       }
 
-      // HTTP 401 也尝试刷新 Token
-      // if (error.response?.status === 401) {
-      //   return handleTokenExpired(error.config as InternalAxiosRequestConfig);
-
-      // }
-      // 其他 HTTP 错误
+      // 处理 HTTP 错误
       handleHttpError(error);
       return Promise.reject(error);
     }

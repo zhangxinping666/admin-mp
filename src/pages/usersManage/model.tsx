@@ -3,9 +3,8 @@ import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
 import { FORM_REQUIRED } from '@/utils/config';
 import { EnhancedImageUploader } from '@/shared/components/EnhancedImageUploader';
-import { Space, Tooltip } from 'antd';
+import { Space } from 'antd';
 import type { FormInstance } from 'antd';
-import { render } from 'nprogress';
 import dayjs from 'dayjs';
 
 // 楼栋接口定义
@@ -33,6 +32,36 @@ export interface updateUserForm {
   wechat: string;
   alipay: string;
   status: number;
+}
+
+export interface PointsDetail {
+  id: number;
+  detail_no: string;
+  business_type: string;
+  operation: 'earn' | 'spend'; // 'earn' (赚取) 或 'spend' (花费)
+  points_change: number;
+  points_before: number;
+  points_after: number;
+  related_order_id: string;
+  expire_date: string | null; // 注意这里可能是 null
+  status: number;
+  status_text: string;
+  remark: string;
+  created_at: string;
+}
+
+export interface PointsHistoryData {
+  list: PointsDetail[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  data: T;
 }
 
 export interface Pagination {
@@ -109,6 +138,42 @@ export const searchDetailList = (): BaseSearchList[] => [
     },
   },
 ];
+
+// 金豆明细搜索配置
+export const searchPointsDetailList = (): BaseSearchList[] => [
+  {
+    label: '时间范围',
+    name: 'time_range',
+    component: 'RangePicker',
+  },
+  {
+    label: '操作类型',
+    name: 'operation',
+    component: 'Select',
+    componentProps: {
+      placeholder: '请选择操作类型',
+      options: [
+        { label: '全部', value: '' },
+        { label: '获得', value: 'earn' },
+        { label: '消费', value: 'spend' },
+      ],
+    },
+  },
+  {
+    label: '状态',
+    name: 'status',
+    component: 'Select',
+    componentProps: {
+      placeholder: '请选择状态',
+      options: [
+        { label: '全部', value: 0 },
+        { label: '处理中', value: 1 },
+        { label: '已到账', value: 2 },
+        { label: '异常', value: 3 }
+      ],
+    },
+  },
+];
 type OptionType = { label: string; value: string | number };
 // 默认“全部”选项
 const DEFAULT_ALL_OPTION = (label = '全部', value: string | number = '全部'): OptionType => ({
@@ -146,7 +211,6 @@ export const useLocationOptions = () => {
 
   // 加载城市
   const loadCities = useCallback(async (province: string) => {
-    console.log(province);
     if (!province || province === '全部') {
       setCityOptions([]);
       return;
@@ -210,6 +274,19 @@ export const searchList = (
       name: 'phone',
       component: 'Input',
       placeholder: '请输入用户电话',
+    },
+    {
+      component: 'Select',
+      name: 'tuiguangzhe',
+      label: '推广者',
+      wrapperWidth: 100,
+      componentProps: {
+        options: [
+          { label: '全部', value: 0 },
+          { label: '推广者', value: 1 },
+          { label: '非推广者', value: 2 },
+        ],
+      },
     },
     {
       component: 'Select',
@@ -320,7 +397,8 @@ export const searchList = (
 // 表格列配置
 export const tableColumns: (
   handleViewDetails: (record: any, event?: React.MouseEvent) => void,
-) => TableColumn[] = (handleViewDetails) => [
+  handleViewPointsDetails: (record: any, event?: React.MouseEvent) => void,
+) => TableColumn[] = (handleViewDetails, handleViewPointsDetails) => [
   {
     title: '昵称',
     dataIndex: 'nickname',
@@ -388,7 +466,7 @@ export const tableColumns: (
     width: 100,
   },
   {
-    title: '可用余额',
+    title: '余额',
     dataIndex: 'total_amount',
     key: 'total_amount',
     width: 100,
@@ -427,6 +505,51 @@ export const tableColumns: (
               </svg>
             </span>
             <span>元</span>
+          </Space>
+        </>
+      );
+    },
+  },
+  {
+    title: '金豆',
+    dataIndex: 'points',
+    key: 'points',
+    width: 100,
+    render: (value: number, record: any) => {
+      return (
+        <>
+          <Space
+            className="blinking-eye"
+            style={{ cursor: 'pointer' }}
+            size={1}
+            onClick={(e) => {
+              handleViewPointsDetails(record, e);
+            }}
+          >
+            <span>{value || '0'}</span>
+            {/* 添加眼睛SVG图标，使用blink动画 */}
+            <span className="ml-1 mr-1 inline-block align-middle">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5Z"
+                  stroke="#faad14"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+                  fill="#faad14"
+                />
+              </svg>
+            </span>
+            <span>个</span>
           </Space>
         </>
       );
@@ -566,6 +689,128 @@ export const detailTableColumns: TableColumn[] = [
         withdraw_processing: '提现申请中',
       };
       return <span style={{ color: '#666' }}>{category[`${value}`] || '用户'}</span>;
+    },
+  },
+];
+
+// 金豆明细表格列配置
+export const pointsDetailTableColumns: TableColumn[] = [
+  {
+    title: '流水号',
+    dataIndex: 'detail_no',
+    key: 'detail_no',
+    width: 180,
+  },
+  {
+    title: '金豆变动',
+    dataIndex: 'points_change',
+    key: 'points_change',
+    width: 100,
+    render: (value: number, record: any) => (
+      <span
+        style={{
+          color: record.operation === 'earn' ? '#52c41a' : '#ff4d4f',
+          fontWeight: 500,
+        }}
+      >
+        {record.operation === 'earn' ? '+' : '-'}
+        {Math.abs(value)}
+      </span>
+    ),
+  },
+  {
+    title: '关联订单号',
+    dataIndex: 'related_order_id',
+    key: 'related_order_id',
+    width: 180,
+  },
+  {
+    title: '操作类型',
+    dataIndex: 'operation',
+    key: 'operation',
+    width: 100,
+    render: (value: string) => (
+      <span
+        style={{
+          color: value === 'earn' ? '#52c41a' : '#ff4d4f',
+        }}
+      >
+        {value === 'earn' ? '获得' : '消费'}
+      </span>
+    ),
+  },
+  {
+    title: '变动前金豆',
+    dataIndex: 'points_before',
+    key: 'points_before',
+    width: 120,
+    render: (value: number) => <span style={{ color: '#666' }}>{value || '0'}</span>,
+  },
+  {
+    title: '变动后金豆',
+    dataIndex: 'points_after',
+    key: 'points_after',
+    width: 120,
+    render: (value: number) => (
+      <span style={{ color: '#1890ff', fontWeight: 500 }}>{value || '0'}</span>
+    ),
+  },
+  {
+    title: '业务类型',
+    dataIndex: 'business_type',
+    key: 'business_type',
+    width: 120,
+    render: (value: string) => {
+      const typeMap: any = {
+        purchase_rebate: '购买返利',
+        activity: '活动奖励',
+        order_deduction: '订单抵扣',
+      };
+      return <span style={{ color: '#666' }}>{typeMap[value] || value}</span>;
+    },
+  },
+  {
+    title: '状态',
+    dataIndex: 'status_text',
+    key: 'status_text',
+    width: 100,
+    render: (value: string, record: any) => {
+      const colorMap: any = {
+        1: '#faad14', // 待处理 - 橙色
+        2: '#1890ff', // 处理中 - 蓝色
+        3: '#52c41a', // 已到账 - 绿色
+        4: '#ff4d4f', // 异常 - 红色
+      };
+      return <span style={{ color: colorMap[record.status] || '#666' }}>{value}</span>;
+    },
+  },
+  {
+    title: '过期时间',
+    dataIndex: 'expire_date',
+    key: 'expire_date',
+    width: 160,
+    render: (value: string | null) => {
+      if (!value) return <span style={{ color: '#999' }}>-</span>;
+      return <span style={{ color: '#666' }}>{dayjs(value).format('YYYY-MM-DD HH:mm:ss')}</span>;
+    },
+  },
+  {
+    title: '备注',
+    dataIndex: 'remark',
+    key: 'remark',
+    width: 150,
+    render: (value: string) => (
+      <span style={{ color: '#666' }}>{value || '无备注信息'}</span>
+    ),
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'created_at',
+    key: 'created_at',
+    width: 160,
+    render: (value: string) => {
+      if (!value) return <span style={{ color: '#999' }}>-</span>;
+      return <span style={{ color: '#666' }}>{dayjs(value).format('YYYY-MM-DD HH:mm:ss')}</span>;
     },
   },
 ];

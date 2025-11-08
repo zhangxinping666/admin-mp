@@ -109,14 +109,9 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
     // checkedKeys包含所有选中的节点（父级菜单+子级权限）
     const keys = Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked || [];
 
-    console.log('=== 功能权限Tree选中事件 ===');
-    console.log('原始checkedKeys:', checkedKeys);
-    console.log('处理后的keys:', keys);
-    console.log('选中信息info:', info);
 
     // 功能权限需要保留所有选中的ID（包括父级菜单ID和子级权限ID）
     setFunctionalPermissions(keys);
-    console.log('设置新的functionalPermissions:', keys);
   };
 
   // 数据权限Tree选中事件处理
@@ -125,14 +120,8 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
     // checkedKeys包含所有选中的节点（父级分组+子级API）
     const keys = Array.isArray(checkedKeys) ? checkedKeys : checkedKeys.checked || [];
 
-    console.log('=== 数据权限Tree选中事件 ===');
-    console.log('原始checkedKeys:', checkedKeys);
-    console.log('处理后的keys:', keys);
-    console.log('选中信息info:', info);
-
     // 数据权限在显示时包含父级分组，但提交时会过滤掉group-开头的分组ID
     setDataPermissions(keys);
-    console.log('设置新的dataPermissions:', keys);
   };
 
   const handleOk = async () => {
@@ -187,12 +176,10 @@ const PermissionEditModal = ({ visible, record, onCancel, onOk }: PermissionEdit
         .map((value: any) => {
           const id = typeof value === 'string' ? parseInt(value, 10) : value;
           const result = typeof id === 'number' && !isNaN(id) ? id : null;
-          console.log('转换结果:', value, '->', result);
           return result;
         })
         .filter((id: any) => {
           const isValid = id !== null && id !== undefined && !isNaN(id);
-          console.log('ID过滤结果:', id, '是否有效:', isValid);
           return isValid;
         });
 

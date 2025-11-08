@@ -88,9 +88,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
         if (isDownloadingRef.current) {
           return;
         }
-
-        console.log('开始下载文件，原始路径:', filePath);
-
         // 设置下载状态为true，防止重复下载
         isDownloadingRef.current = true;
 
@@ -216,8 +213,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
               clearPollingTimer();
               // 重置导出状态
               setIsExporting(false);
-
-              console.log('导出任务完成，文件路径:', file);
               // 触发文件下载
               handleFileDownload(file);
               return;
@@ -287,12 +282,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
       return value !== undefined && value !== null && value !== '';
     });
 
-    console.log('筛选参数检查:', {
-      searchData,
-      hasValidParams,
-      keys: keys.filter(k => !['page', 'page_size', 'pageSize'].includes(k))
-    });
-
     return hasValidParams;
   };
 
@@ -355,7 +344,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
       // 判断是否有筛选条件
       if (hasSearchParams()) {
         // 有筛选条件：同步导出（直接返回文件）
-        console.log('同步导出模式：有筛选条件', params);
 
         // 显示导出进度弹窗
         setExportModalVisible(true);
@@ -382,7 +370,6 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
 
           // 检查是否是Blob对象
           if (blob instanceof Blob) {
-            console.log('导出成功，收到Blob对象，大小:', blob.size, 'bytes');
             await handleDirectExport(blob);
           } else {
             // 如果不是Blob，可能返回了JSON错误
@@ -422,16 +409,12 @@ const ExportExcelButton: React.FC<ExportExcelButtonProps> = ({
         }
       } else {
         // 无筛选条件：异步导出（创建任务、轮询状态）
-        console.log('异步导出模式：无筛选条件，需要轮询');
-        console.log('导出参数:', params);
 
         const res = await createExportTaskServe(params);
-        console.log('创建导出任务响应:', res);
 
         // 检查响应类型
         if (res.code === 2000 && res.data && res.data.task_id) {
           // 异步任务，需要轮询状态
-          console.log('创建导出任务成功，task_id:', res.data.task_id);
           setExportTaskId(res.data.task_id);
           setExportModalVisible(true);
           setExportStatus('pending');

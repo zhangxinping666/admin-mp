@@ -129,7 +129,6 @@ const MerchantsPage = () => {
       closed_hour: params.time_range[1],
     };
     newParams.is_dormitory_store = Number(params.is_dormitory_store);
-    console.log('newParams', newParams);
     const response = await apis.modifyMerchantsList(newParams);
     return response.data;
   };

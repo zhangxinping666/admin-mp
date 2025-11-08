@@ -68,14 +68,12 @@ function Page() {
       };
 
       const res = await getOperationLogServe(requestParams);
-      console.log(res);
       const { list, total, page: currentPage, pages } = res.data;
       setTableData(list || []);
       setPagination({
         ...pagination,
         page: currentPage,
         total,
-        pages,
       });
     } catch (error) {
       console.error('获取操作日志失败', error);

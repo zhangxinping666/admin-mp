@@ -61,30 +61,41 @@ function LayoutTabs() {
       // 3. 根据查找结果更新 Tabs 状态
       if (foundMenuItem) {
         // 如果找到了匹配的菜单项
-        // antd Tabs 的 activeKey 通常是 string 类型
-        setActiveKey(String(foundMenuItem.key));
+        const key = foundMenuItem.route_path;
+        const label = foundMenuItem.label;
 
-        setChangeLang(true);
+        // 验证：只有当 key 和 label 都存在时才添加标签
+        if (key && label && key !== '/') {
+          // 添加标签到 tabs 数组
+          addTabs({
+            key,
+            label,
+            labelZh: label,
+            labelEn: label,
+            closable: true,
+            nav: [],
+          });
+
+          // 设置激活的标签
+          setActiveKey(key);
+          setChangeLang(true);
+        } else {
+          console.warn(`标签数据无效: key=${key}, label=${label}`);
+        }
       } else {
-        // 如果在菜单列表中找不到匹配项（例如，一个非菜单页面，或者通过url直接访问的详情页）
-        // 我们可以设置一个默认行为，比如仅激活tab的key为当前路径
         setActiveKey(path);
         console.warn(`在菜单列表中未找到路径: ${path}，可能是一个非菜单页面。`);
       }
     },
-    // 4. 【重要修正】将所有外部依赖项添加到 useCallback 的依赖数组中
-    //    这对于避免 React Hook 的 stale closure (闭包陈旧) 问题至关重要
-    [uri, permissions, menuList, setActiveKey, setNav, addTabs, setChangeLang],
+    [uri, permissions, menuList, setActiveKey, setNav, addTabs, setChangeLang, currentLanguage],
   );
 
   useEffect(() => {
     handleAddTab();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [permissions, menuList]);
 
   useEffect(() => {
     switchTabsLang(currentLanguage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLanguage]);
 
   useEffect(() => {
@@ -92,7 +103,6 @@ function LayoutTabs() {
       switchTabsLang(currentLanguage);
       setChangeLang(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChangeLang]);
 
   useEffect(() => {
@@ -109,7 +119,6 @@ function LayoutTabs() {
         seRefreshTime(null);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -127,7 +136,6 @@ function LayoutTabs() {
         handleAddTab(key);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey, uri]);
 
   /**
@@ -137,10 +145,8 @@ function LayoutTabs() {
    */
   const handleSetTitle = useCallback(() => {
     const path = `${pathname}${search || ''}`;
-    // 通过路由获取标签名
     const title = getTabTitle(tabs, path);
     if (title) setTitle(t, title);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   /**
@@ -269,9 +275,9 @@ function LayoutTabs() {
       className={`
       w-[calc(100%-5px)]
       flex
-      items-center
+      items-end
       justify-between
-      mx-2
+      mx-3
       transition-all
       ${isMaximize ? styles['con-maximize'] : ''}
     `}

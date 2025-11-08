@@ -9,6 +9,7 @@ lerna-debug.log*
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+payProcess.drawio
 
 node_modules
 dist

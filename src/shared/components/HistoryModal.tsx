@@ -96,7 +96,6 @@ const HistoryModal: React.FC<Props> = ({
 }) => {
   const timelineItems = useMemo(() => {
     if (!data.length) return null;
-    console.log('历史记录', data);
     return data.map((item, idx) => {
       const meta = STATUS_META[item.status] || STATUS_META['3'];
       const time = formatTime(item.createTime || item.updateTime);

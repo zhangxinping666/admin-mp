@@ -21,23 +21,17 @@ export const useUserStore = create<UserState>()(
         permissions: [],
         menuPermissions: [],
         userInfo: null,
-        /** 设置权限 */
         setPermissions: (permissions) => set({ permissions }),
-        /** 设置菜单权限 */
         setMenuPermissions: (menuPermissions) => set({ menuPermissions }),
-        /** 设置用户信息 */
         setUserInfo: (userInfo) => set({ userInfo }),
-        /** 清除用户信息 */
         clearInfo: () => {
           set({
             userInfo: null,
             permissions: [],
             menuPermissions: [],
           });
-          // 同时清除菜单存储
           localStorage.removeItem('menu-storage');
         },
-        /** 获取角色ID */
         getRoleId: () => {
           try {
             const state = get();

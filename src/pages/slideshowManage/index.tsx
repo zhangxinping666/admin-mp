@@ -60,12 +60,10 @@ const mockFetchApi = async (params: any) => {
 };
 
 const mockUpdateApi = async (data: Draft) => {
-  console.log("更新轮播图草稿:", data);
   return { code: 200, message: "更新成功" };
 };
 
 const mockDeleteApi = async (ids: Key[]) => {
-  console.log("删除轮播图草稿:", ids);
   return { code: 200, message: "删除成功" };
 };
 
@@ -122,7 +120,6 @@ export default function slideshowManage() {
           placeholder: "请选择省份",
           options: locationOptions.provinceOptions,
           onChange: (value: string) => {
-            console.log('搜索省份选择', form);
             locationOptions.loadCities(value);
             form.setFieldsValue({ city_id: undefined, school_id: undefined });
             form.validateFields(['city_id', 'school_id']);

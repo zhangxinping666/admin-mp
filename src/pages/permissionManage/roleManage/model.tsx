@@ -138,7 +138,6 @@ function buildMenuTree(flatList: MenuData[]): MenuData[] {
 
 // 将菜单数据转换为权限树节点
 function convertMenuToTreeNode(menuList: MenuData[]): MenuTreeNode[] {
-  console.log(menuList);
   return menuList.map((menu) => ({
     key: menu.id.toString(),
     title: menu.name,

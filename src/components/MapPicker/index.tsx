@@ -53,8 +53,6 @@ const MapPicker = React.memo(
       // 使用默认坐标
       return [116.397428, 39.90923];
     });
-
-    console.log('当前位置坐标:', currentPosition);
     useEffect(() => {
       (window as any)._AMapSecurityConfig = {
         securityJsCode: import.meta.env.VITE_AMAP_SECURITY_CODE,
@@ -95,12 +93,10 @@ const MapPicker = React.memo(
             geocoder.getAddress([lng, lat], function (status: string, result: any) {
               if (status === 'complete' && result.info === 'OK') {
                 const address = result.regeocode.formattedAddress;
-                console.log('逆地理编码成功:', address);
                 if (callback) {
                   callback(address);
                 }
               } else {
-                console.log('逆地理编码失败:', status, result);
                 if (callback) {
                   callback('');
                 }
@@ -111,18 +107,14 @@ const MapPicker = React.memo(
           // 监听标记拖拽结束事件
           marker.on('dragend', function (e: any) {
             const position = marker.getPosition();
-            console.log('标记拖拽结束:', position);
             const newPosition = [position.lng, position.lat];
 
-            // 更新内部状态
             setCurrentPosition(newPosition);
 
-            // 触发onChange回调，更新表单位置数据
             if (onChange) {
               onChange(newPosition);
             }
 
-            // 获取地址并触发onSave回调
             getAddressFromPosition(position.lng, position.lat, (address) => {
               if (onSave) {
                 onSave({
@@ -148,19 +140,12 @@ const MapPicker = React.memo(
           geolocation.getCurrentPosition(function (status: any, result: any) {
             if (status == 'complete') {
               onComplete(result);
-            } else {
-              onError(result);
             }
           });
 
           function onComplete(data: any) {
             // data是具体的定位信息
             console.log('定位成功', data);
-          }
-
-          function onError(data: any) {
-            // 定位出错
-            console.log('定位出错', data);
           }
           // 输入框
           const autoOptions = {
@@ -172,41 +157,40 @@ const MapPicker = React.memo(
           };
           const autocomplete = new AMap.AutoComplete(autoOptions);
           autocomplete.on('select', function (e: any) {
-            console.log('搜索选择:', e);
             const newPosition = [e.poi.location.lng, e.poi.location.lat];
-
             // 更新内部状态
             setCurrentPosition(newPosition);
 
-            // 更新地图和标记
             map.setCenter(e.poi.location);
             marker.setPosition(e.poi.location);
 
-            // 触发回调
-            onSave!([e.poi.location.lng, e.poi.location.lat]);
-
+            if (onSave) {
+              onSave({
+                location: { lng: e.poi.location.lng, lat: e.poi.location.lat },
+                name: e.poi.name || '搜索选点',
+                address: e.poi.address || e.poi.district || e.poi.name || '搜索选点位置',
+              });
+            }
+            // 触发 onChange 回调，更新坐标
             if (onChange && e.poi.location) {
               onChange(newPosition);
             }
           });
 
-          // 移除地图点击事件，只允许拖拽标记来选择位置
-          // 用户只能通过拖拽标记或搜索来选择位置
+          // 点击地图选择位置
           map.on('click', function (e: any) {
             console.log('点击地图', e);
 
             // 点击地图时，将标记移动到点击位置
             marker.setPosition(e.lnglat);
             // 更新内部状态
-            setCurrentPosition([e.lnglat.lng, e.lnglat.lat]);
-            // 触发回调
-            onSave?.([e.lnglat.lng, e.lnglat.lat]);
-
-            if (onChange && e.lnglat) {
-              onChange([e.lnglat.lng, e.lnglat.lat]);
+            const newPosition = [e.lnglat.lng, e.lnglat.lat];
+            setCurrentPosition(newPosition);
+            // 先触发 onChange 回调，立即更新坐标
+            if (onChange) {
+              onChange(newPosition);
             }
-
-            // 获取地址并触发onSave回调
+            // 然后获取地址并触发 onSave 回调
             getAddressFromPosition(e.lnglat.lng, e.lnglat.lat, (address) => {
               if (onSave) {
                 onSave({

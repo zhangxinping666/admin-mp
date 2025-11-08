@@ -11,7 +11,6 @@ function BaseTimePicker(props: TimeRangePickerProps) {
 
   // 如果值不是dayjs类型则进行转换
   if (value) params.value = stringRang2DayjsRang(value);
-  console.log('范围时间选择器value', value);
   return <RangePicker prefix={<SmileOutlined />} {...params} />;
 }
 

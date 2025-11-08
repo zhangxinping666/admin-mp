@@ -17,8 +17,8 @@ function Guards() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = getAccessToken();
-  const [isInitialLoad, setIsInitialLoad] = useState(true); // 标识是否为初始加载
-  const isLoadingPermissionsRef = useRef(false); // 使用ref避免状态更新导致重新渲染
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const isLoadingPermissionsRef = useRef(false);
   const { setUserInfo, setPermissions, setMenuPermissions, userInfo } = useUserStore(
     (state) => state,
   );
@@ -26,7 +26,6 @@ function Guards() {
   const setMenuList = useMenuStore((state) => state.setMenuList);
   const { menuList } = useMenuStore();
 
-  // 顶部进度条
   useEffect(() => {
     nprogress.start();
   }, []);
@@ -52,8 +51,6 @@ function Guards() {
       setMenuList(menus);
       setMenuPermissions(routePermissions);
     } catch (error: any) {
-      console.error('[Guards] 获取权限数据失败:', error);
-      // 只有在非取消错误时才清除数据
       if (error?.name !== 'CanceledError') {
         setPermissions([]);
         setMenuPermissions([]);
@@ -74,10 +71,8 @@ function Guards() {
     return checkPermission(pathname, userPermissions);
   };
 
-  // 主加载逻辑 - 只依赖关键状态变化
   useEffect(() => {
     if (location.pathname === '/login' && !token) {
-      // 清除可能存在的过期数据
       setPermissions([]);
       setMenuPermissions([]);
       setMenuList([]);
@@ -87,7 +82,6 @@ function Guards() {
     }
 
     if (token && permissions.length === 0 && userInfo && !isLoadingPermissionsRef.current) {
-      console.log('[Guards] 检测到需要加载权限数据');
       loadPermissionsData().finally(() => {
         setIsInitialLoad(false);
       });
@@ -108,34 +102,28 @@ function Guards() {
     }
   }, [token, userInfo?.id, permissions.length, location.pathname]);
 
-  // 路由权限校验 - 只在数据完全加载后执行
   useEffect(() => {
-    if (!isInitialLoad && token && menuList.length > 0 && menuPermissions.length > 0) {
-      console.log('[Guards] 路由权限校验', {
-        pathname: location.pathname,
-        menuPermissionsLength: menuPermissions.length
-      });
+    if (!isInitialLoad && token && permissions.length > 0) {
       if (['/', '/403', '/404'].includes(location.pathname)) {
         return;
       }
-      const hasPermission = menuPermissions.includes(location.pathname);
-      if (!hasPermission) {
-        console.warn('[Guards] 无权限访问路径:', location.pathname);
-        console.warn('[Guards] 可用权限列表:', menuPermissions);
-        const firstMenu = getFirstMenu(menuList);
-        if (firstMenu && firstMenu !== location.pathname) {
-          console.warn('[Guards] 跳转到第一个有权限的菜单:', firstMenu);
-          navigate(firstMenu, { replace: true });
+      if (menuPermissions.length > 0) {
+        const hasPermission = menuPermissions.includes(location.pathname);
+        if (!hasPermission) {
+          console.warn('[Guards] 无权限访问路径:', location.pathname);
+          console.warn('[Guards] 可用权限列表:', menuPermissions);
+          const firstMenu = getFirstMenu(menuList);
+          if (firstMenu && firstMenu !== location.pathname) {
+            console.warn('[Guards] 跳转到第一个有权限的菜单:', firstMenu);
+            navigate(firstMenu, { replace: true });
+          }
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, isInitialLoad, menuList.length, menuPermissions.length]);
+  }, [location.pathname, isInitialLoad, token, permissions.length, menuPermissions, menuList]);
 
-  // 登录页面重定向逻辑
   useEffect(() => {
     if (token && location.pathname === '/login') {
-      console.log('[Guards] 在登录页但有token,准备跳转');
       if (permissions.length > 0 && menuPermissions.length > 0) {
         const firstMenu = getFirstMenu(menuList);
         if (firstMenu) {
@@ -149,13 +137,11 @@ function Guards() {
           setUserInfo(null);
         }
       } else if (!isLoadingPermissionsRef.current) {
-        console.log('[Guards] 权限数据未加载,跳转到根路径');
         navigate('/', { replace: true });
       }
     }
   }, [token, location.pathname, permissions.length, menuPermissions.length]);
 
-  /** 渲染页面 */
   const renderPage = () => {
     if (token && location.pathname === '/login') {
       return (
@@ -168,7 +154,6 @@ function Guards() {
       );
     }
 
-    // 没有token时才显示登录页面
     if (location.pathname === '/login') {
       return <div>{outlet}</div>;
     }

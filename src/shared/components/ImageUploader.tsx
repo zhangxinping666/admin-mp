@@ -17,7 +17,7 @@ export const ImageUploader = ({
   maxSize = 2,
   baseUrl = 'http://192.168.10.7:8082',
 }: ImageUploaderProps) => {
-  
+
   // 包装URL - 如果是相对路径则添加baseUrl
   const getFullImageUrl = (url: string) => {
     if (!url) return '';
@@ -30,7 +30,6 @@ export const ImageUploader = ({
   };
   const handleChange: UploadProps['onChange'] = ({ file }) => {
     if (file.status === 'done') {
-      console.log('file', file);
       const url = file.response?.data?.url || file.response?.url || file.response?.imageUrl;
       url ? onChange?.(url) : message.error('没有接受到图片URL，请重试');
     } else if (file.status === 'error') {

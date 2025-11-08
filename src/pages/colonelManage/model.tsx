@@ -4,7 +4,7 @@ import { FORM_REQUIRED } from '@/utils/config';
 import { useState, useEffect, useCallback } from 'react';
 import { getProvinces, getCitiesByProvince } from '@/servers/trade-blotter/location';
 import dayjs from 'dayjs';
-import { 
+import {
   createProvinceCitySearch,
   createStatusSearch,
   createInputSearch,
@@ -153,7 +153,7 @@ export const searchList = (
 
   // 地区搜索字段（只有非城市运营商才显示）
   const locationSearchFields: BaseSearchList[] = [];
-  
+
   // 只有非城市运营商（role_id !== 5）才显示省市选择
   if (roleId !== 5) {
     locationSearchFields.push(
@@ -246,7 +246,6 @@ export const tableColumns: TableColumn[] = [
 // 表单配置
 export const formList = ({
   groupedCityOptions,
-  isLoadingOptions,
   schoolOptions,
   isSchoolLoading,
   userOptions,
@@ -256,7 +255,6 @@ export const formList = ({
 }: {
   // 建议使用更具体的类型，但 any[] 也能工作
   groupedCityOptions: any[];
-  isLoadingOptions: boolean;
   schoolOptions: any[];
   isSchoolLoading: boolean;
   userOptions: any[];
@@ -264,105 +262,104 @@ export const formList = ({
   userInfo?: { role_id: number; city_id: number };
   cityName?: string;
 }): BaseFormList[] => [
-  {
-    label: '团长名称',
-    name: 'name',
-    component: 'Input',
-    placeholder: '请输入学校名称',
-    rules: FORM_REQUIRED,
-  },
-  {
-    label: '团长电话',
-    name: 'phone',
-    component: 'Input',
-    placeholder: '请输入团长电话',
-    rules: [
-      { required: true, message: '请输入用户电话' },
-      { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
-    ],
-  },
-  // 城市字段：根据角色显示不同形式
-  userInfo?.role_id === 5
-    ? {
-      // 城市运营商：显示只读的城市名称
-      name: 'city_id',
-      label: '城市',
-      component: 'Select',
-      required: true,
+    {
+      label: '团长名称',
+      name: 'name',
+      component: 'Input',
+      placeholder: '请输入学校名称',
       rules: FORM_REQUIRED,
-      componentProps: {
-        disabled: true,
-        value: userInfo.city_id,
-        options: [{ label: cityName || '所属城市', value: userInfo.city_id }],
-        style: { width: '100%' },
-      },
-    }
-    : {
-      // 其他角色：显示可选择的城市下拉框
-      name: 'city_id',
-      label: '选择城市',
-      component: 'Select',
-      required: true,
-      rules: FORM_REQUIRED,
-      placeholder: isLoadingOptions ? '正在加载省市数据...' : '请选择或搜索城市',
-      componentProps: {
-        loading: isLoadingOptions,
-        showSearch: true,
-        optionFilterProp: 'label',
-        options: groupedCityOptions,
-      },
     },
-  {
-    name: 'school_id', // 这个字段的键名，最终提交给后端
-    label: '选择学校',
-    component: 'Select',
-    required: true,
-    rules: FORM_REQUIRED,
-    placeholder: isSchoolLoading ? '正在加载学校数据...' : '请选择或搜索学校',
-    componentProps: {
-      loading: isSchoolLoading,
-      showSearch: true, // 开启搜索功能
-      optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
-      options: schoolOptions,
-      disabled: isSchoolLoading,
-    },
-  },
-  {
-    name: 'user_id',
-    label: '用户',
-    component: 'Select',
-    placeholder: isLoadingUsers ? '正在加载用户数据...' : '请选择或搜索用户',
-    required: true,
-    rules: FORM_REQUIRED,
-    componentProps: {
-      loading: isLoadingUsers,
-      showSearch: true,
-      optionFilterProp: 'label',
-      options: userOptions,
-      disabled: isLoadingUsers,
-    },
-  },
-  {
-    label: '团长密码',
-    name: 'password',
-    component: 'Input',
-    placeholder: '请输入团长密码',
-    componentProps: {
-      precision: 6,
-      style: { width: '100%' },
-    },
-  },
-  {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    placeholder: '请选择状态',
-    rules: FORM_REQUIRED,
-    componentProps: {
-      options: [
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
+    {
+      label: '团长电话',
+      name: 'phone',
+      component: 'Input',
+      placeholder: '请输入团长电话',
+      rules: [
+        { required: true, message: '请输入用户电话' },
+        { pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号' },
       ],
     },
-  },
-];
+    // 城市字段：根据角色显示不同形式
+    userInfo?.role_id === 5
+      ? {
+        // 城市运营商：显示只读的城市名称
+        name: 'city_id',
+        label: '城市',
+        component: 'Select',
+        required: true,
+        rules: FORM_REQUIRED,
+        componentProps: {
+          disabled: true,
+          value: userInfo.city_id,
+          options: [{ label: cityName || '所属城市', value: userInfo.city_id }],
+          style: { width: '100%' },
+        },
+      }
+      : {
+        // 其他角色：显示可选择的城市下拉框
+        name: 'city_id',
+        label: '选择城市',
+        component: 'Select',
+        required: true,
+        rules: FORM_REQUIRED,
+        placeholder: '正在加载中',
+        componentProps: {
+          showSearch: true,
+          optionFilterProp: 'label',
+          options: groupedCityOptions,
+        },
+      },
+    {
+      name: 'school_id', // 这个字段的键名，最终提交给后端
+      label: '选择学校',
+      component: 'Select',
+      required: true,
+      rules: FORM_REQUIRED,
+      placeholder: isSchoolLoading ? '正在加载学校数据...' : '请选择或搜索学校',
+      componentProps: {
+        loading: isSchoolLoading,
+        showSearch: true, // 开启搜索功能
+        optionFilterProp: 'label', // 按选项的显示文本（城市名）进行搜索
+        options: schoolOptions,
+        disabled: isSchoolLoading,
+      },
+    },
+    {
+      name: 'user_id',
+      label: '用户',
+      component: 'Select',
+      placeholder: isLoadingUsers ? '正在加载用户数据...' : '请选择或搜索用户',
+      required: true,
+      rules: FORM_REQUIRED,
+      componentProps: {
+        loading: isLoadingUsers,
+        showSearch: true,
+        optionFilterProp: 'label',
+        options: userOptions,
+        disabled: isLoadingUsers,
+      },
+    },
+    {
+      label: '团长密码',
+      name: 'password',
+      component: 'Input',
+      placeholder: '请输入团长密码',
+      componentProps: {
+        precision: 6,
+        style: { width: '100%' },
+      },
+    },
+    {
+      label: '状态',
+      name: 'status',
+      component: 'Select',
+      placeholder: '请选择状态',
+      rules: FORM_REQUIRED,
+      componentProps: {
+        options: [
+          { label: '启用', value: 1 },
+          { label: '禁用', value: 2 },
+        ],
+      },
+    },
+  ];

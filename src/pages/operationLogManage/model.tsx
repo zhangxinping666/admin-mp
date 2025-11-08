@@ -131,10 +131,10 @@ export const tableColumns = (t: TFunction, handleViewDetail?: (record: Operation
     key: 'action',
     width: 100,
     render: (_, record) => (
-      <BaseBtn 
-        size="small" 
-        icon={<EyeOutlined />} 
-        onClick={() => handleViewDetail(record)}
+      <BaseBtn
+        size="small"
+        icon={<EyeOutlined />}
+        onClick={() => handleViewDetail?.(record as OperationLogRecord)}
       >
         {t('operationLog.viewDetail')}
       </BaseBtn>

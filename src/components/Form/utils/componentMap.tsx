@@ -87,7 +87,6 @@ export function getComponent(
     // 获取组件自定义渲染失败直接返回空标签
     if (!render) return renderInput;
     addComponent('customize', render);
-    console.log('componentProps', componentProps);
   }
 
   const Comp = componentMap.get(component);
@@ -97,7 +96,6 @@ export function getComponent(
   // 处理componentProps为函数的情况
   const props = typeof componentProps === 'function' ? componentProps(form) : componentProps;
   if (component == 'customize') {
-    console.log('自定义组件', props);
   }
   return (
     <>

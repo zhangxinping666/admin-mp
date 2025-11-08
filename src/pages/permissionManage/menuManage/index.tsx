@@ -91,7 +91,6 @@ const MenuPage = () => {
 
       // 调用API获取指定类型的菜单列表
       const response = await getMenuSelectList({ type: typeParams });
-      console.log("response", response)
       const Data = response.data as unknown as MenuSelect[];
       const options = Data.map((item: any) => ({
         label: item.name,
@@ -101,7 +100,6 @@ const MenuPage = () => {
       const finalOptions =
         menuType === 1 || menuType === 2 ? [{ label: '根目录', value: 0 }, ...options] : options;
       setMenuOptions(finalOptions);
-      console.log("finalOptions", finalOptions)
     } catch (error) {
       console.error('加载父级菜单选项失败:', error);
     } finally {
@@ -193,8 +191,6 @@ const MenuPage = () => {
 
           const response = await menuApis.fetch(searchParams);
           const flatList = response?.data as unknown as Menu[];
-          console.log("response", response)
-          console.log("response", response)
           // 调用树形转换函数
           const treeData = buildTree(flatList);
           return {

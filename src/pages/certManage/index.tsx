@@ -295,14 +295,7 @@ const CertPage = () => {
           </BaseCard>
         </Space>
       </BaseContent>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* 用户信息 */}
-        <Descriptions bordered column={1} size="small">
-          <Descriptions.Item label="用户姓名">{createData?.name}</Descriptions.Item>
-          <Descriptions.Item label="身份证号">{createData?.card_id}</Descriptions.Item>
-          <Descriptions.Item label="用户电话">{createData?.user_phone}</Descriptions.Item>
-        </Descriptions>
-      </div>
+
 
 
       {/* 审批弹窗 */}
