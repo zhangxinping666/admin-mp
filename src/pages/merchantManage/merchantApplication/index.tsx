@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CRUDPageTemplate, TableActions } from '@/shared';
+import { CRUDPageTemplate } from '@/shared';
 import {
   searchList,
   tableColumns,
@@ -15,8 +15,8 @@ import { checkPermission } from '@/utils/permissions';
 import dayjs from 'dayjs';
 import useGroupCitySchoolOptions from '@/shared/hooks/useGroupedCityOptions';
 import { Space } from 'antd';
-import { createBrotliCompress } from 'zlib';
 import { BaseBtn } from '@/components/Buttons';
+import useUsersOptions from '@/shared/hooks/useUsersOptions';
 
 const MerchantApplicationPage = () => {
   // 获取用户信息
@@ -26,6 +26,8 @@ const MerchantApplicationPage = () => {
   const [categoryOptions] = useCategoryOptions(schoolId);
 
   const [isDormStore, setIsDormStore] = useState(false);
+
+  const [userOptions] = useUsersOptions();
 
   const locationOptions = useGroupCitySchoolOptions();
 
@@ -115,7 +117,7 @@ const MerchantApplicationPage = () => {
       handleEdit: (record: MerchantApplication) => void;
       handleDelete?: (id: Key[]) => void;
       handleDetail: (record: MerchantApplication) => void; // 新增：审批详情处理函数
-      handleHistory: (record: MerchantApplication) => void; // 新增：历史审核记录处理函数
+      handleHistory: (id: number) => void; // 新增：历史审核记录处理函数
     },
   ) => {
     const canEdit = hasPermission('mp:merchantApl:update');
@@ -178,7 +180,7 @@ const MerchantApplicationPage = () => {
         <BaseBtn
           type="default"
           size="small"
-          onClick={() => actions.handleHistory(record.merchant_id)}
+          onClick={() => actions.handleHistory(record.merchant_id!)}
         >
           历史审核记录
         </BaseBtn>
@@ -198,13 +200,14 @@ const MerchantApplicationPage = () => {
       title="商家申请"
       searchConfig={searchList(locationOptions, userInfo || undefined)}
       columns={tableColumns().filter((col) => col.dataIndex !== 'action')}
-      formConfig={formList()}
+      formConfig={formList({ userOptions })}
       initCreate={initCreate}
       disableCreate={!hasPermission('mp:merchantApl:add')}
       disableBatchDelete={!hasPermission('mp:merchantApl:delete')}
       onEditOpen={(record) => {
         return {
           id: record.id,
+          user_id: record.user_id,
           apply_status: record.apply_status,
         };
       }}
@@ -266,7 +269,7 @@ const MerchantApplicationPage = () => {
 
           const idList = Array.isArray(params.id) ? params.id[0] : params.id;
           return apis.updateApplication({
-            id: idList,
+            id: params.store_id,
             apply_status: params.apply_status,
             reason: params.reason,
           });

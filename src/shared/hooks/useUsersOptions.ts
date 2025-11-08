@@ -1,6 +1,6 @@
 import { getUsers } from '@/servers/merchantApplication';
 
-const useUsersOptions = (params: any) => {
+const useUsersOptions = (params?: any) => {
   const [usersOptions, setUsersOptions] = useState<any[]>([]);
   const userStore = useUserStore();
   const schoolName = userStore?.userInfo?.school_name;
@@ -13,7 +13,7 @@ const useUsersOptions = (params: any) => {
       const { data } = res;
       const options = data.list
         .map((item: any) => {
-          if (item.school === schoolName) {
+          if (!params || item.school === schoolName) {
             return {
               label: item.nickname,
               value: item.id,

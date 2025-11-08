@@ -20,7 +20,7 @@ export interface UniversalDetailProps {
   config: FieldConfig[];
 }
 
-const defaultRender: RenderFn = (v) => (v == null ? '' : String(v));
+const defaultRender: RenderFn = (v) => (v == null ? '-' : String(v));
 
 const DetailModal: React.FC<UniversalDetailProps> = ({
   data,
@@ -46,7 +46,7 @@ const DetailModal: React.FC<UniversalDetailProps> = ({
   }, [data, config]);
 
   return (
-    <Modal open={open} title={title} onCancel={onClose} footer={null} width={720} destroyOnClose>
+    <Modal open={open} title={title} onCancel={onClose} footer={null} width={720} >
       {Object.entries(groups).map(([groupName, items]) => (
         <Descriptions
           key={groupName}

@@ -28,6 +28,7 @@ interface Props {
   data: AuditRecord[];
   loading?: boolean;
   title?: string;
+  formatMap?: Record<string, (value: unknown) => string>;
 }
 
 /* ============================ 常量映射 ============================ */
@@ -76,9 +77,11 @@ const formatLabel = (key: string): string => {
   return map[key] || key;
 };
 
-const formatValue = (value: unknown): string => {
+const formatValue = (key: string, value: unknown, formatMap?: Record<string, (value: unknown) => string>): string => {
   if (value === null || value === undefined) return '-';
   if (typeof value === 'boolean') return value ? '是' : '否';
+  if (formatMap && formatMap[key]) return formatMap[key](value);
+  if (STATUS_META[value as AuditStatus]) return STATUS_META[value as AuditStatus].title;
   return String(value);
 };
 
@@ -89,6 +92,7 @@ const HistoryModal: React.FC<Props> = ({
   data = [],
   loading = false,
   title = '历史审核记录',
+  formatMap,
 }) => {
   const timelineItems = useMemo(() => {
     if (!data.length) return null;
@@ -115,7 +119,7 @@ const HistoryModal: React.FC<Props> = ({
                 '无数据'
               )
             ) : (
-              formatValue(v)
+              formatValue(k, v, formatMap)
             )}
           </p>,
         );

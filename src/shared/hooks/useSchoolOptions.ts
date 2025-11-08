@@ -10,7 +10,7 @@ interface SchoolOption {
   city_name?: string;
 }
 
-const useSelectSchoolOptions = () => {
+const useSelectSchoolOptions = (city_id?: number) => {
   const [schoolOptions, setSchoolOptions] = useState<SchoolOption[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +21,7 @@ const useSelectSchoolOptions = () => {
         const res = await getSchoolList({
           page: 1,
           page_size: 1000,
+          city_id,
         });
         const list: School[] = (res.data as any).list;
 
@@ -42,8 +43,8 @@ const useSelectSchoolOptions = () => {
       }
     };
 
-    fetchSchoolOptions();
-  }, []);
+    fetchSchoolOptions(city_id);
+  }, [city_id]);
 
   return { schoolOptions, setSchoolOptions, loading };
 };

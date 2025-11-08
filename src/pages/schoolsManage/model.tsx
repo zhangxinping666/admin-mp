@@ -63,6 +63,7 @@ export interface Pagination {
 
 export interface PaginationParams {
   name?: string;
+  city_id?: number;
   page: number;
   page_size: number;
 }

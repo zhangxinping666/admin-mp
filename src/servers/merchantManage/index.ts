@@ -7,5 +7,5 @@ import request from '@/utils/request';
  */
 
 export function getMerchantList(data: object) {
-  return request.get('/api/merchant', { params: data });
+  return request.get('/merchant_manage/list', { params: data });
 }
