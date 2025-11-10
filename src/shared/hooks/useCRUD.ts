@@ -173,39 +173,73 @@ export const useCRUD = <T extends { id: number }>(options: UseCRUDOptions<T>) =>
     setCreateLoading(true);
     const isEditing = createId != -1;
 
-    if (isEditing) {
-      // --- 编辑逻辑 ---
-      if (!updateApi) {
-        console.warn('[CRUD] 未提供 updateApi，无法执行编辑操作。');
-        setCreateLoading(false);
-        return;
-      }
-      // 确保id格式正确：如果是application模式且不是数组则转为数组，否则直接使用createId
-      const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
-      await updateApi({ id: idToPass, ...values });
-      messageApi.success('编辑成功');
-
-      // 【核心】触发列表重新获取
-      setFetch(true);
-    } else {
-      // --- 新增逻辑 ---
-      if (!createApi) {
-        // 这是在没有提供 createApi 时的本地模拟回退逻辑，可以保留
-        console.warn('[CRUD] 未提供 createApi，执行本地模拟新增。');
-        const newId = getNextId();
-        const newItem = { ...values, id: newId } as T;
-        setTableData((prev) => [...prev, newItem]);
-        setTotal((prev) => prev + 1);
+    // --- 辅助函数：处理 API 响应和错误 ---
+    const handleApiResponse = (response: any, successMessage: string) => {
+      // ... (保持 handleApiResponse 逻辑不变，它已经处理了 code != 2000 的情况)
+      if (response && response.code === 2000) {
+        messageApi.success(successMessage);
+        return true;
       } else {
-        await createApi(values);
-        messageApi.success({ content: '新增成功', duration: 3 });
-        // 【核心】重置到第一页，并触发列表重新获取
-        setPage(1);
-        setFetch(true);
+        const errorMessage = response?.message || '操作失败，请重试。';
+        messageApi.error(errorMessage);
+        return false;
       }
+    };
+
+    let operationSuccess = false;
+
+    try {
+      if (isEditing) {
+        // --- 编辑逻辑 ---
+        if (!updateApi) {
+          messageApi.error('系统配置错误：未提供编辑接口 (updateApi)。');
+          return; // 直接返回
+        }
+
+        const idToPass = options.isApplication && !Array.isArray(createId) ? [createId] : createId;
+        const res = await updateApi({ id: idToPass, ...values });
+
+        operationSuccess = handleApiResponse(res, '编辑成功');
+        if (operationSuccess) {
+          setFetch(true);
+        }
+
+      } else {
+        // --- 新增逻辑 ---
+        if (!createApi) {
+          // 🚀 修正点 2: 使用 messageApi.error 提醒用户
+          messageApi.error('系统配置警告：未提供新增接口 (createApi)，执行本地模拟。');
+
+          // 执行本地模拟新增
+          const newId = getNextId();
+          const newItem = { ...values, id: newId } as T;
+          setTableData((prev) => [...prev, newItem]);
+          setTotal((prev) => prev + 1);
+
+          operationSuccess = true; // 本地操作视为成功
+        } else {
+          const res = await createApi(values);
+          operationSuccess = handleApiResponse(res, '新增成功');
+
+          if (operationSuccess) {
+            setPage(1);
+            setFetch(true);
+          }
+        }
+      }
+    } catch (error) {
+      // 捕获网络错误、JSON解析错误等 Promise 抛出的异常 (保持不变)
+      console.error('API请求发生异常:', error);
+      messageApi.error(`系统错误或网络中断：${(error as Error).message || '未知错误'}`);
+      operationSuccess = false;
+
+    } finally {
+      if (operationSuccess) {
+        setCreateOpen(false);
+      }
+
+      setCreateLoading(false); // 无论成功失败都关闭加载状态
     }
-    setCreateOpen(false); // 操作成功，关闭弹窗
-    setCreateLoading(false);
   };
   // 获取数据
   const fetchTableData = useCallback(
