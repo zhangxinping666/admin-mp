@@ -41,6 +41,17 @@ export const FORM_NOT_NEGATIVE = [
     },
   },
 ];
+
+export const FORM_LTE_1 = [
+  {
+    validator: (_: any, value: string | number) => {
+      if (value && parseFloat(value as string) > 1) {
+        return Promise.reject(new Error('比例必须小于或等于 1 (即 100%)'));
+      }
+      return Promise.resolve();
+    },
+  },
+];
 /**
  * 校验：必须大于 0
  * @description 注意：此规则不检查空值。如果需要必填，请配合 FORM_REQUIRED 使用。
@@ -84,6 +95,33 @@ export const FORM_LTE_100 = [
       if (value && parseFloat(value as string) > 100) {
         return Promise.reject(new Error('必须小于或等于 100'));
       }
+      return Promise.resolve();
+    },
+  },
+];
+
+//大于或等于 100
+export const FORM_GTE_100 = [
+  {
+    validator: (_: any, value: string | number) => {
+      // 检查 value 是否存在且是否为有效数字
+      if (value && parseFloat(value as string) < 100) {
+        return Promise.reject(new Error('必须大于或等于 100'));
+      }
+      // 如果 value 为空或大于等于 100，则校验通过
+      return Promise.resolve();
+    },
+  },
+];
+//校验：必须小于等于 10000 (常用于百分比)
+export const FORM_LTE_10000 = [
+  {
+    validator: (_: any, value: string | number) => {
+      // 检查 value 是否存在且是否为有效数字
+      if (value && parseFloat(value as string) > 10000) {
+        return Promise.reject(new Error('必须小于或等于 10000'));
+      }
+      // 如果 value 为空或小于等于 10000，则校验通过
       return Promise.resolve();
     },
   },

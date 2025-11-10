@@ -127,28 +127,28 @@ export const tableColumns: TableColumn[] = [
     dataIndex: 'platform_rate',
     key: 'platform_rate',
     width: 130,
-    render: (value: string) => `${value}`,
+    render: (value: string) => `${value}%`,
   },
   {
     title: '推广者分佣比例',
     dataIndex: 'promoter_rate',
     key: 'promoter_rate',
     width: 140,
-    render: (value: string) => `${value}`,
+    render: (value: string) => `${value}%`,
   },
   {
     title: '团长分佣比例',
     dataIndex: 'leader_rate',
     key: 'leader_rate',
     width: 130,
-    render: (value: string) => `${value}`,
+    render: (value: string) => `${value}%`,
   },
   {
     title: '运营商分佣比例',
     dataIndex: 'operator_rate',
     key: 'operator_rate',
     width: 140,
-    render: (value: string) => `${value}`,
+    render: (value: string) => `${value}%`,
   },
   {
     title: '固定金额',
@@ -196,7 +196,6 @@ export const formList: BaseFormList[] = [
     name: 'platform_rate',
     component: 'Input',
     placeholder: '平台分佣比例(比例总和必须=100)',
-    // --- (关键修改 1: 应用比例校验) ---
     rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',
@@ -209,7 +208,6 @@ export const formList: BaseFormList[] = [
     name: 'promoter_rate',
     component: 'Input',
     placeholder: '推广者分佣比例(比例总和必须=100)',
-    // --- (关键修改 1: 应用比例校验) ---
     rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',

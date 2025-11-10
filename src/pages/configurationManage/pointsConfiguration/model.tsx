@@ -1,6 +1,6 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
-import { FORM_REQUIRED } from '@/utils/config';
+import { FORM_REQUIRED, FORM_NOT_NEGATIVE, FORM_GTE_100, FORM_LTE_1, FORM_LTE_10000, FORM_GT_ZERO } from '@/utils/config';
 import dayjs from 'dayjs';
 
 /**
@@ -225,23 +225,27 @@ export const formList: BaseFormList[] = [
     label: '规则代码',
     name: 'rule_code',
     component: 'Input',
-    placeholder: '请输入规则代码(如:CONSUME_REWARD)',
     rules: FORM_REQUIRED,
+    componentProps: {
+      placeholder: '请输入规则代码(如:CONSUME_REWARD)',
+    },
   },
   {
     label: '规则名称',
     name: 'rule_name',
     component: 'Input',
-    placeholder: '请输入规则名称',
     rules: FORM_REQUIRED,
+    componentProps: {
+      placeholder: '请输入规则名称',
+    },
   },
   {
     label: '业务类型',
     name: 'business_type',
     component: 'Select',
-    placeholder: '请选择业务类型',
     rules: FORM_REQUIRED,
     componentProps: {
+      placeholder: '请选择业务类型',
       options: BUSINESS_TYPE_OPTIONS,
     },
   },
@@ -249,9 +253,9 @@ export const formList: BaseFormList[] = [
     label: '兑换比例',
     name: 'exchange_rate',
     component: 'InputNumber',
-    placeholder: '请输入兑换比例(如:100表示100:1)',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_GTE_100, ...FORM_LTE_10000],
     componentProps: {
+      placeholder: '请输入兑换比例',
       min: 1,
       style: { width: '100%' },
     },
@@ -260,26 +264,29 @@ export const formList: BaseFormList[] = [
     label: '最小触发金额',
     name: 'min_amount',
     component: 'Input',
-    placeholder: '留空表示无限制',
+    rules: [...FORM_NOT_NEGATIVE],
     componentProps: {
       type: 'number',
+      placeholder: '留空表示无限制',
     },
   },
   {
     label: '最大触发金额',
     name: 'max_amount',
     component: 'Input',
-    placeholder: '留空表示无限制',
+    rules: [...FORM_NOT_NEGATIVE],
     componentProps: {
       type: 'number',
+      placeholder: '大于等于最小触发金额',
     },
   },
   {
     label: '每日限制次数',
     name: 'daily_limit',
     component: 'InputNumber',
-    placeholder: '留空表示无限制',
+    rules: [...FORM_NOT_NEGATIVE],
     componentProps: {
+      placeholder: '留空表示无限制',
       min: 0,
       style: { width: '100%' },
     },
@@ -287,9 +294,10 @@ export const formList: BaseFormList[] = [
   {
     label: '每月限制次数',
     name: 'monthly_limit',
+    rules: [...FORM_NOT_NEGATIVE],
     component: 'InputNumber',
-    placeholder: '留空表示无限制',
     componentProps: {
+      placeholder: '需要大于每日*30（留空表示无限制）',
       min: 0,
       style: { width: '100%' },
     },
@@ -297,9 +305,10 @@ export const formList: BaseFormList[] = [
   {
     label: '用户总限制次数',
     name: 'user_total_limit',
+    rules: [...FORM_NOT_NEGATIVE],
     component: 'InputNumber',
-    placeholder: '留空表示无限制',
     componentProps: {
+      placeholder: '留空表示无限制',
       min: 0,
       style: { width: '100%' },
     },
@@ -308,9 +317,9 @@ export const formList: BaseFormList[] = [
     label: '默认过期天数',
     name: 'default_expire_days',
     component: 'InputNumber',
-    placeholder: '请输入默认过期天数',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_GT_ZERO],
     componentProps: {
+      placeholder: '请输入默认过期天数',
       min: 1,
       style: { width: '100%' },
     },
@@ -319,9 +328,10 @@ export const formList: BaseFormList[] = [
     label: '过期提醒提前天数',
     name: 'expire_remind_days',
     component: 'InputNumber',
-    placeholder: '留空表示不提醒',
+    rules: [...FORM_NOT_NEGATIVE],
     componentProps: {
       min: 1,
+      placeholder: '留空表示不提醒',
       style: { width: '100%' },
     },
   },
@@ -329,10 +339,10 @@ export const formList: BaseFormList[] = [
     label: '生效开始时间',
     name: 'valid_start_time',
     component: 'DatePicker',
-    placeholder: '请选择生效开始时间',
     rules: FORM_REQUIRED,
     componentProps: {
       style: { width: '100%' },
+      placeholder: '请选择生效开始时间',
       showTime: true,
       format: 'YYYY-MM-DD HH:mm:ss',
     },
@@ -341,9 +351,9 @@ export const formList: BaseFormList[] = [
     label: '生效结束时间',
     name: 'valid_end_time',
     component: 'DatePicker',
-    placeholder: '留空表示永久有效',
     componentProps: {
       style: { width: '100%' },
+      placeholder: '留空表示永久有效',
       showTime: true,
       format: 'YYYY-MM-DD HH:mm:ss',
     },

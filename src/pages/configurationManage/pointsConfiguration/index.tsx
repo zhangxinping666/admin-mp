@@ -37,7 +37,7 @@ const initCreate: Partial<PointsConfigItem> = {
   status: 1,
   default_expire_days: 365,
   valid_start_time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-  valid_end_time: dayjs().format('YYYY-MM-DD HH:mm:ss') || null
+  valid_end_time: null
 };
 
 const PointsConfigurationPage = () => {

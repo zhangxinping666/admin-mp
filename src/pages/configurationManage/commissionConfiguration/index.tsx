@@ -30,10 +30,10 @@ const commissionConfigApis = {
 // 初始化新增数据
 const initCreate: Partial<CommissionConfigItem> = {
   business_type: '',
-  platform_rate: '0',
-  promoter_rate: '0',
-  leader_rate: '0',
-  operator_rate: '0',
+  platform_rate: '40',
+  promoter_rate: '30',
+  leader_rate: '20',
+  operator_rate: '10',
   amount: '0',
   status: 1,
 };

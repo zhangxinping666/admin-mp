@@ -32,12 +32,12 @@ const rebateConfigApis = {
 const initCreate: Partial<RebateConfigItem> = {
   config_name: '',
   category_id: null,
-  platform_rate: '0',
-  promoter_rate: '0',
-  buyer_points_rate: '0',
-  min_order_amount: '0',
+  platform_rate: '0.5',
+  promoter_rate: '0.3',
+  buyer_points_rate: '0.2',
+  min_order_amount: '10',
   max_order_amount: null,
-  priority: 0,
+  priority: 1,
   status: 1,
   valid_start_time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
   valid_end_time: null
