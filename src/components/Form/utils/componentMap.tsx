@@ -25,7 +25,7 @@ import BaseTransfer from '@/components/Transfer/BaseTransfer';
 import PasswordStrength from '@/components/PasswordStrength';
 import AmountRangeInput from '@/components/AmountRange';
 import { UploadOutlined } from '@ant-design/icons';
-import { ImageUpload, AdvancedImageUpload, CropImageUpload } from '@/components/Upload';
+import { ImageUpload } from '@/components/Upload';
 
 const componentMap = new Map();
 
@@ -45,8 +45,6 @@ componentMap.set('Rate', Rate);
 componentMap.set('Slider', Slider);
 componentMap.set('Upload', Upload);
 componentMap.set('ImageUpload', ImageUpload);
-componentMap.set('AdvancedImageUpload', AdvancedImageUpload);
-componentMap.set('CropImageUpload', CropImageUpload);
 componentMap.set('Transfer', BaseTransfer);
 componentMap.set('DatePicker', BaseDatePicker);
 componentMap.set('RangePicker', BaseRangePicker);

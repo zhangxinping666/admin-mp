@@ -7,7 +7,6 @@ function Forbidden() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  /** 跳转首页 */
   const goIndex = () => {
     navigate('/login');
   };
