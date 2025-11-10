@@ -89,16 +89,6 @@ export const STATUS_OPTIONS = [
 // 搜索配置
 export const searchList: BaseSearchList[] = [
   {
-    label: '业务类型',
-    name: 'business_type',
-    component: 'Select',
-    placeholder: '请选择业务类型',
-    componentProps: {
-      options: [{ label: '全部', value: '' }, ...BUSINESS_TYPE_OPTIONS],
-    },
-    wrapperWidth: 200,
-  },
-  {
     label: '状态',
     name: 'status',
     component: 'Select',

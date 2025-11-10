@@ -89,7 +89,7 @@ export const STATUS_OPTIONS = [
 // 搜索配置
 export const searchList: BaseSearchList[] = [
   {
-    label: '配置名称',
+    label: '分类名称',
     name: 'config_name',
     component: 'Input',
     placeholder: '请输入配置名称',

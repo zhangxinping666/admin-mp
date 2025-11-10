@@ -107,13 +107,7 @@ export const STATUS_OPTIONS = [
 
 // 搜索配置
 export const searchList: BaseSearchList[] = [
-  {
-    label: '规则名称',
-    name: 'rule_name',
-    component: 'Input',
-    placeholder: '请输入规则名称',
-    wrapperWidth: 200,
-  },
+
   {
     label: '状态',
     name: 'status',
