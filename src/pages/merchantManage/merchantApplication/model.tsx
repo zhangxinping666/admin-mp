@@ -310,7 +310,7 @@ export const searchList = (
 export const tableColumns = (): TableColumn[] => {
   let list: TableColumn[] = [];
   list = [
-    { title: '商家名称', dataIndex: 'merchant_id', key: 'merchant_id' },
+    { title: '店铺名称', dataIndex: 'store_name', key: 'store_name' },
     { title: '用户姓名', dataIndex: 'name', key: 'name' },
     { title: '手机号', dataIndex: 'phone', key: 'phone' },
     {
