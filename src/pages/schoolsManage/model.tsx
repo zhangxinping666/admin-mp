@@ -391,7 +391,7 @@ export const formList = ({
 
         // 如果是编辑模式且有经纬度数据，使用学校的实际位置作为地图中心
         // 否则使用默认的北京坐标
-        let initCenter: [number, number] = [116.397428, 39.90923]; // 默认北京坐标
+        let initCenter: [number, number] = [116.397428, 39.90923];
 
         if (
           formValues.longitude &&

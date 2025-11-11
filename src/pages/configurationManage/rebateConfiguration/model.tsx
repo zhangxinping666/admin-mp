@@ -1,6 +1,11 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
-import { FORM_REQUIRED } from '@/utils/config';
+import {
+  FORM_REQUIRED,
+  FORM_GT_ZERO,
+  FORM_NOT_NEGATIVE,
+  FORM_LTE_1
+} from '@/utils/config';
 import dayjs from 'dayjs';
 
 export interface GetRebateConfigListParams {
@@ -84,7 +89,7 @@ export const STATUS_OPTIONS = [
 // 搜索配置
 export const searchList: BaseSearchList[] = [
   {
-    label: '配置名称',
+    label: '分类名称',
     name: 'config_name',
     component: 'Input',
     placeholder: '请输入配置名称',
@@ -112,32 +117,47 @@ export const tableColumns: TableColumn[] = [
     ellipsis: true,
   },
   {
-    title: '品类',
+    title: '分类',
     dataIndex: 'category_name',
     key: 'category_name',
     width: 120,
-    render: (value: string) => value || '全部品类',
+    render: (value: string) => value || '全部分类',
   },
   {
     title: '平台返利比例',
     dataIndex: 'platform_rate',
     key: 'platform_rate',
     width: 120,
-    render: (value: string) => `${value}%`,
+    render: (value: string | number) => {
+      const numericValue = parseFloat(value as string) || 0;
+      const calculatedValue = numericValue * 100;
+      const integerPercentage = Math.round(calculatedValue);
+      return `${integerPercentage}%`;
+    },
   },
   {
     title: '推广者返利比例',
     dataIndex: 'promoter_rate',
     key: 'promoter_rate',
     width: 140,
-    render: (value: string) => `${value}%`,
+    render: (value: string | number) => {
+      const numericValue = parseFloat(value as string) || 0;
+      const calculatedValue = numericValue * 100;
+      const integerPercentage = Math.round(calculatedValue);
+      return `${integerPercentage}%`;
+    },
   },
   {
     title: '购买者返金豆比例',
     dataIndex: 'buyer_points_rate',
     key: 'buyer_points_rate',
     width: 150,
-    render: (value: string) => `${value}%`,
+    render: (value: string | number) => {
+      const numericValue = parseFloat(value as string) || 0;
+      const calculatedValue = numericValue * 100;
+      const integerPercentage = Math.round(calculatedValue);
+      return `${integerPercentage}%`;
+    },
   },
   {
     title: '订单金额范围',
@@ -201,61 +221,63 @@ export const formList: BaseFormList[] = [
     rules: FORM_REQUIRED,
   },
   {
-    label: '品类',
+    label: '分类',
     name: 'category_id',
     component: 'Select',
     placeholder: '留空表示全部品类',
     componentProps: {
       options: [
-        { label: '全部品类', value: null },
-        // 这里需要从API获取品类列表,暂时先放一个示例
+        { label: '全部分类', value: null },
       ],
       allowClear: true,
     },
   },
   {
-    label: '平台返利比例(%)',
+    label: '平台返利比例',
     name: 'platform_rate',
     component: 'Input',
-    placeholder: '请输入平台返利比例',
-    rules: FORM_REQUIRED,
+    placeholder: '请输入平台返利比例 (0-100)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_1],
     componentProps: {
-      type: 'number',
+      type: 'float',
       min: 0,
-      max: 100,
+      max: 1,
     },
   },
+
+  // 推广者返利比例配置
   {
-    label: '推广者返利比例(%)',
+    label: '推广者返利比例',
     name: 'promoter_rate',
     component: 'Input',
-    placeholder: '请输入推广者返利比例',
-    rules: FORM_REQUIRED,
+    placeholder: '请输入推广者返利比例 (0-100)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_1],
     componentProps: {
-      type: 'number',
+      type: 'float',
       min: 0,
-      max: 100,
+      max: 1,
     },
   },
   {
-    label: '购买者返金豆比例(%)',
+    label: '购买者返利比例',
     name: 'buyer_points_rate',
     component: 'Input',
-    placeholder: '请输入购买者返金豆比例',
-    rules: FORM_REQUIRED,
+    placeholder: '请输入购买者返金豆比例 (0 到 1)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_1],
+    extra: '温馨提示：三种返利比例总和必须小于等于 100% (即 1.0)',
     componentProps: {
-      type: 'number',
+      type: 'float',
       min: 0,
-      max: 100,
+      max: 1,
     },
   },
   {
     label: '最小订单金额',
     name: 'min_order_amount',
     component: 'Input',
-    placeholder: '请输入最小订单金额',
-    rules: FORM_REQUIRED,
+    rules: [...FORM_REQUIRED, ...FORM_GT_ZERO],
     componentProps: {
+      placeholder: '请输入最小订单金额',
       type: 'number',
       min: 0,
     },
@@ -264,8 +286,9 @@ export const formList: BaseFormList[] = [
     label: '最大订单金额',
     name: 'max_order_amount',
     component: 'Input',
-    placeholder: '留空表示无限制',
+    rules: [...FORM_GT_ZERO],
     componentProps: {
+      placeholder: '需要大于等于最小订单金额',
       type: 'number',
       min: 0,
     },
@@ -274,18 +297,17 @@ export const formList: BaseFormList[] = [
     label: '优先级',
     name: 'priority',
     component: 'InputNumber',
-    placeholder: '数字越大优先级越高',
     rules: FORM_REQUIRED,
     componentProps: {
-      min: 0,
+      placeholder: '数字越大优先级越高',
+      min: 1,
       style: { width: '100%' },
     },
   },
   {
     label: '生效开始时间',
-    name: 'valid_from',
+    name: 'valid_start_time',
     component: 'DatePicker',
-    placeholder: '请选择生效开始时间',
     rules: FORM_REQUIRED,
     componentProps: {
       style: { width: '100%' },
@@ -295,10 +317,10 @@ export const formList: BaseFormList[] = [
   },
   {
     label: '生效结束时间',
-    name: 'valid_to',
+    name: 'valid_end_time',
     component: 'DatePicker',
-    placeholder: '留空表示永久有效',
     componentProps: {
+      placeholder: '留空表示永久有效',
       style: { width: '100%' },
       showTime: true,
       format: 'YYYY-MM-DD HH:mm:ss',

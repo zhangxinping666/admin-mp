@@ -36,9 +36,8 @@ async function refreshAccessToken(): Promise<string> {
   } catch (error) {
     console.log(error)
     clearAllTokens()
-
     try {
-      await refreshInstance.post('/auth/logout')
+      await refreshInstance.post('/backstage/logout')
     } catch (error) {
       console.error('登出失败', error)
     }

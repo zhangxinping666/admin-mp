@@ -1,6 +1,12 @@
 import type { BaseSearchList, BaseFormList } from '#/form';
 import type { TableColumn } from '#/public';
-import { FORM_REQUIRED } from '@/utils/config';
+import {
+  FORM_REQUIRED,
+  FORM_NOT_NEGATIVE,
+  FORM_LT_100,
+  FORM_GT_ZERO,
+  FORM_LTE_100
+} from '@/utils/config';
 import dayjs from 'dayjs';
 
 /**
@@ -82,16 +88,6 @@ export const STATUS_OPTIONS = [
 
 // 搜索配置
 export const searchList: BaseSearchList[] = [
-  {
-    label: '业务类型',
-    name: 'business_type',
-    component: 'Select',
-    placeholder: '请选择业务类型',
-    componentProps: {
-      options: [{ label: '全部', value: '' }, ...BUSINESS_TYPE_OPTIONS],
-    },
-    wrapperWidth: 200,
-  },
   {
     label: '状态',
     name: 'status',
@@ -180,17 +176,17 @@ export const formList: BaseFormList[] = [
     name: 'business_type',
     component: 'Select',
     placeholder: '请选择业务类型',
-    rules: FORM_REQUIRED,
+    rules: FORM_REQUIRED, // 保持不变
     componentProps: {
       options: BUSINESS_TYPE_OPTIONS,
     },
   },
   {
-    label: '平台分佣比例(%)',
+    label: '平台分佣比例',
     name: 'platform_rate',
     component: 'Input',
-    placeholder: '请输入平台分佣比例',
-    rules: FORM_REQUIRED,
+    placeholder: '平台分佣比例(比例总和必须=100)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',
       min: 0,
@@ -198,11 +194,11 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '推广者分佣比例(%)',
+    label: '推广者分佣比例',
     name: 'promoter_rate',
     component: 'Input',
-    placeholder: '请输入推广者分佣比例',
-    rules: FORM_REQUIRED,
+    placeholder: '推广者分佣比例(比例总和必须=100)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',
       min: 0,
@@ -210,11 +206,11 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '团长分佣比例(%)',
+    label: '团长分佣比例',
     name: 'leader_rate',
     component: 'Input',
-    placeholder: '请输入团长分佣比例',
-    rules: FORM_REQUIRED,
+    placeholder: '团长分佣比例(比例总和必须=100)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100],
     componentProps: {
       type: 'number',
       min: 0,
@@ -222,11 +218,12 @@ export const formList: BaseFormList[] = [
     },
   },
   {
-    label: '运营商分佣比例(%)',
+    label: '运营商分佣比例',
     name: 'operator_rate',
     component: 'Input',
-    placeholder: '请输入运营商分佣比例',
-    rules: FORM_REQUIRED,
+    placeholder: '运营商分佣比例(比例总和必须=100)',
+    rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LT_100],
+    extra: '温馨提示：平台、推广者、团长、运营商的分佣比例总和必须等于 100%',
     componentProps: {
       type: 'number',
       min: 0,
@@ -237,7 +234,9 @@ export const formList: BaseFormList[] = [
     label: '固定金额',
     name: 'amount',
     component: 'Input',
-    placeholder: '请输入固定金额(可选)',
+    placeholder: '请输入固定金额',
+    // 必须大于 0
+    rules: [...FORM_REQUIRED, ...FORM_GT_ZERO],
     componentProps: {
       type: 'number',
       min: 0,
@@ -248,7 +247,7 @@ export const formList: BaseFormList[] = [
     name: 'status',
     component: 'Select',
     placeholder: '请选择状态',
-    rules: FORM_REQUIRED,
+    rules: FORM_REQUIRED, // 保持不变
     componentProps: {
       options: [
         { label: '启用', value: 1 },

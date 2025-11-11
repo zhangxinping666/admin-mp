@@ -15,86 +15,6 @@
 - 自定义上传请求
 - 支持多文件上传
 
-**使用示例:**
-```tsx
-import { ImageUpload } from '@/components/Upload';
-
-<ImageUpload
-  value={fileList}
-  onChange={setFileList}
-  maxCount={3}
-  maxSize={2}
-  onUploadSuccess={(file, fileList) => console.log('上传成功', file)}
-  onUploadError={(error, file) => console.log('上传失败', error)}
-/>
-```
-
-### 2. AdvancedImageUpload - 高级图片上传
-
-增强版图片上传组件，支持图片压缩、进度显示等高级功能。
-
-**特性:**
-- 包含基础上传的所有功能
-- 图片压缩（可配置质量和尺寸）
-- 上传进度显示
-- 多种显示样式（text、picture、picture-card）
-- 更好的用户体验
-
-**使用示例:**
-```tsx
-import { AdvancedImageUpload } from '@/components/Upload';
-
-<AdvancedImageUpload
-  value={fileList}
-  onChange={setFileList}
-  maxCount={5}
-  listType="picture-card"
-  enableCompress
-  compressOptions={{
-    quality: 0.8,
-    maxWidth: 1920,
-    maxHeight: 1080
-  }}
-/>
-```
-
-### 3. CropImageUpload - 裁剪图片上传
-
-带图片裁剪功能的上传组件，支持自定义裁剪比例和形状。
-
-**特性:**
-- 图片裁剪功能
-- 支持矩形和圆形裁剪
-- 自定义裁剪比例
-- 图片旋转和缩放
-- 实时预览
-
-**使用示例:**
-```tsx
-import { CropImageUpload } from '@/components/Upload';
-
-// 正方形裁剪
-<CropImageUpload
-  maxCount={1}
-  aspectRatio={1}
-  cropShape="rect"
-/>
-
-// 圆形头像裁剪
-<CropImageUpload
-  maxCount={1}
-  aspectRatio={1}
-  cropShape="round"
-/>
-
-// 16:9 横幅裁剪
-<CropImageUpload
-  maxCount={1}
-  aspectRatio={16/9}
-  cropShape="rect"
-/>
-```
-
 ### 4. ImagePreview - 图片预览
 
 用于在表格或其他地方显示图片的预览组件。
@@ -118,35 +38,6 @@ import { ImagePreview } from '@/components/Upload';
   { uid: '2', name: 'image2.jpg', url: 'https://example.com/2.jpg' }
 ]} />
 ```
-
-### 5. ImageCropper - 图片裁剪器
-
-独立的图片裁剪组件，可以单独使用。
-
-**特性:**
-- 拖拽裁剪框
-- 图片旋转和缩放
-- 支持矩形和圆形裁剪
-- 自定义裁剪比例
-- 高质量输出
-
-**使用示例:**
-```tsx
-import { ImageCropper } from '@/components/Upload';
-
-<ImageCropper
-  visible={visible}
-  file={file}
-  onCancel={() => setVisible(false)}
-  onOk={(croppedFile) => {
-    setVisible(false);
-  }}
-  aspectRatio={1}
-  cropShape="round"
-/>
-```
-
-## 工具函数
 
 ### imageUtils
 
@@ -189,14 +80,6 @@ const info = await getImageInfo(file);
 
 ```tsx
 <Form>
-  <Form.Item name="avatar" label="头像">
-    <CropImageUpload
-      maxCount={1}
-      aspectRatio={1}
-      cropShape="round"
-    />
-  </Form.Item>
-  
   <Form.Item name="gallery" label="图片库">
     <AdvancedImageUpload
       maxCount={6}
