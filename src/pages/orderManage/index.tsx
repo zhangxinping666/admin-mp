@@ -11,12 +11,6 @@ export default function OrderManage() {
   const locationOptions = useLocationOptions();
 
   const fetchApi = async (params: any) => {
-    // const { search_type, search_value, ...rest } = params || {};
-    // const mappedParams: any = { ...rest };
-    // if (search_type && search_value) {
-    //   mappedParams[search_type] = search_value;
-    // }
-    // const res = await mockOrderList(mappedParams);
     const res = await getOrderList(params);
     const data = res?.data as unknown as OrderListData;
     const list = (data?.list || []).map((item: OrderItem) => ({
