@@ -27,6 +27,106 @@ export const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 export const FORM_REQUIRED = [{ required: true }]; // 表单必填校验
 
 /**
+ * 校验：不能为负数 (必须 >= 0)
+ * @description 注意：此规则不检查空值。
+ * @example rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE]
+ */
+export const FORM_NOT_NEGATIVE = [
+  {
+    validator: (_: any, value: string | number) => {
+      if (value && parseFloat(value as string) < 0) {
+        return Promise.reject(new Error('不能为负数'));
+      }
+      return Promise.resolve();
+    },
+  },
+];
+
+export const FORM_LTE_1 = [
+  {
+    validator: (_: any, value: string | number) => {
+      if (value && parseFloat(value as string) > 1) {
+        return Promise.reject(new Error('比例必须小于或等于 1 (即 100%)'));
+      }
+      return Promise.resolve();
+    },
+  },
+];
+/**
+ * 校验：必须大于 0
+ * @description 注意：此规则不检查空值。如果需要必填，请配合 FORM_REQUIRED 使用。
+ * @example rules: [...FORM_REQUIRED, ...FORM_GT_ZERO]
+ */
+export const FORM_GT_ZERO = [
+  {
+    validator: (_: any, value: string | number) => {
+      // 如果值存在 (不为 null/undefined/空字符串) 且不大于 0
+      if (value && parseFloat(value as string) <= 0) {
+        return Promise.reject(new Error('必须大于 0'));
+      }
+      return Promise.resolve();
+    },
+  },
+];
+/**
+ * 校验：必须小于 100
+ * @description 注意：此规则不检查空值。
+ * @example rules: [...FORM_NOT_NEGATIVE, ...FORM_LT_100]
+ */
+export const FORM_LT_100 = [
+  {
+    validator: (_: any, value: string | number) => {
+      if (value && parseFloat(value as string) >= 100) {
+        return Promise.reject(new Error('必须小于 100'));
+      }
+      return Promise.resolve();
+    },
+  },
+];
+
+/**
+ * 校验：必须小于等于 100 (常用于百分比)
+ * @description 注意：此规则不检查空值。
+ * @example rules: [...FORM_REQUIRED, ...FORM_NOT_NEGATIVE, ...FORM_LTE_100]
+ */
+export const FORM_LTE_100 = [
+  {
+    validator: (_: any, value: string | number) => {
+      if (value && parseFloat(value as string) > 100) {
+        return Promise.reject(new Error('必须小于或等于 100'));
+      }
+      return Promise.resolve();
+    },
+  },
+];
+
+//大于或等于 100
+export const FORM_GTE_100 = [
+  {
+    validator: (_: any, value: string | number) => {
+      // 检查 value 是否存在且是否为有效数字
+      if (value && parseFloat(value as string) < 100) {
+        return Promise.reject(new Error('必须大于或等于 100'));
+      }
+      // 如果 value 为空或大于等于 100，则校验通过
+      return Promise.resolve();
+    },
+  },
+];
+//校验：必须小于等于 10000 (常用于百分比)
+export const FORM_LTE_10000 = [
+  {
+    validator: (_: any, value: string | number) => {
+      // 检查 value 是否存在且是否为有效数字
+      if (value && parseFloat(value as string) > 10000) {
+        return Promise.reject(new Error('必须小于或等于 10000'));
+      }
+      // 如果 value 为空或小于等于 10000，则校验通过
+      return Promise.resolve();
+    },
+  },
+];
+/**
  *
  * @param required 是否必填
  * @param message 校验失败提示

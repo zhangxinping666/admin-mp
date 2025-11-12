@@ -107,6 +107,10 @@ export interface UpdateRequest {
    * 更新商家id
    */
   id: number;
+  /**
+   * 审核理由
+   */
+  reason?: string;
   [property: string]: any;
 }
 // 更新商家响应接口

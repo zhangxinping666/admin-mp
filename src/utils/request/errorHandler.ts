@@ -3,10 +3,10 @@ import type { AxiosError } from 'axios'
 
 const ERROR_CODE_MAP: Record<number, { message: string; action?: () => void }> = {
   4000: {
-    message: 'Token 已过期',
+    message: '请求参数错误,请检查输入',
   },
   4010: {
-    message: '请求参数错误,请检查输入',
+    message: 'Token 已过期',
   },
   4230: {
     message: '无权限访问此资源',

@@ -3,14 +3,12 @@ import { extractRoutePathsFromMenus } from '@/utils/menuUtils';
 import type { FormProps } from 'antd';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { message, Form, Button, Input } from 'antd';
 import { getUserInfoServe, login, getCode } from '@/servers/login';
 import { getFirstMenu } from '@/menus/utils/helper';
 import Logo from '@/assets/images/logo.png';
-import { setAccessToken, setRefreshToken } from '@/stores/token';
+import { setAccessToken } from '@/stores/token';
 import { getPermissions } from '@/servers/login';
-import { useCommonStore } from '@/hooks/useCommonStore';
 import { useMenuStore } from '@/stores/menu';
 import { usePublicStore } from '@/stores/public';
 import { useUserStore } from '@/stores/user';
@@ -19,10 +17,8 @@ import { ThemeType } from '@/stores/public';
 import I18n from '@/components/I18n';
 import Theme from '@/components/Theme';
 import { PermissionsData } from './model'
-import { sortMenusBySort } from '@/utils/menuUtils'
 
 function Login() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [isLoading, setLoading] = useState(false);
@@ -81,7 +77,7 @@ function Login() {
     // 获取第一个有权限的菜单
     const firstMenu = getFirstMenu(menus);
     if (!firstMenu) {
-      return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
+      return messageApi.error({ content: "没有权限", key: 'permissions' });
     }
     navigate(firstMenu, { replace: true });
   };
@@ -144,7 +140,7 @@ function Login() {
 
 
       if (!perms || !access_token) {
-        return messageApi.error({ content: t('login.notPermissions'), key: 'permissions' });
+        return messageApi.error({ content: "没有权限", key: 'permissions' });
       }
       await handleGoMenu(menus, perms);
     } catch (error) {
@@ -229,7 +225,7 @@ function Login() {
         >
           <div className="pb-20px pt-10px flex items-center justify-center">
             <img className="mr-2 object-contain" width="32" height="32" src={Logo} alt="LOGO" />
-            <span className="text-22px font-bold tracking-2px">{t('login.systemLogin')}</span>
+            <span className="text-22px font-bold tracking-2px">{'校园慢跑系统登录'}</span>
           </div>
           <Form
             form={form}
@@ -244,34 +240,34 @@ function Login() {
               captcha_code: '',
             }}
           >
-            <div className="text-#AAA6A6 text-14px mb-8px">{t('login.username')}</div>
+            <div className="text-#AAA6A6 text-14px mb-8px">{'用户名'}</div>
 
             <Form.Item
               name="account"
               className="!mb-15px"
               rules={[
-                { required: true, message: t('public.pleaseEnter', { name: t('login.username') }) },
+                { required: true, message: '请输入用户名' },
               ]}
             >
               <Input
                 allow-clear="true"
-                placeholder={t('public.pleaseEnter', { name: t('login.username') })}
+                placeholder={'请输入用户名'}
                 autoComplete="username"
               />
             </Form.Item>
 
-            <div className="text-#AAA6A6 text-14px mb-8px">{t('login.password')}</div>
+            <div className="text-#AAA6A6 text-14px mb-8px">{'密码'}</div>
 
             <Form.Item
               name="password"
               className="!mb-15px"
               rules={[
-                { required: true, message: t('public.pleaseEnter', { name: t('login.password') }) },
+                { required: true, message: '请输入密码' },
               ]}
             >
               <Input.Password
                 name="password"
-                placeholder={t('public.pleaseEnter', { name: t('login.password') })}
+                placeholder={'请输入密码'}
                 autoComplete="current-password"
               />
             </Form.Item>
@@ -312,7 +308,7 @@ function Login() {
               className="w-full mt-15px mb-25px rounded-5px tracking-2px"
               loading={isLoading}
             >
-              {t('login.login')}
+              {'登录'}
             </Button>
           </Form>
 

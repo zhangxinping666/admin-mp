@@ -18,6 +18,7 @@ export interface MerchantApplication {
   business_license_image?: string;
   medical_certificate_image?: string;
   id: number;
+  merchant_id?: number;
   merchant_type?: string;
   name?: string;
   open_hour?: string;
@@ -42,6 +43,13 @@ export interface MerchantApplicationQuery {
   phone?: string;
 }
 
+const STATUS_META = {
+  'wxChat': {
+    title: '微信',
+    color: 'success',
+  },
+}
+
 export const merchantOrderConfig: FieldConfig[] = [
   /* ===== 商户信息 ===== */
   { key: 'merchantDetail.name', label: '商户名称', group: '商户信息' },
@@ -54,7 +62,7 @@ export const merchantOrderConfig: FieldConfig[] = [
   { key: 'merchantDetail.category', label: '经营品类', group: '商户信息' },
   { key: 'merchantDetail.start_time', label: '营业开始时间', group: '商户信息' },
   { key: 'merchantDetail.end_time', label: '营业结束时间', group: '商户信息' },
-  { key: 'merchantDetail.is_dorm_store', label: '是否宿舍门店', group: '商户信息' },
+  { key: 'merchantDetail.is_dorm_store', label: '是否宿舍门店', group: '商户信息', render: (v) => (v ? '是' : '否') },
 
   // 位置
   {
@@ -104,9 +112,9 @@ export const merchantOrderConfig: FieldConfig[] = [
   },
 
   /* ===== 订单信息 ===== */
-  { key: 'orderDetail.amount', label: '订单金额', group: '订单信息' },
+  { key: 'orderDetail.amount', label: '订单金额', group: '订单信息', render: (v) => `${v?.toFixed(2)}元` },
   { key: 'orderDetail.order_number', label: '订单号', group: '订单信息' },
-  { key: 'orderDetail.pay_channel', label: '支付渠道', group: '订单信息' },
+  { key: 'orderDetail.pay_channel', label: '支付渠道', group: '订单信息', render: (v) => ((v && STATUS_META[v as keyof typeof STATUS_META]?.title) || '-') },
 ];
 
 // 搜索配置
@@ -302,6 +310,7 @@ export const searchList = (
 export const tableColumns = (): TableColumn[] => {
   let list: TableColumn[] = [];
   list = [
+    { title: '店铺名称', dataIndex: 'store_name', key: 'store_name' },
     { title: '用户姓名', dataIndex: 'name', key: 'name' },
     { title: '手机号', dataIndex: 'phone', key: 'phone' },
     {
@@ -330,8 +339,8 @@ export const tableColumns = (): TableColumn[] => {
     },
     {
       title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: 'apply_status',
+      key: 'apply_status',
       render: (value: number) => {
         return value === 3 ? '待审批' : value === 1 ? '审批通过' : '审批失败';
       },
@@ -348,16 +357,16 @@ export const tableColumns = (): TableColumn[] => {
   return list;
 };
 // 表单配置项
-export const formList = (): BaseFormList[] => [
+export const formList = (options?: any): BaseFormList[] => [
   {
-    label: '申请表ID',
-    name: 'id',
+    label: '申请用户',
+    name: 'user_id',
     rules: FORM_REQUIRED,
-    component: 'Input',
+    component: 'Select',
     componentProps: {
-      placeholder: '请输入商家ID',
-      maxLength: 11,
+      placeholder: '请输入用户',
       disabled: true,
+      options: options?.userOptions || [],
     },
   },
   {

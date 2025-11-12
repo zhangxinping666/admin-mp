@@ -25,9 +25,6 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
 
   /**
    * 从菜单数据中递归查找路由对应的标题
-   * @param routePath - 路由路径
-   * @param menus - 菜单列表
-   * @returns 菜单标题或 null
    */
   const findMenuTitle = (routePath: string, menus: MenuItem[]): string | null => {
     for (const menu of menus) {
@@ -71,7 +68,7 @@ const TableNavigation: React.FC<TableNavigationProps> = ({
       currentPath += `/${segment}`;
       const isLast = index === pathSegments.length - 1;
 
-      // 🔥 动态从菜单数据中查找标题（替代硬编码的 switch-case）
+      // 动态从菜单数据中查找标题（替代硬编码的 switch-case）
       const menuTitle = findMenuTitle(currentPath, menuList);
       const segmentTitle = menuTitle || title || segment;
 

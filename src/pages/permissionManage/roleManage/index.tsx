@@ -112,7 +112,6 @@ const RolesPage = () => {
           updateApi: (data: any) => {
             return apis.updateApi(data);
           },
-
           deleteApi: (id: number[]) => apis.deleteApi(id),
         }}
         optionRender={optionRender}

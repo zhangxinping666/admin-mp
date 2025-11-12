@@ -27,6 +27,10 @@ const newRoutes: RouteObject[] = [
     element: <Guards />,
     children: [
       {
+        index: true,
+        element: <Login />,
+      },
+      {
         path: 'login',
         element: <Login />,
       },

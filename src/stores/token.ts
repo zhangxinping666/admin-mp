@@ -32,18 +32,6 @@ export const clearAccessToken = (): void => {
   sessionStorage.removeItem('access_token');
 };
 
-// Refresh Token 管理   该方法保留仅用于向后兼容，实际无法获取
-export const getRefreshToken = (): string => {
-  console.warn('[DEPRECATED] getRefreshToken() - Refresh token is now in HttpOnly cookie.');
-  return '';
-};
-
-// Refresh token 由后端设置，前端不应调用
-export const setRefreshToken = (token: string): void => {
-  console.warn('[DEPRECATED] setRefreshToken() - Backend sets refresh token as HttpOnly cookie.');
-  // 不执行任何操作
-};
-
 //清除token
 export const clearAllTokens = (): void => {
   clearAccessToken();

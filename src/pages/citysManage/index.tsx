@@ -59,10 +59,7 @@ const CitiesPage = () => {
     try {
       const response = await getUserListByPage();
       const Data = response as unknown as UserSimple
-
-      // 检查不同的数据结构可能性
       if (Data && Data.code === 2000) {
-        // 直接在response层级有code
         const users = Data.data || [];
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
@@ -70,7 +67,6 @@ const CitiesPage = () => {
         }));
         setUserOptions(userOptionsList);
       } else if (response.data && response.data.code === 0) {
-        // 在response.data层级有code
         const users = response.data.data || [];
         const userOptionsList = users.map((user: any) => ({
           label: user.username,
@@ -87,10 +83,10 @@ const CitiesPage = () => {
   useEffect(() => {
     fetchUserOptions();
   }, []);
+
   // 加载省市数据
   useEffect(() => {
     const fetchAndGroupData = async () => {
-      // 过滤掉"全部"选项，只保留真实的省份
       const realProvinces = locationOptions.provinceOptions.filter(
         (p) => p.value !== '全部'
       );
@@ -115,7 +111,6 @@ const CitiesPage = () => {
 
         const finalOptions = await Promise.all(cityPromises);
         setGroupedCityOptions(finalOptions);
-
       } catch (error) {
         console.error('加载分组城市选项失败:', error);
       }

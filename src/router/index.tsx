@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { BrowserRouter as Router } from 'react-router-dom';
 import nprogress from 'nprogress';
 import RouterPage from './components/Router';
@@ -10,8 +9,6 @@ import { AliveScope } from 'react-activation';
 
 // antd
 import { theme, ConfigProvider, App } from 'antd';
-import zhCN from 'antd/es/locale/zh_CN';
-import enUS from 'antd/es/locale/en_US';
 
 // 禁止进度条添加loading
 nprogress.configure({ showSpinner: false });
@@ -22,11 +19,7 @@ const { defaultAlgorithm, darkAlgorithm } = theme;
 import { useCommonStore } from '@/hooks/useCommonStore';
 
 function Page() {
-  const { i18n } = useTranslation();
   const { theme } = useCommonStore();
-  // 获取当前语言
-  const currentLanguage = i18n.language;
-
   useEffect(() => {
     // 关闭loading
     const firstElement = document.getElementById('first');
@@ -38,7 +31,6 @@ function Page() {
   return (
     <Router>
       <ConfigProvider
-        locale={currentLanguage === 'en' ? enUS : zhCN}
         theme={{
           algorithm: [theme === 'dark' ? darkAlgorithm : defaultAlgorithm],
         }}
