@@ -223,14 +223,8 @@ export const formList: BaseFormList[] = [
   {
     label: '分类',
     name: 'category_id',
-    component: 'Select',
+    component: 'Input',
     placeholder: '留空表示全部品类',
-    componentProps: {
-      options: [
-        { label: '全部分类', value: null },
-      ],
-      allowClear: true,
-    },
   },
   {
     label: '平台返利比例',

@@ -267,25 +267,26 @@ export const searchList = (
       label: '用户昵称',
       name: 'nickname',
       component: 'Input',
-      placeholder: '请输入团长昵称',
+      componentProps: {
+        placeholder: '请输入用户昵称',
+      },
     },
     {
       label: '电话',
       name: 'phone',
       component: 'Input',
-      placeholder: '请输入用户电话',
+      componentProps: {
+        placeholder: '请输入用户电话',
+      },
+
     },
     {
-      component: 'Select',
-      name: 'tuiguangzhe',
+      component: 'Input',
+      name: 'superior_username',
       label: '推广者',
-      wrapperWidth: 100,
+      wrapperWidth: 200,
       componentProps: {
-        options: [
-          { label: '全部', value: 0 },
-          { label: '推广者', value: 1 },
-          { label: '非推广者', value: 2 },
-        ],
+        placeholder: '请输入推广者昵称',
       },
     },
     {
