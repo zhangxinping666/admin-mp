@@ -19,11 +19,12 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
   title: string;
   isAddOpen?: boolean;
   isDelete: boolean;
+  isAdapt?: boolean;
   isApplication?: boolean;
   addFormConfig?: BaseFormList[];
   detailConfig?: FieldConfig[];
   formatHistoryData?: (data: any) => any;
-
+  actionWidth?: number;
   pagination?: boolean;
   hideCreate?: boolean;
   disableCreate?: boolean;
@@ -60,10 +61,12 @@ interface CRUDPageTemplateProps<T extends { id: number }> {
 export const CRUDPageTemplate = <T extends { id: number }>({
   isAddOpen = true,
   isDelete,
+  isAdapt = false,
   addFormConfig,
   title,
   searchConfig,
   detailConfig,
+  actionWidth,
   isApplication,
   columns,
   formConfig,
@@ -169,7 +172,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
       title: '操作',
       dataIndex: 'action',
       key: 'action',
-      width: 130,
+      ...(isAdapt ? {} : { width: actionWidth || 120 }),
       fixed: 'right' as const,
       render: (_: any, record: T) =>
         optionRender
@@ -229,7 +232,7 @@ export const CRUDPageTemplate = <T extends { id: number }>({
             <BaseTable
               isLoading={isLoading}
               isAuthHeight={false}
-              scrollX={scrollX}
+              {...(isAdapt ? {} : { scrollX: scrollX })}
               columns={(optionRender ? finalColumns : columns) as TableColumnsType}
               getPage={() => {
                 fetchTableData();

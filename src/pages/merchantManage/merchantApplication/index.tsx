@@ -191,6 +191,7 @@ const MerchantApplicationPage = () => {
     <CRUDPageTemplate
       disableBatchUpdate={false}
       // isAddOpen={roleId === 4}
+      isAdapt={true}
       isDelete={true}
       formatHistoryData={formatHistoryData}
       detailConfig={merchantOrderConfig}
@@ -266,12 +267,17 @@ const MerchantApplicationPage = () => {
           if (params.apply_status === 3) {
             throw new Error('待审核状态不能进行操作');
           }
+          const id = params.id?.[0];
+          if (!id) {
+            throw new Error('请选择要操作的记录');
+          }
+          console.log(params);
 
-          const idList = Array.isArray(params.id) ? params.id[0] : params.id;
           return apis.updateApplication({
-            id: params.store_id,
-            apply_status: params.apply_status,
+            id: Number(id),
+            apply_status: Number(params.apply_status),
             reason: params.reason,
+            user_id: Number(params.user_id),
           });
         },
         deleteApi: (params: any) => {

@@ -193,6 +193,7 @@ const MenuPage = () => {
           const flatList = response?.data as unknown as Menu[];
           // 调用树形转换函数
           const treeData = buildTree(flatList);
+          console.log('treeData', treeData);
           return {
             data: treeData,
           };

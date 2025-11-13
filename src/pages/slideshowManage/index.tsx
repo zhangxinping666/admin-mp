@@ -339,12 +339,12 @@ export default function slideshowManage() {
 
   // 新增接口
   const createApi = async (data: Draft) => {
-    return createCarousel(data );
+    return createCarousel(data);
   };
 
   // 获取列表接口
   const fetchApi = async (params: any) => {
-    return getCarouselList(params );
+    return getCarouselList(params);
   };
 
   // 更新接口
@@ -441,6 +441,7 @@ export default function slideshowManage() {
       <CRUDPageTemplate
         title="轮播图草稿管理"
         isDelete={true}
+        isAdapt={true}
         searchConfig={searchConfig} // 传入城市选项和学校选项
         columns={tableColumns}
         addFormConfig={addFormConfig} // 表单配置需要根据实际需求定义

@@ -252,7 +252,7 @@ export const tableColumns: TableColumn[] = [
   {
     title: '标题',
     dataIndex: 'title',
-    key: 'title',
+    key: 'title',                                                          
     ellipsis: true,
   },
   {
