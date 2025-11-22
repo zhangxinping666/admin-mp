@@ -1,0 +1,49 @@
+import { useEffect } from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import nprogress from 'nprogress';
+import RouterPage from './components/Router';
+import StaticMessage from '@manpao/message';
+
+// keepalive
+import { AliveScope } from 'react-activation';
+
+// antd
+import { theme, ConfigProvider, App } from 'antd';
+
+// 禁止进度条添加loading
+nprogress.configure({ showSpinner: false });
+
+// antd主题
+const { defaultAlgorithm, darkAlgorithm } = theme;
+
+import { useCommonStore } from '@/hooks/useCommonStore';
+
+function Page() {
+  const { theme } = useCommonStore();
+  useEffect(() => {
+    // 关闭loading
+    const firstElement = document.getElementById('first');
+    if (firstElement && firstElement.style?.display !== 'none') {
+      firstElement.style.display = 'none';
+    }
+  }, []);
+
+  return (
+    <Router>
+      <ConfigProvider
+        theme={{
+          algorithm: [theme === 'dark' ? darkAlgorithm : defaultAlgorithm],
+        }}
+      >
+        <App>
+          <StaticMessage />
+          <AliveScope>
+            <RouterPage />
+          </AliveScope>
+        </App>
+      </ConfigProvider>
+    </Router>
+  );
+}
+
+export default Page;
